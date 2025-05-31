@@ -20,6 +20,7 @@ response = client.chat.complete(
     model="mistral-small-2503",
     messages=[
         {"role": "user", "content": "Mejórame este título para un vídeo de YouTube, incluye emojis:" + os.getenv("YOUTUBE_TITLE")}
+    ]
 )
 
 end_time = time.time()
