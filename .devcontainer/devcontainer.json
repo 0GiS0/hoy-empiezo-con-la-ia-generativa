@@ -25,5 +25,7 @@
 	"forwardPorts": [
 		6333		
 	],
-	"postCreateCommand": "pip install --upgrade pip"
+	"containerEnv": {
+		"OLLAMA_HOST": "http://host.docker.internal:11434"
+	}	
 }
