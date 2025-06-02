@@ -22,10 +22,12 @@ client = OpenAI(
 start_time = time.time()
 
 prompt = """
-        Genera una imagen de un caracol y una rana de escayola. El caracol debe ser de color azul y la rana de color verde. 
-        La escena debe ser detallada y mostrar ambos objetos en un entorno natural.
-        """
+Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
+La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
+"""
 
+print("⏳ Generando la primera imagen (caracol y rana de escayola)... Esto puede tardar unos segundos.")
 response = client.responses.create(
     model=os.getenv("IMAGE_GENERATION_MODEL"),
     input=prompt,
@@ -46,23 +48,28 @@ image_data = [
 
 if image_data:
     image_base64 = image_data[0]
-    with open(f"image_with_responses_{random_number}.png", "wb") as f:
+    filename = f"image_with_responses_{random_number}.png"
+    with open(filename, "wb") as f:
         f.write(base64.b64decode(image_base64))
-
+    print(f"✅ Imagen generada y guardada como {filename}")
+else:
+    print("❌ No se pudo generar la primera imagen.")
 
 # Print the execution time
 execution_time = end_time - start_time
-print(f"Image generated and saved as image_with_responses_{random_number}.png")
-print(f"Execution time: {execution_time:.2f} seconds")
-
-# Print the name of the generated image
-print(f"Generated image name: image_with_responses_{random_number}.png")
+print(f"⏱️ Tiempo de ejecución de la primera generación: {execution_time:.2f} segundos")
 
 # Follow up
+print("\n⏳ Generando la segunda imagen (añadiendo mariposa amarilla)... Espera mientras se procesa la petición.")
 second_response = client.responses.create(
     previous_response_id=response.id,
     model=os.getenv("IMAGE_GENERATION_MODEL"),
-    input="¿Ahora añade una mariposa de color amarillo en la escena",
+    input=(
+        "Añade una mariposa de color amarillo, con alas abiertas y detalles realistas, "
+        "posada suavemente sobre una hoja cerca del caracol y la rana. "
+        "Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, "
+        "y que todos los elementos conserven un aspecto hiperrealista y armonioso."
+    ),
     tools=[{"type": "image_generation"}],
 )
 
@@ -75,18 +82,25 @@ second_image_data = [
 
 if second_image_data:
     second_image_base64 = second_image_data[0]
-    with open(f"image_with_responses_followup_{random_number}.png", "wb") as f:
+    filename2 = f"image_with_responses_followup_{random_number}.png"
+    with open(filename2, "wb") as f:
         f.write(base64.b64decode(second_image_base64))
-
-# Print the name of the second generated image
-print(f"Second image generated and saved as image_with_responses_followup_{random_number}.png")
-print(f"Second image name: image_with_responses_followup_{random_number}.png")
+    print(f"✅ Segunda imagen generada y guardada como {filename2}")
+else:
+    print("❌ No se pudo generar la segunda imagen.")
 
 # Last but not least, another follow up
+print("\n⏳ Generando la tercera imagen (escena completamente realista en un bosque)... Por favor, espera.")
 third_response = client.responses.create(
     previous_response_id=second_response.id,
     model=os.getenv("IMAGE_GENERATION_MODEL"),
-    input="Pero que los animales sean realistas y con un fondo de bosque",
+    input=(
+        "Transforma la escena para que tanto el caracol, la rana y la mariposa tengan un aspecto completamente realista, "
+        "que dejen de ser de escayola y se conviertan en animales vivos, "
+        "con detalles naturales en sus texturas y colores. Cambia el fondo a un bosque frondoso y realista, "
+        "con árboles, hojas y luz filtrada entre las ramas, manteniendo la composición armoniosa y la iluminación suave. "
+        "Asegúrate de que los animales se integren perfectamente en el entorno natural del bosque."
+    ),
     tools=[{"type": "image_generation"}],
 )
 
@@ -99,8 +113,11 @@ third_image_data = [
 
 if third_image_data:
     third_image_base64 = third_image_data[0]
-    with open(f"image_with_responses_followup2_{random_number}.png", "wb") as f:
+    filename3 = f"image_with_responses_followup2_{random_number}.png"
+    with open(filename3, "wb") as f:
         f.write(base64.b64decode(third_image_base64))
-# Print the name of the third generated image
-print(f"Third image generated and saved as image_with_responses_followup2_{random_number}.png")
-print(f"Third image name: image_with_responses_followup2_{random_number}.png")
+    print(f"✅ Tercera imagen generada y guardada como {filename3}")
+else:
+    print("❌ No se pudo generar la tercera imagen.")
+
+print("\n🎉 Proceso completado. Puedes revisar las imágenes generadas en el directorio actual.")
