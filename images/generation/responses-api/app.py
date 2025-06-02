@@ -8,7 +8,6 @@ import os
 import base64
 import random
 import time
-from PIL import Image
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -27,7 +26,7 @@ Asegúrate de que el caracol y la rana sean claramente visibles, con texturas re
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 """
 
-print("⏳ Generando la primera imagen (caracol y rana de escayola)... Esto puede tardar unos segundos.")
+print("⏳🖼️ Generando la primera imagen (caracol y rana de escayola)... Esto puede tardar unos segundos.")
 response = client.responses.create(
     model=os.getenv("IMAGE_GENERATION_MODEL"),
     input=prompt,
@@ -51,16 +50,16 @@ if image_data:
     filename = f"image_with_responses_{random_number}.png"
     with open(filename, "wb") as f:
         f.write(base64.b64decode(image_base64))
-    print(f"✅ Imagen generada y guardada como {filename}")
+    print(f"✅🖼️ Imagen generada y guardada como {filename}")
 else:
-    print("❌ No se pudo generar la primera imagen.")
+    print("❌🚫 No se pudo generar la primera imagen.")
 
 # Print the execution time
 execution_time = end_time - start_time
 print(f"⏱️ Tiempo de ejecución de la primera generación: {execution_time:.2f} segundos")
 
 # Follow up
-print("\n⏳ Generando la segunda imagen (añadiendo mariposa amarilla)... Espera mientras se procesa la petición.")
+print("\n⏳🦋 Generando la segunda imagen (añadiendo mariposa amarilla)... Espera mientras se procesa la petición.")
 second_response = client.responses.create(
     previous_response_id=response.id,
     model=os.getenv("IMAGE_GENERATION_MODEL"),
@@ -85,13 +84,13 @@ if second_image_data:
     filename2 = f"image_with_responses_followup_{random_number}.png"
     with open(filename2, "wb") as f:
         f.write(base64.b64decode(second_image_base64))
-    print(f"✅ Segunda imagen generada y guardada como {filename2}")
+    print(f"✅🦋 Segunda imagen generada y guardada como {filename2}")
 else:
-    print("❌ No se pudo generar la segunda imagen.")
+    print("❌🚫 No se pudo generar la segunda imagen.")
 
 # Last but not least, another follow up
-print("\n⏳ Generando la tercera imagen (escena completamente realista en un bosque)... Por favor, espera.")
-third_response = client.responses.create(
+print("\n⏳🌳 Generando la tercera imagen (escena completamente realista en un bosque)... Por favor, espera.")
+third_response_stream = client.responses.create(
     previous_response_id=second_response.id,
     model=os.getenv("IMAGE_GENERATION_MODEL"),
     input=(
@@ -101,23 +100,18 @@ third_response = client.responses.create(
         "con árboles, hojas y luz filtrada entre las ramas, manteniendo la composición armoniosa y la iluminación suave. "
         "Asegúrate de que los animales se integren perfectamente en el entorno natural del bosque."
     ),
-    tools=[{"type": "image_generation"}],
+    stream=True,
+    tools=[{"type": "image_generation", "partial_images": 3}],
 )
 
-# Save the third image
-third_image_data = [
-    output.result
-    for output in third_response.output
-    if output.type == "image_generation_call"
-]
+# Show partial images as they are generated
+print("🔄🌲 Generando la tercera imagen (escena completamente realista en un bosque)... Esto puede tardar un poco.")
 
-if third_image_data:
-    third_image_base64 = third_image_data[0]
-    filename3 = f"image_with_responses_followup2_{random_number}.png"
-    with open(filename3, "wb") as f:
-        f.write(base64.b64decode(third_image_base64))
-    print(f"✅ Tercera imagen generada y guardada como {filename3}")
-else:
-    print("❌ No se pudo generar la tercera imagen.")
-
-print("\n🎉 Proceso completado. Puedes revisar las imágenes generadas en el directorio actual.")
+for partial_image in third_response_stream:   
+    if partial_image.type == "response.image_generation_call.partial_image":
+        index = partial_image.partial_image_index
+        image_base64 = partial_image.partial_image_b64
+        image_bytes = base64.b64decode(image_base64)
+        with open(f"partial_image_{index}.png", "wb") as f:
+            f.write(image_bytes)
+            print(f"🖼️ Imagen parcial generada: partial_image_{index}.png")
