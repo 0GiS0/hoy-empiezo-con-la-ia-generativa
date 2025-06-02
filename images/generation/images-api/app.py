@@ -1,3 +1,8 @@
+"""
+Si solo necesitas generar o editar una única imagen usando un único prompt, esta API es la más sencilla de usar.
+Esta a día de hoy soporta gpt-image-1, dall-e-2 y dall-e-3.
+
+"""
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
