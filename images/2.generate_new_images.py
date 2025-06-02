@@ -31,7 +31,7 @@ start_time = time.time()
 
 # Llamada a la API para generar la imagen
 response = client.images.generate(
-    model="gpt-image-1",
+    model=os.getenv("MODEL"),
     prompt=prompt,
     size="1024x1024",  # También puedes usar "1024x1792" o "1792x1024"
     n=1  # Número de imágenes a generar
