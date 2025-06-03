@@ -10,7 +10,7 @@ from rich.panel import Panel
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 # Imagen que vamos a editar
 input_image_file = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/responses-api/example_output/final_frog_snail_and_butterfly.png"
@@ -38,12 +38,16 @@ Genera una imagen de máscara que cubra el caracol azul que aparece en la imagen
 Usando blanco donde está el caracol
 """
 
-print("[cyan]🖼️ Abriendo imagen de entrada...[/cyan]")
 img_input = open(
     input_image_file, "rb")
 
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
-    progress.add_task(description="🎨 Generando la máscara..", total=None)
+with Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    TimeElapsedColumn(),
+    transient=True
+) as progress:
+    progress.add_task(description=f"🎨 Generando la máscara de la imagen {input_image_file}...", total=None)
     result_mask = client.images.edit(
         model="gpt-image-1",
         image=img_input,
@@ -98,7 +102,12 @@ la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 mask = open(f"{output_path}/mask_alpha.png", "rb")
 # mask = open(f"{output_path}/mask_image.png", "rb")
 
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+with Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    TimeElapsedColumn(),
+    transient=True
+) as progress:
     progress.add_task(description="🎨 Editando imagen con máscara...", total=None)
     result_mask_edit = client.images.edit(
         model="gpt-image-1",

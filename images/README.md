@@ -137,4 +137,71 @@ Y finalmente la imagen completa:
 
 La composición de imágenes es el proceso de combinar varias imágenes para crear una nueva. Esto puede incluir superponer imágenes, recortar partes de una imagen y pegarlas en otra, o incluso fusionar varias imágenes en una sola.
 
-Para este ejemplo he utilizado el endpoint `/v1/responses`, ya que es el más versátil y soporta la composición de imágenes de manera más eficiente. En el directorio 
+Para este ejemplo he utilizado el endpoint `/v1/responses`, ya que es el más versátil y soporta la composición de imágenes de manera más eficiente. En este sentido tengo dos demos que compartir contigo:
+
+- Imágenes que no afecten a la moderación de la API: ¿Qué significa esto? Pues que puedes usarlas sin problemas.
+
+Para este ejemplo he puesto como parte del repo tres objetos que forman parte mi estanteria: 
+
+1. Un Clippo en 3D que me regaló un compañero de trabajo y que me encanta 🩶
+
+![Un Clippo en 3D](image-for-demos/composition/no-fail/figure-1.png)
+
+2. Peluche de Octocat
+
+![Un peluche de Octocat](image-for-demos/composition/no-fail/figure-2.png)
+
+3. Un insecto hecho de hojalata que sus ojos son solares
+
+![Un insecto hecho de hojalata](image-for-demos/composition/no-fail/figure-3.png)
+
+Ahora utilizando el archivo [generation/responses-api/create_image_from_others.py](generation/responses-api/create_image_from_others.py) lo único que le he pedido es:
+
+```
+Genera una foto realista donde los personajes de las imágenes están juntos en una cesta.
+```
+
+y pasándole estas tres imágenes este es el resultado:
+
+![Imagen compuesta de los tres objetos](generation/responses-api/example_output/composition.png)
+
+¡Mola, eh! 😍
+
+## Edición de imágenes ✏️ usando máscaras
+
+Podría estar aquí todo el día haciendo ejemplos de cómo usar la IA generativa para editar imágenes 😱 Pero ya para finalizar quiero mostrarte un último ejemplo que sería la edición de imágenes usando máscaras que también me parece súper chulo. Para ello voy a tomar como referencia la imagen que se ha creado realista de la rana, el caracol y la mariposa:
+
+![Imagen final /v1/responses](generation/responses-api/example_output/final_frog_snail_and_butterfly.png)
+
+Y lo que voy a hacer es reemplazar el caracol por algo gracioso, que lo decida la IA 😅. Para hacer esto de una forma fiable lo que voy a hacer primeramente es generar la máscara. Podría hacerlo usando cualquier programa de edición de imágenes pero voy a pedirle incluso a la IA que lo haga por mi y una vez que lo tenga la use para la imagen final.
+
+Por lo que si ejecutas este archivo [generation/images-api/edit_with_mask.py](generation/images-api/edit_with_mask.py) verás que primero le pido que me genere la máscara de la imagen:
+
+Lo primero que va a hacer es generar la máscara de la imagen que le he pasado:
+
+![Máscara de la imagen](generation/images-api/example_output/mask_image.png)
+
+
+De la cual voy a crear posteriormente una nueva con el canal alfa para que la IA pueda usarla como máscara:
+
+![Máscara de la imagen con canal alfa](generation/images-api/example_output/mask_alpha.png)
+
+Y por último le voy a pedir que me genere una nueva imagen usando esa máscara y un prompt como el siguiente:
+
+```
+Sustituye únicamente el caracol azul en la imagen por algo divertido, 
+asegurándote de que solo el caracol sea reemplazado y el fondo, 
+la rana y la mariposa permanezcan exactamente igual que en la imagen original.
+```
+
+Y el resultado en mi ejecución fue este:
+
+![Imagen editada con la IA](generation/images-api/example_output/edited_image.png)
+
+¡Y ya está! 😍
+
+Recuerda que si quiere ver todo esto en acción puedes ver mi vídeo en YouTube donde explico todo esto y más: XXX
+
+¡Ah! y no olvides seguirme en mis redes sociales para estar al tanto de todas las novedades y no perderte nada
+
+¡Nos vemos en el siguiente directorio 👋🏻!
