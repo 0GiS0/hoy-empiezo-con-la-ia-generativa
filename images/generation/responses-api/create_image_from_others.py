@@ -51,11 +51,11 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
                     {"type": "input_text", "text": prompt},
                     {
                         "type": "input_image",
-                        "image_url": f"data:image/jpeg;base64,{base64_image1}",
+                        "image_url": f"data:image/png;base64,{base64_image1}",
                     },
                     {
                         "type": "input_image",
-                        "image_url": f"data:image/webp;base64,{base64_image2}",
+                        "image_url": f"data:image/png;base64,{base64_image2}",
                     },
                     {
                         "type": "input_image",

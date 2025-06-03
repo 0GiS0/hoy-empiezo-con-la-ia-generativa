@@ -198,10 +198,24 @@ Y el resultado en mi ejecución fue este:
 
 ![Imagen editada con la IA](generation/images-api/example_output/edited_image.png)
 
+Si quisieras hacer lo mismo con el endpoint `/v1/responses` podrías hacerlo utilizando este otro archivo: [generation/responses-api/edit_with_mask.py](generation/responses-api/edit_with_mask.py). La diferencia es que en este caso no necesitas generar la máscara, ya que el modelo se encargará de hacerlo por ti. Usando la misma imagen, me ha generado esta máscara:
+
+![Máscara de la imagen con el endpoint /v1/responses](generation/responses-api/example_output/mask_image.png)
+
+de la que sale esta con canal alfa:
+
+![Máscara de la imagen con canal alfa /v1/responses](generation/responses-api/example_output/mask_alpha.png)
+
+y como resultado este:
+
+![Imagen editada con la IA /v1/responses](generation/responses-api/example_output/edited_image.png)
+
+
 ¡Y ya está! 😍
 
 Recuerda que si quiere ver todo esto en acción puedes ver mi vídeo en YouTube donde explico todo esto y más: XXX
 
-¡Ah! y no olvides seguirme en mis redes sociales para estar al tanto de todas las novedades y no perderte nada
+¡Ah! y no olvides seguirme en mis redes sociales para estar al tanto de todas las novedades y no perderte nada.
+
 
 ¡Nos vemos en el siguiente directorio 👋🏻!
