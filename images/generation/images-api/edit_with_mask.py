@@ -8,7 +8,17 @@ import time
 import base64
 from rich.panel import Panel
 from PIL import Image
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
+# Imagen que vamos a editar
+input_image_file = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/responses-api/example_output/final_frog_snail_and_butterfly.png"
+
+# Output directory for generated images
+output_path = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/images-api/example_output"
+
+# Cargar variables de entorno desde un archivo .env
 load_dotenv()
 console = Console()
 
@@ -22,7 +32,7 @@ client = OpenAI(
 # Iniciar medición de tiempo
 start_time = time.time()
 
-# Generate a mask image
+# Generar una imagen de máscara
 prompt_mask = """
 Genera una imagen de máscara que cubra el caracol azul que aparece en la imagen.
 Usando blanco donde está el caracol
@@ -30,29 +40,25 @@ Usando blanco donde está el caracol
 
 print("[cyan]🖼️ Abriendo imagen de entrada...[/cyan]")
 img_input = open(
-    "/workspaces/hoy-empiezo-con-ia-generativa/final_frog_snail_and_butterfly.png", "rb")
+    input_image_file, "rb")
 
-print("[cyan]🎨 Generando la máscara...[/cyan]")
-# Generate the mask
-result_mask = client.images.edit(
-    model="gpt-image-1",
-    image=img_input,
-    prompt=prompt_mask
-)
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(description="🎨 Generando la máscara..", total=None)
+    result_mask = client.images.edit(
+        model="gpt-image-1",
+        image=img_input,
+        prompt=prompt_mask
+    )
 
-# Save the mask image
+# Guardar la imagen de la máscara
 print("[cyan]💾 Decodificando y guardando la máscara como mask_image.png...[/cyan]")
 image_base64 = result_mask.data[0].b64_json
 
-print(image_base64)
-
-# print(f"🖤 Background: {result_mask.data[0].background}")
-# print(f"✨ Quality: {result_mask.data[0].quality}")
-# print(f"📏 Size: {result_mask.data[0].size}")
+# print(image_base64)
 
 image_bytes = base64.b64decode(image_base64)
 
-with open("mask_image.png", "wb") as f:
+with open(f"{output_path}/mask_image.png", "wb") as f:
     f.write(image_bytes)
 
 elapsed_time = time.time() - start_time
@@ -60,23 +66,23 @@ print(
     f"[bold green]🎉 Proceso completado en {elapsed_time:.2f} segundos.[/bold green]")
 
 
-# Alpha channel
-# 1. Load your black & white mask as a grayscale image
-mask = Image.open("mask_image.png").convert("L")
+# Canal alfa
+# 1. Cargar tu máscara en blanco y negro como imagen en escala de grises
+mask = Image.open(f"{output_path}/mask_image.png").convert("L")
 
-# 2. Convert it to RGBA so it has space for an alpha channel
+# 2. Convertirla a RGBA para que tenga espacio para un canal alfa
 mask_rgba = mask.convert("RGBA")
 
-# 3. Then use the mask itself to fill that alpha channel
+# 3. Usar la propia máscara para rellenar ese canal alfa
 mask_rgba.putalpha(mask)
 
-# 4. Convert the mask into bytes
+# 4. Convertir la máscara en bytes
 buf = BytesIO()
 mask_rgba.save(buf, format="PNG")
 mask_bytes = buf.getvalue()
 
-# Save the resulting file
-img_path_mask_alpha = "mask_alpha.png"
+# Guardar el archivo resultante
+img_path_mask_alpha = f"{output_path}/mask_alpha.png"
 with open(img_path_mask_alpha, "wb") as f:
     f.write(mask_bytes)
 
@@ -89,27 +95,26 @@ asegurándote de que solo el caracol sea reemplazado y el fondo,
 la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 """
 
-mask = open("mask_alpha.png", "rb")
+mask = open(f"{output_path}/mask_alpha.png", "rb")
+# mask = open(f"{output_path}/mask_image.png", "rb")
 
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(description="🎨 Editando imagen con máscara...", total=None)
+    result_mask_edit = client.images.edit(
+        model="gpt-image-1",
+        prompt=prompt_replace,
+        image=img_input,
+        mask=mask,
+        size="auto"
+    )
 
-
-print("[cyan]🎨 Generando la imagen editada...[/cyan]")
-
-result_mask_edit = client.images.edit(
-    model="gpt-image-1",
-    prompt=prompt_replace,
-    image=img_input,
-    mask=mask,
-    size="1024x1024"
-)
-
-# Save the edited image
+# Guardar la imagen editada
 print("[cyan]💾 Decodificando y guardando la imagen editada como edited_image.png...[/cyan]")
 image_base64_edit = result_mask_edit.data[0].b64_json
 
 image_bytes_edit = base64.b64decode(image_base64_edit)
 
-with open("edited_image.png", "wb") as f:
+with open(f"{output_path}/edited_image.png", "wb") as f:
     f.write(image_bytes_edit)
 
 print("[bold green]🎉 Imagen editada guardada como edited_image.png.[/bold green]")
