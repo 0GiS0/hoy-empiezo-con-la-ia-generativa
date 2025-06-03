@@ -67,3 +67,11 @@ En el directorio [images/generation](images/generation) encontrarás ejemplos de
 En el archivo [generation/images-api/app.py](generation/images-api/app.py) encontrarás un ejemplo de cómo usar este endpoint para generar imágenes a partir de un texto descriptivo. Aquí se muestra cómo enviar un prompt y recibir una imagen generada por el modelo.
 
 En este caso el endpoint solo soporta 'gpt-image-1', 'dall-e-2', or 'dall-e-3' como modelos, por lo que si quieres usar otro modelo tendrás que usar el endpoint `/v1/responses`.
+
+El resultado será parecido a este:
+
+![Ejemplo de imagen generada por IA usando el endpoint /v1/images/generations](generation/images-api/example_output/image_generated_with_images-api.png)
+
+
+### Usando `/v1/responses`
+

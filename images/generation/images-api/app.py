@@ -14,6 +14,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+
+output_file = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/images-api/example_output/image_generated_with_images-api.png"
+
+
 # Crear y configurar console de Rich
 console = Console()
 
@@ -68,7 +72,8 @@ response = client.images.generate(
 )
 
 # Actualizar el progreso al completar la tarea
-progress.update(task, description="[bold green]Imagen generada con éxito![/bold green]")
+progress.update(
+    task, description="[bold green]Imagen generada con éxito![/bold green]")
 
 # Guardar el tiempo de finalización
 end_time = time.time()
@@ -81,11 +86,11 @@ image_bytes = base64.b64decode(image_base64)
 random_number = random.randint(1000, 9999)
 
 # Guardar la imagen en un archivo
-with open(f"image_generated_with_images-api.png", "wb") as f:
+with open(f"{output_file}", "wb") as f:
     f.write(image_bytes)
 
 # Obtener la resolución de la imagen guardada
-with Image.open(f"image_generated_with_images-api.png") as img:
+with Image.open(f"{output_file}") as img:
     image_size = img.size
 print(f"Resolución de la imagen: {image_size}")
 
@@ -94,7 +99,7 @@ execution_time = end_time - start_time
 
 console.print(
     Panel.fit(
-        f"✅🖼️ [bold green]Imagen generada y guardada como[/bold green] [yellow]image_generated_with_images-api.png[/yellow]\n"
+        f"✅🖼️ [bold green]Imagen generada y guardada como[/bold green] [yellow]{output_file}[/yellow]\n"
         f"⏱️ [bold]Tiempo de ejecución:[/bold] [cyan]{execution_time:.2f} segundos[/cyan]",
         border_style="green"
     )
@@ -102,8 +107,8 @@ console.print(
 # Mostrar la imagen generada
 console.print(
     Panel.fit(
-        f"[bold blue]Puedes encontrarla la imagen generada en el archivo[/bold blue] [yellow]image_generated_with_images-api.png[/yellow]",
-        border_style="blue",      
+        f"[bold blue]Puedes encontrarla la imagen generada en el archivo[/bold blue] [yellow]{output_file}[/yellow]",
+        border_style="blue",
         title="[bold green]Imagen Generada[/bold green]"
     )
 )
