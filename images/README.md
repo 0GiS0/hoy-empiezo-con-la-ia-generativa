@@ -1,6 +1,21 @@
-# Jugando con imágenes y la Inteligencia Artificial Generativa 🖼️🤖
+# ¡Imágenes, IA y Magia Generativa! 🧙‍♂️🖼️🤖✨
 
 ¡Hola developer 👋🏻! En este directorio encontrarás un montón de pruebas/demos con las que jugar para que puedas entender mejor cómo puedes usar la inteligencia artificial para entender qué hay en una imagen, crear nuevas, componer en base a otras e incluso editarlas. También te ayudará a entender los diferentes endpoints que existen.
+
+## Tabla de Contenidos
+
+- [Introducción](#introducción)
+- [Vision 👁️](#vision-)
+  - [Usando `/v1/chat/completions` para analizar imágenes](#usando-v1chatcompletions-para-analizar-imágenes)
+  - [Usando `/v1/responses` para analizar imágenes](#usando-v1responses-para-analizar-imágenes)
+- [Generación de imágenes 🖼](#generación-de-imágenes-)
+  - [¿Cuál es la diferencia entre ambos?](#cuál-es-la-diferencia-entre-ambos)
+  - [Usando `/v1/images/generations`](#usando-v1imagesgenerations)
+  - [Usando `/v1/responses`](#usando-v1responses)
+- [Composición de imágenes 🧩](#composición-de-imágenes-)
+- [Edición de imágenes ✏️ usando máscaras](#edición-de-imágenes-️-usando-máscaras)
+
+## Introducción
 
 Cuando hablamos de imágenes en IA podemos referirnos a:
 
@@ -11,7 +26,7 @@ Cuando hablamos de imágenes en IA podemos referirnos a:
 
 
 >[!NOTE]
-Para estas demos me he basado fundamentalmente en cómo funcion OpenAI por lo que algunos endpoints pueden no estar disponibles si no tienes acceso a la API de OpenAI. ¿Por qué he usado esta? Porque a nivel personal es más barato a la hora de pagar.
+Para estas demos me he basado fundamentalmente en cómo funciona OpenAI por lo que algunos endpoints pueden no estar disponibles si no tienes acceso a la API de OpenAI. 
 
 
 Y ahora, veamos cada uno de estos aspectos en detalle.
@@ -21,9 +36,10 @@ Y ahora, veamos cada uno de estos aspectos en detalle.
 
 El primer punto, "Entender imágenes", es lo que se conoce como **Computer Vision** o simplemente **Vision**. Esto nos permite pasarle a un modelo de IA una imagen y que este nos diga qué hay en ella. Esto es muy útil para tareas como reconocimiento de objetos, análisis de escenas, etc.
 
-En el directorio [vision](vision) encontrarás diferentes demos que muestran cómo puedes trabajar con imágenes usando IA generativa. Pero antes de entrar en cada demo es importante que sepas que para poder analizar imágenes podemos usar dos endpoints diferentes:
+En el directorio `images` encontrarás diferentes demos que muestran cómo puedes trabajar con imágenes usando IA generativa. Pero antes de entrar en cada demo es importante que sepas que para poder analizar imágenes podemos usar dos endpoints diferentes:
 
 - `/v1/chat/completions`: Este ya lo conoces de secciones anteriores, si has seguido mi serie de IA Generativa 😇 y es el mismo que se utiliza para generar un chat o incluso text completion.
+
 - `/v1/responses`: Este te permite enviar una imagen y recibir una respuesta generada por un modelo de IA que ha sido entrenado para entender imágenes. Este endpoint también nos servirá para generar imágenes, componerlas, editarlas, etc.
 
 ### Usando `/v1/chat/completions` para analizar imágenes
@@ -50,13 +66,13 @@ Para este caso tenemos dos endpoints que podemos usar:
 - `/v1/images/generations`: Este endpoint te permite generar una imagen a partir de un texto descriptivo. Es el más común y utilizado para crear imágenes nuevas basadas en prompts.
 
 
-### ¿Cuál es la diferencia entre ambos?
+**¿Cuál es la diferencia entre ambos?**
 
-El endpoint `/v1/responses` es más versátil, ya que también te permite analizar imágenes, generar nuevas, multi turno para ir tomando como referencia las imágenes que vas generando, etc. Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo aunque también puedes editar imágenes usando máscaras y prompts.
+El endpoint `/v1/responses` es más versátil, ya que te permite crear nuevas, editar, pero lo que realmente la diferencia es el multi turno para ir tomando como referencia las imágenes que vas generando, analizar imágenes y puedes usar modelos de caracter general como 'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', etc.
 
-¿Y por qué no usar siempre el mismo? Pues porque los modelos que soporta cada uno de ellos son diferentes. Por ejemplo, el endpoint `/v1/images/generations` solo soporta modelos como 'gpt-image-1', 'dall-e-2' o 'dall-e-3', mientras que el endpoint `/v1/responses` soporta modelos más avanzados como 'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', etc.
+ Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo aunque también puedes editar imágenes usando máscaras y prompts. Sólo permite el uso de modelos específicos para generación de imágenes como 'gpt-image-1', 'dall-e-2', 'dall-e-3', lo cual hace que sean imágenes de alta calidad pero también más caras en tokens.
 
-En el directorio `images/generation` encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes a partir de un texto descriptivo.
+En el directorio `images/generation` encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes, componerlas y editarlas.
 
 ### Usando `/v1/images/generations`
 

@@ -14,7 +14,9 @@
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
 				"ms-toolsai.prompty",
-				"ritwickdey.LiveServer"
+				"ritwickdey.LiveServer",
+				"shd101wyy.markdown-preview-enhanced",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	},
