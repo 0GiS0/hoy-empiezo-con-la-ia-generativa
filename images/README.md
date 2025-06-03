@@ -34,9 +34,12 @@ Lo bueno de este ejemplo es que puedes utilizar tanto Ollama, GitHub Models como
 
 ### Usando `/v1/responses` para analizar imágenes
 
-En el caso de este endpoint, `/v1/responses`, es muy similar al anterior, desde el punto de vista de cómo se envía la imagen, pero la respuesta que obtendrás será diferente. Este endpoint está diseñado específicamente para analizar imágenes y generar respuestas basadas en su contenido. Además tiene un parámetro adicional que te permite controlar el nivel de detalle del análisis.
+En el caso de este endpoint, `/v1/responses`, es muy similar al anterior, desde el punto de vista de cómo se envía la imagen, pero la respuesta que obtendrás será diferente. Este endpoint está diseñado específicamente para analizar imágenes y generar respuestas basadas en su contenido. Además  que te permite controlar el nivel de detalle del análisis.
 
-- `detail`: te permite decirle al modelo el nivel de detalle a usar cuando analice la imagen (`low`, `high`o `auto`). El objetivo de esto es que puedas ahorrar tokens si no necesitas un análisis muy detallado.
+-  Tiene un parámetro adicional `detail` que te permite decirle al modelo el nivel de detalle a usar cuando analice la imagen (`low`, `high`o `auto`). El objetivo de esto es que puedas ahorrar tokens si no necesitas un análisis muy detallado.
+- Multi turno, lo que significa que puedes pedirle una imagen y luego pedirle que la mejore en siguientes turnos.
+- Mostrar imagenes parciales mientras se genera la respuesta, lo que te permite ver el progreso del análisis.
+
 
 Por otro lado, este endpoint nos permite generar e editar imágenes, cosa que no puedes hacer con el anterior. En el archivo [vision/responses-api/app.py](vision/responses-api/app.py) encontrarás un ejemplo de cómo hacerlo.
 
@@ -74,4 +77,64 @@ El resultado será parecido a este:
 
 
 ### Usando `/v1/responses`
+
+Por otro lado, tenemos el endpoint que vimos en la sección anterior, `/v1/responses`, que también nos permite generar imágenes a partir de un texto descriptivo. Pero te permite muchas más cosas. En primer lugar soporta otros modelos:
+
+- gpt-4o
+- gpt-4o-mini
+- gpt-4.1
+- gpt-4.1-mini
+- gpt-4.1-nano
+- o3
+
+En el archivo [generation/responses-api/app.py](generation/responses-api/app.py) encontrarás un ejemplo de cómo usar este endpoint para generar imágenes a partir de un texto descriptivo. 
+
+Además, como parte de ese ejemplo también estoy haciendo multi-turno, lo que significa que estoy generando una imagen y luego pidiéndole al modelo que la mejore en base a esa imagen. Esto te permite ir refinando la imagen generada hasta que obtengas el resultado deseado.
+
+De hecho, con el primer prompt le pido lo siguiente:
+
+```
+Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
+La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
+```
+
+Y me genera algo como esto:
+
+![Primera imagen /v1/responses](generation/responses-api/example_output/first_image.png)
+
+Luego, tomando esa imagen como referencia, le pido que la mejore:
+
+```
+Añade una mariposa de color amarillo, con alas abiertas y detalles realistas,
+posada suavemente sobre una hoja cerca del caracol y la rana.
+Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, 
+y que todos los elementos conserven un aspecto hiperrealista y armonioso.
+```
+
+Y me devuelve algo como esto:
+
+![Segunda imagen /v1/responses](generation/responses-api/example_output/second_image.png)
+
+Y por último le pido que ahora quiero que los animales dejen de ser de escayola y sean reales: 
+
+```
+Transforma la escena para que tanto el caracol, la rana y la mariposa tengan un aspecto completamente realista, 
+que dejen de ser de escayola y se conviertan en animales vivos, 
+con detalles naturales en sus texturas y colores. Cambia el fondo a un bosque frondoso y realista, 
+con árboles, hojas y luz filtrada entre las ramas, manteniendo la composición armoniosa y la iluminación suave. 
+Asegúrate de que los animales se integren perfectamente en el entorno natural del bosque.
+```
+
+Y para esta última generación le pido que me devuelva parciales, por lo que primero me devuelve esto:
+
+![Primer imagen parcial /v1/responses](generation/responses-api/example_output/partial_image_0.png)
+
+Luego esto:
+
+![Segunda imagen parcial /v1/responses](generation/responses-api/example_output/partial_image_1.png)
+
+Y finalmente la imagen completa:
+
+![Imagen final /v1/responses](generation/responses-api/example_output/final_frog_snail_and_butterfly.png)
 

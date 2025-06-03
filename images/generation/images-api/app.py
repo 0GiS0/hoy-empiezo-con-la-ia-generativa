@@ -55,25 +55,17 @@ console.print(
 start_time = time.time()
 
 # Mostrar un spinner mientras se genera la imagen
-with Progress(
-    SpinnerColumn(spinner_name="dots"),
-    TextColumn("[progress.description]{task.description}"),
-    console=console,
-) as progress:
-    task = progress.add_task("[bold green]Generando imagen...", total=None)
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(description="Generando imagen...", total=None)
+    # Llamada a la API para generar la imagen
+    response = client.images.generate(
+        # model=os.getenv("IMAGE_GENERATION_MODEL"),
+        model="gpt-image-1",  # Puedes usar "dall-e-2" o "dall-e-3" si lo prefieres
+        prompt=prompt,
+        size="1024x1024",  # También puedes usar "1024x1792" o "1792x1024"
+        n=1,  # Número de imágenes a generar
+    )   
 
-# Llamada a la API para generar la imagen
-response = client.images.generate(
-    # model=os.getenv("IMAGE_GENERATION_MODEL"),
-    model="gpt-image-1",  # Puedes usar "dall-e-2" o "dall-e-3" si lo prefieres
-    prompt=prompt,
-    size="1024x1024",  # También puedes usar "1024x1792" o "1792x1024"
-    n=1,  # Número de imágenes a generar
-)
-
-# Actualizar el progreso al completar la tarea
-progress.update(
-    task, description="[bold green]Imagen generada con éxito![/bold green]")
 
 # Guardar el tiempo de finalización
 end_time = time.time()

@@ -12,6 +12,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+output_path = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/responses-api/example_output"
+
 # Setup rich console
 console = Console()
 
@@ -57,7 +59,7 @@ image_data = [
 
 if image_data:
     image_base64 = image_data[0]
-    filename = f"image_with_responses_{random_number}.png"
+    filename = f"{output_path}/first_image.png"
     with open(filename, "wb") as f:
         f.write(base64.b64decode(image_base64))
     console.print(Panel.fit(
@@ -97,7 +99,7 @@ second_image_data = [
 
 if second_image_data:
     second_image_base64 = second_image_data[0]
-    filename2 = f"image_with_responses_followup_{random_number}.png"
+    filename2 = f"{output_path}/second_image.png"
     with open(filename2, "wb") as f:
         f.write(base64.b64decode(second_image_base64))
     console.print(Panel.fit(
@@ -133,13 +135,13 @@ for partial_image in third_response_stream:
         image_bytes = base64.b64decode(image_base64)
         # Si es la última imagen parcial, guárdala con el nombre final
         if index == 2:
-            filename = "final_frog_snail_and_butterfly.png"
+            filename = f"{output_path}/final_frog_snail_and_butterfly.png"
             with open(filename, "wb") as f:
                 f.write(image_bytes)
             console.print(
                 f"🖼️ [bold green]Imagen final generada:[/bold green] [cyan]{filename}[/cyan]")
         else:
-            filename = f"partial_image_{index}.png"
+            filename = f"{output_path}/partial_image_{index}.png"
             with open(filename, "wb") as f:
                 f.write(image_bytes)
             console.print(
