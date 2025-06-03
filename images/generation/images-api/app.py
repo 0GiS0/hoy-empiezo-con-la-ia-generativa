@@ -12,7 +12,7 @@ import time
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 
 output_file = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/images-api/example_output/image_generated_with_images-api.png"
@@ -44,8 +44,7 @@ prompt = """
 
 console.print(
     Panel.fit(
-        f"⏳🖼️ [bold cyan]Generando imagen con el endpoint[/bold cyan] [bold magenta]/v1/images/generations[/bold magenta]."
-        f"[bold cyan]Esto puede tardar unos segundos.[/bold cyan]\n\n"
+        f"⏳🖼️ [bold cyan]Generando imagen con el endpoint[/bold cyan] [bold magenta]/v1/images/generations[/bold magenta]."       
         f"[bold yellow]Prompt:[/bold yellow]\n{prompt.strip()}",
         title="[bold green]OpenAI Images API[/bold green]"
     )
@@ -54,17 +53,21 @@ console.print(
 # Guardar el tiempo de inicio
 start_time = time.time()
 
-# Mostrar un spinner mientras se genera la imagen
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+# Mostrar un spinner mientras se genera la imagen, mostrando también el tiempo transcurrido
+with Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    TimeElapsedColumn(),
+    transient=True
+) as progress:
     progress.add_task(description="Generando imagen...", total=None)
     # Llamada a la API para generar la imagen
     response = client.images.generate(
         # model=os.getenv("IMAGE_GENERATION_MODEL"),
         model="gpt-image-1",  # Puedes usar "dall-e-2" o "dall-e-3" si lo prefieres
         prompt=prompt,
-        size="1024x1024",  # También puedes usar "1024x1792" o "1792x1024"
-        n=1,  # Número de imágenes a generar
-    )   
+        size="auto",  # También puedes usar "1024x1024", "1024x1792" o "1792x1024"
+    )
 
 
 # Guardar el tiempo de finalización
@@ -81,10 +84,17 @@ random_number = random.randint(1000, 9999)
 with open(f"{output_file}", "wb") as f:
     f.write(image_bytes)
 
-# Obtener la resolución de la imagen guardada
+# Obtener la resolución de la imagen guardada y mostrarla con Rich
 with Image.open(f"{output_file}") as img:
     image_size = img.size
-print(f"Resolución de la imagen: {image_size}")
+
+console.print(
+    Panel.fit(
+        f"📏 [bold cyan]Resolución de la imagen:[/bold cyan] [yellow]{image_size[0]} x {image_size[1]}[/yellow] píxeles",
+        border_style="cyan",
+        title="[bold green]Detalles de la Imagen[/bold green]"
+    )
+)
 
 # Imprimir el tiempo de ejecución
 execution_time = end_time - start_time
