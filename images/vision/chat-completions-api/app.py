@@ -1,83 +1,92 @@
-"""
-En este ejemplo, se utiliza la API de OpenAI para analizar imágenes usando el endpoint de chat completions.
-Se envía una solicitud con un texto y una imagen, y se obtiene una respuesta que describe lo que se ve en la imagen.
-El código utiliza la biblioteca `openai` para interactuar con la API y `dotenv` para cargar las variables de entorno.
-Asegúrate de tener las variables de entorno `ENDPOINT_URL`, `API_KEY` y `MODEL_FOR_VISION` configuradas correctamente en tu archivo `.env`.
-"""
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from rich.console import Console
 import time
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 import base64
 
+# Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 console = Console()
 
-# Crear cliente de OpenAI
+# Configurar el cliente de OpenAI con las variables de entorno
 client = OpenAI(
     base_url=os.getenv("ENDPOINT_URL"),
     api_key=os.getenv("API_KEY")
 )
 
-# Iniciar medición de tiempo
-start_time = time.time()
 
-# Analizar una imagen usando la API de OpenAI usando URL
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
-    progress.add_task(description="🔍 Analizando la imagen recuperada de una URL...", total=None)
-    response = client.chat.completions.create(
-        model=os.getenv("MODEL_FOR_VISION"),
-        messages=[
+# Analiza la imagen usando el endpoint de chat completions
+def analizar_imagen(descripcion, prompt):
+    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), TimeElapsedColumn(), transient=True, console=console) as progress:
+        progress.add_task(description=descripcion, total=None)
+        start_time = time.time()
+
+        # Llamada al endpoint de chat completions
+        response = client.chat.completions.create(
+            model=os.getenv("MODEL_FOR_VISION"),
+            messages=prompt
+        )
+
+        end_time = time.time()
+        elapsed = end_time - start_time
+        return response.choices[0].message.content, elapsed
+
+
+#### Analizar imagen por URL ####
+prompt_with_url = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "¿Qué ves en esta imagen?"},
             {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "¿Qué ves en esta imagen?"},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png"
-                        }
-                    }
-                ]
+                "type": "image_url",
+                "image_url": {
+                    "url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png"
+                }
             }
         ]
-    )
-
-# Finalizar medición de tiempo
-end_time = time.time()
-
+    }
+]
+description_url = "🔍 Analizando la imagen recuperada de una URL..."
+resultado_url, tiempo_url = analizar_imagen(description_url, prompt_with_url)
 console.print(
-    f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {end_time - start_time:.2f} segundos")
-console.print(":sparkles: [bold yellow]Descripción generada:[/bold yellow]")
-console.print(response.choices[0].message.content)
+    Panel.fit(
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {tiempo_url:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada:[/bold yellow]\n"
+        f"{resultado_url}",
+        title="Resultado Imagen por URL",
+        border_style="bright_blue"
+    )
+)
 
-# Analizar usando una imagen en base64
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
-    progress.add_task(
-        description="🔍 Analizando imagen en base64...", total=None)
+#### Analizar imagen en base64 ####
+with open("/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/IMG_2377.png", "rb") as image_file:
+    base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-    with open("/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/IMG_2377.png", "rb") as image_file:
-        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
-
-    response_base64 = client.chat.completions.create(
-        model=os.getenv("MODEL_FOR_VISION"),
-        messages=[
+prompt_with_base64 = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "¿Qué ves en esta imagen en base64?"},
             {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "¿Qué ves en esta imagen en base64?"},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{base64_image}"},
-                    }
-                ]
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{base64_image}"},
             }
         ]
-    )
+    }
+]
 
+description_base64 = "🔍 Analizando imagen en base64..."
+resultado_base64, tiempo_base64 = analizar_imagen(description_base64, prompt_with_base64)
 console.print(
-    ":sparkles: [bold yellow]Descripción generada desde base64:[/bold yellow]")
-console.print(response_base64.choices[0].message.content)
+    Panel.fit(
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {tiempo_base64:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada desde base64:[/bold yellow]\n"
+        f"{resultado_base64}",
+        title="Resultado Imagen Base64",
+        border_style="bright_magenta"
+    )
+)

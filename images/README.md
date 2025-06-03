@@ -11,24 +11,24 @@ Cuando hablamos de imágenes en IA podemos referirnos a:
 
 
 >[!NOTE]
-Para estas demos me he basado fundamentalmente en cómo funcion OpenAI por lo que algunos endpoints puedes no estar disponibles si no tienes acceso a la API de OpenAI. Sin embargo, puedes adaptarlos fácilmente a otros servicios similares como Hugging Face, Stability AI, etc.
+Para estas demos me he basado fundamentalmente en cómo funcion OpenAI por lo que algunos endpoints pueden no estar disponibles si no tienes acceso a la API de OpenAI. ¿Por qué he usado esta? Porque a nivel personal es más barato a la hora de pagar.
 
 
-El primer punto, "Entender imágenes", es lo que se conoce como **Computer Vision** o simplemente **Vision**. Así que vamos a empezar por eso:
+Y ahora, veamos cada uno de estos aspectos en detalle.
 
 
 ## Vision 👁️
 
-En el directorio [vision](vision) encontrarás diferentes demos que muestran cómo puedes trabajar con imágenes usando IA generativa. 
+El primer punto, "Entender imágenes", es lo que se conoce como **Computer Vision** o simplemente **Vision**. Esto nos permite pasarle a un modelo de IA una imagen y que este nos diga qué hay en ella. Esto es muy útil para tareas como reconocimiento de objetos, análisis de escenas, etc.
 
-Antes de entrar en cada demos es importante que sepas que para poder analizar imágenes podemos usar dos endpoints diferentes:
+En el directorio [vision](vision) encontrarás diferentes demos que muestran cómo puedes trabajar con imágenes usando IA generativa. Pero antes de entrar en cada demo es importante que sepas que para poder analizar imágenes podemos usar dos endpoints diferentes:
 
 - `/v1/chat/completions`: Este ya lo conoces de secciones anteriores, si has seguido mi serie de IA Generativa 😇 y es el mismo que se utiliza para generar un chat o incluso text completion.
-- `/v1/responses`: Este te permite enviar una imagen y recibir una respuesta generada por un modelo de IA que ha sido entrenado para entender imágenes. Este endpoint también nos servirá para generar imágenes.
+- `/v1/responses`: Este te permite enviar una imagen y recibir una respuesta generada por un modelo de IA que ha sido entrenado para entender imágenes. Este endpoint también nos servirá para generar imágenes, componerlas, editarlas, etc.
 
 ### Usando `/v1/chat/completions` para analizar imágenes
 
-Para analizar imágenes usando el endpoint `/v1/chat/completions`, debes enviar un mensaje que incluya la imagen como parte del contenido. En el archivo [vision/chat-completions-api/app.py](vision/chat-completions-api/app.py) encontrarás un ejemplo de cómo hacerlo. Aquí se muestra cómo enviar una imagen y recibir una respuesta generada por el modelo.
+Para analizar imágenes usando el endpoint `/v1/chat/completions`, debes enviar un mensaje que incluya la imagen como parte del contenido. En el archivo [vision/chat-completions-api/app.py](vision/chat-completions-api/app.py) encontrarás un ejemplo de cómo hacerlo, tanto pasandole una URL como la imagen en base64.
 
 Lo bueno de este ejemplo es que puedes utilizar tanto Ollama, GitHub Models como OpenAI (entre otros) para analizar imágenes usando este endpoint. En el archivo `.env-sample` encontrarás un ejemplo de cómo configurar las variables de entorno para cada uno de ellos y en base a la sección que tengas descomentadas podrás usar uno u otro.
 
