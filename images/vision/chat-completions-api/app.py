@@ -26,12 +26,8 @@ client = OpenAI(
 start_time = time.time()
 
 # Analizar una imagen usando la API de OpenAI usando URL
-console.print(
-    ":mag: [bold cyan]Analizando imagen...[/bold cyan] :framed_picture:")
-
-
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
-    progress.add_task(description="🔍 Analizando la imagen...", total=None)
+    progress.add_task(description="🔍 Analizando la imagen recuperada de una URL...", total=None)
     response = client.chat.completions.create(
         model=os.getenv("MODEL_FOR_VISION"),
         messages=[
@@ -59,11 +55,9 @@ console.print(":sparkles: [bold yellow]Descripción generada:[/bold yellow]")
 console.print(response.choices[0].message.content)
 
 # Analizar usando una imagen en base64
-console.print(
-    ":mag: [bold cyan]Analizando imagen en base64...[/bold cyan] :framed_picture:")
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
     progress.add_task(
-        description="🔍 Analizando la imagen en base64...", total=None)
+        description="🔍 Analizando imagen en base64...", total=None)
 
     with open("/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/IMG_2377.png", "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
