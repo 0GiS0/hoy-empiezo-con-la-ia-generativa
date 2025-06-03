@@ -52,11 +52,11 @@ Para este caso tenemos dos endpoints que podemos usar:
 
 ### ¿Cuál es la diferencia entre ambos?
 
-El endpoint `/v1/responses` es más versátil, ya que también te permite analizar imágenes, generar nuevas, multi turno para ir tomando como referencia las imágenes que vas generando, etc. Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo y chin pump.
+El endpoint `/v1/responses` es más versátil, ya que también te permite analizar imágenes, generar nuevas, multi turno para ir tomando como referencia las imágenes que vas generando, etc. Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo aunque también puedes editar imágenes usando máscaras y prompts.
 
-¿Y por qué no usar siempre el primero? Pues porque el segundo es más rápido y eficiente para la generación de imágenes, ya que está optimizado para ese propósito. Además, algunos modelos pueden no soportar el endpoint `/v1/responses` para generación de imágenes. Sin embargo, el primero soporta más modelos y es más versátil en cuanto a las tareas que puedes realizar con él.
+¿Y por qué no usar siempre el mismo? Pues porque los modelos que soporta cada uno de ellos son diferentes. Por ejemplo, el endpoint `/v1/images/generations` solo soporta modelos como 'gpt-image-1', 'dall-e-2' o 'dall-e-3', mientras que el endpoint `/v1/responses` soporta modelos más avanzados como 'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', etc.
 
-En el directorio [images/generation](images/generation) encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes a partir de un texto descriptivo.
+En el directorio `images/generation` encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes a partir de un texto descriptivo.
 
 ### Usando `/v1/images/generations`
 
