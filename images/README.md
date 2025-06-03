@@ -138,3 +138,10 @@ Y finalmente la imagen completa:
 
 ![Imagen final /v1/responses](generation/responses-api/example_output/final_frog_snail_and_butterfly.png)
 
+¿A que mola? 😍
+
+## Composición de imágenes 🧩
+
+La composición de imágenes es el proceso de combinar varias imágenes para crear una nueva. Esto puede incluir superponer imágenes, recortar partes de una imagen y pegarlas en otra, o incluso fusionar varias imágenes en una sola.
+
+Para este ejemplo he utilizado el endpoint `/v1/responses`, ya que es el más versátil y soporta la composición de imágenes de manera más eficiente. En el directorio 

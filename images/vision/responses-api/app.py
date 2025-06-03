@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from rich.console import Console
 import time
 import base64
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
 load_dotenv()
 console = Console()
@@ -26,21 +29,24 @@ start_time = time.time()
 # Analizar una imagen usando la API de OpenAI usando URL
 console.print(
     ":mag: [bold cyan]Analizando imagen...[/bold cyan] :framed_picture:")
-response = client.responses.create(
-    model=os.getenv("MODEL_FOR_VISION"),
-    input=[{
-        "role": "user",
-        "content": [
-            {"type": "input_text", "text": "¿Qué ves en esta imagen?"},
-            {
-                "type": "input_image",
-                        "image_url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png",
-                        ""
-                "detail": "low"  # low, high o auto
-            },
-        ],
-    }],
-)
+
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(description="🔍 Analizando la imagen...", total=None)
+    response = client.responses.create(
+        model=os.getenv("MODEL_FOR_VISION"),
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": "¿Qué ves en esta imagen?"},
+                {
+                    "type": "input_image",
+                            "image_url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png",
+                            ""
+                    "detail": "low"  # low, high o auto
+                },
+            ],
+        }],
+    )
 
 # Finalizar medición de tiempo
 end_time = time.time()
@@ -62,7 +68,7 @@ def encode_image_to_base64(image_path):
 
 
 base64_image = encode_image_to_base64(
-    "/workspaces/hoy-empiezo-con-ia-generativa/images/examples/partida_de_ajedrez.jpg")
+    "/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/partida_de_ajedrez.jpg")
 
 response_base64 = client.responses.create(
     model=os.getenv("MODEL_FOR_VISION"),

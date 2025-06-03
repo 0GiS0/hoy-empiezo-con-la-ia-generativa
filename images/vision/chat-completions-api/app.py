@@ -9,6 +9,9 @@ import os
 from dotenv import load_dotenv
 from rich.console import Console
 import time
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+import base64
 
 load_dotenv()
 console = Console()
@@ -26,23 +29,26 @@ start_time = time.time()
 console.print(
     ":mag: [bold cyan]Analizando imagen...[/bold cyan] :framed_picture:")
 
-response = client.chat.completions.create(
-    model=os.getenv("MODEL_FOR_VISION"),
-    messages=[
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "¿Qué ves en esta imagen?"},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png"                        
+
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(description="🔍 Analizando la imagen...", total=None)
+    response = client.chat.completions.create(
+        model=os.getenv("MODEL_FOR_VISION"),
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "¿Qué ves en esta imagen?"},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png"
+                        }
                     }
-                }
-            ]
-        }
-    ]
-)
+                ]
+            }
+        ]
+    )
 
 # Finalizar medición de tiempo
 end_time = time.time()
@@ -52,3 +58,32 @@ console.print(
 console.print(":sparkles: [bold yellow]Descripción generada:[/bold yellow]")
 console.print(response.choices[0].message.content)
 
+# Analizar usando una imagen en base64
+console.print(
+    ":mag: [bold cyan]Analizando imagen en base64...[/bold cyan] :framed_picture:")
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+    progress.add_task(
+        description="🔍 Analizando la imagen en base64...", total=None)
+
+    with open("/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/IMG_2377.png", "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
+
+    response_base64 = client.chat.completions.create(
+        model=os.getenv("MODEL_FOR_VISION"),
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "¿Qué ves en esta imagen en base64?"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/png;base64,{base64_image}"},
+                    }
+                ]
+            }
+        ]
+    )
+
+console.print(
+    ":sparkles: [bold yellow]Descripción generada desde base64:[/bold yellow]")
+console.print(response_base64.choices[0].message.content)
