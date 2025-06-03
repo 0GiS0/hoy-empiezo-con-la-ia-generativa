@@ -45,4 +45,25 @@ Sin embargo, este endpoint no está disponible en Ollama ni en GitHub Models, po
 
 ## Generación de imágenes 🖼
 
-Ahora que ya ️
+Ahora que ya ️sabes cómo analizar imágenes, ahora vamos a ver cómo podemos generar nuevas.
+
+Para este caso tenemos dos endpoints que podemos usar:
+
+- `/v1/responses`: El mismo que vimos en la sección anterior, pero en este caso lo usaremos para generar imágenes a partir de un texto descriptivo. 
+
+- `/v1/images/generations`: Este endpoint te permite generar una imagen a partir de un texto descriptivo. Es el más común y utilizado para crear imágenes nuevas basadas en prompts.
+
+
+### ¿Cuál es la diferencia entre ambos?
+
+El endpoint `/v1/responses` es más versátil, ya que también te permite analizar imágenes, generar nuevas, multi turno para ir tomando como referencia las imágenes que vas generando, etc. Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo y chin pump.
+
+¿Y por qué no usar siempre el primero? Pues porque el segundo es más rápido y eficiente para la generación de imágenes, ya que está optimizado para ese propósito. Además, algunos modelos pueden no soportar el endpoint `/v1/responses` para generación de imágenes. Sin embargo, el primero soporta más modelos y es más versátil en cuanto a las tareas que puedes realizar con él.
+
+En el directorio [images/generation](images/generation) encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes a partir de un texto descriptivo.
+
+### Usando `/v1/images/generations`
+
+En el archivo [generation/images-api/app.py](generation/images-api/app.py) encontrarás un ejemplo de cómo usar este endpoint para generar imágenes a partir de un texto descriptivo. Aquí se muestra cómo enviar un prompt y recibir una imagen generada por el modelo.
+
+En este caso el endpoint solo soporta 'gpt-image-1', 'dall-e-2', or 'dall-e-3' como modelos, por lo que si quieres usar otro modelo tendrás que usar el endpoint `/v1/responses`.
