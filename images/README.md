@@ -34,14 +34,7 @@ Lo bueno de este ejemplo es que puedes utilizar tanto Ollama, GitHub Models como
 
 ### Usando `/v1/responses` para analizar imágenes
 
-En el caso de este endpoint, `/v1/responses`, es muy similar al anterior, desde el punto de vista de cómo se envía la imagen, pero la respuesta que obtendrás será diferente. Este endpoint está diseñado específicamente para analizar imágenes y generar respuestas basadas en su contenido. Además  que te permite controlar el nivel de detalle del análisis.
-
--  Tiene un parámetro adicional `detail` que te permite decirle al modelo el nivel de detalle a usar cuando analice la imagen (`low`, `high`o `auto`). El objetivo de esto es que puedas ahorrar tokens si no necesitas un análisis muy detallado.
-- Multi turno, lo que significa que puedes pedirle una imagen y luego pedirle que la mejore en siguientes turnos.
-- Mostrar imagenes parciales mientras se genera la respuesta, lo que te permite ver el progreso del análisis.
-
-
-Por otro lado, este endpoint nos permite generar e editar imágenes, cosa que no puedes hacer con el anterior. En el archivo [vision/responses-api/app.py](vision/responses-api/app.py) encontrarás un ejemplo de cómo hacerlo.
+En el caso de este endpoint, `/v1/responses`, es muy similar al anterior, desde el punto de vista de cómo se envía la imagen, pero la respuesta que obtendrás será diferente. Este endpoint está diseñado específicamente para analizar imágenes y generar respuestas basadas en su contenido. Además tiene un parámetro adicional `detail` que te permite decirle al modelo el nivel de detalle a usar cuando analice la imagen (`low`, `high`o `auto`). El objetivo de esto es que puedas ahorrar tokens si no necesitas un análisis muy detallado. Em el archivo [vision/responses-api/app.py](vision/responses-api/app.py) encontrarás un ejemplo de cómo usar este endpoint para analizar imágenes.
 
 Sin embargo, este endpoint no está disponible en Ollama ni en GitHub Models, por lo que si quieres usarlo tendrás que usar OpenAI o algún otro servicio que lo implemente. Si intentas ejecutar el ejemplo de este endpoint con Ollama o GitHub Models, obtendrás un error indicando que el endpoint no se encuentra (404 Not Found).
 
