@@ -12,8 +12,9 @@ import time
 import base64
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
+# Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 console = Console()
 
@@ -27,10 +28,7 @@ client = OpenAI(
 start_time = time.time()
 
 # Analizar una imagen usando la API de OpenAI usando URL
-console.print(
-    ":mag: [bold cyan]Analizando imagen...[/bold cyan] :framed_picture:")
-
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), TimeElapsedColumn(), transient=True, console=console) as progress:
     progress.add_task(description="🔍 Analizando la imagen...", total=None)
     response = client.responses.create(
         model=os.getenv("MODEL_FOR_VISION"),
@@ -40,8 +38,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
                 {"type": "input_text", "text": "¿Qué ves en esta imagen?"},
                 {
                     "type": "input_image",
-                            "image_url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png",
-                            ""
+                    "image_url": "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png",
                     "detail": "low"  # low, high o auto
                 },
             ],
@@ -52,15 +49,16 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
 end_time = time.time()
 
 console.print(
-    f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {end_time - start_time:.2f} segundos")
-console.print(":sparkles: [bold yellow]Descripción generada:[/bold yellow]")
-console.print(response.output_text)
+    Panel.fit(
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {end_time - start_time:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada:[/bold yellow]\n"
+        f"{response.output_text}",
+        title="Resultado Imagen por URL",
+        border_style="bright_blue"
+    )
+)
 
 # Analizar usando una imagen en base64
-console.print(
-    ":mag: [bold cyan]Analizando imagen en base64...[/bold cyan] :framed_picture:")
-
-
 def encode_image_to_base64(image_path):
     """Convierte una imagen a base64."""
     with open(image_path, "rb") as image_file:
@@ -70,28 +68,31 @@ def encode_image_to_base64(image_path):
 base64_image = encode_image_to_base64(
     "/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/partida_de_ajedrez.jpg")
 
-response_base64 = client.responses.create(
-    model=os.getenv("MODEL_FOR_VISION"),
-    input=[{
-        "role": "user",
-        "content": [
-            {"type": "input_text", "text": "¿Qué ves en esta imagen?"},
-            {
-                "type": "input_image",
-                "image_url":  f"data:image/jpeg;base64,{base64_image}",
-
-            },
-        ],
-    }],
-)
+start_time_base64 = time.time()
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), TimeElapsedColumn(), transient=True, console=console) as progress:
+    progress.add_task(description="🔍 Analizando la imagen en base64...", total=None)
+    response_base64 = client.responses.create(
+        model=os.getenv("MODEL_FOR_VISION"),
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": "¿Qué ves en esta imagen?"},
+                {
+                    "type": "input_image",
+                    "image_url":  f"data:image/jpeg;base64,{base64_image}",
+                },
+            ],
+        }],
+    )
 
 # Mostrar el tiempo de respuesta
 end_time_base64 = time.time()
 console.print(
-	f":hourglass_flowing_sand: [green]Tiempo de respuesta (base64):[/green] {end_time_base64 - end_time:.2f} segundos")
-
-# Descripción de la imagen en base64
-console.print(":sparkles: [bold yellow]Descripción generada (base64):[/bold yellow]")
-print(response_base64.output_text)
-
-
+    Panel.fit(
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta (base64):[/green] {end_time_base64 - start_time_base64:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada (base64):[/bold yellow]\n"
+        f"{response_base64.output_text}",
+        title="Resultado Imagen Base64",
+        border_style="bright_magenta"
+    )
+)
