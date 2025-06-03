@@ -12,6 +12,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
+# Modelo de IA a utilizar
+MODEL_NAME = "gpt-image-1"
+
 # Imagen que vamos a editar
 input_image_file = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/responses-api/example_output/final_frog_snail_and_butterfly.png"
 
@@ -47,9 +50,9 @@ with Progress(
     TimeElapsedColumn(),
     transient=True
 ) as progress:
-    progress.add_task(description=f"🎨 Generando la máscara de la imagen {input_image_file}...", total=None)
+    progress.add_task(description=f"[bold magenta]🎨 Generando la máscara de la imagen[/bold magenta] [bold blue]{input_image_file}[/bold blue] [bold blue]🧠 Modelo: {MODEL_NAME}[/bold blue]", total=None)
     result_mask = client.images.edit(
-        model="gpt-image-1",
+        model=MODEL_NAME,
         image=img_input,
         prompt=prompt_mask
     )
@@ -93,8 +96,10 @@ with open(img_path_mask_alpha, "wb") as f:
 
 # Reemplazar en la imagen original la parte del caracol con la máscara generada poniendo en su lugar una seta roja con puntos blancos.
 
-prompt_replace = """
-Sustituye únicamente el caracol azul en la imagen por algo divertido, 
+replacement_object = "algo divertido"
+
+prompt_replace = f"""
+Sustituye únicamente el caracol azul en la imagen por {replacement_object}, 
 asegurándote de que solo el caracol sea reemplazado y el fondo, 
 la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 """
@@ -108,9 +113,9 @@ with Progress(
     TimeElapsedColumn(),
     transient=True
 ) as progress:
-    progress.add_task(description="🎨 Editando imagen con máscara...", total=None)
+    progress.add_task(description=f"[bold yellow]🎨 Editando imagen con máscara \n🧠 Modelo: {MODEL_NAME}...[/bold yellow]", total=None)
     result_mask_edit = client.images.edit(
-        model="gpt-image-1",
+        model=MODEL_NAME,
         prompt=prompt_replace,
         image=img_input,
         mask=mask,

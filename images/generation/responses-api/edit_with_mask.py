@@ -7,7 +7,6 @@ from rich.console import Console
 import time
 import base64
 from PIL import Image
-from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
@@ -34,12 +33,12 @@ start_time = time.time()
 # Generar una imagen de máscara
 prompt_mask = """
 Genera una imagen de máscara que cubra el caracol azul que aparece en la imagen.
-Usando blanco donde está el caracol
+Usando blanco donde está el caracol. El fondo y el resto de la imagen deben permanecer intactos.
+Asegúrate de que la máscara sea precisa y cubra únicamente el caracol.
 """
 
-img_input = open(input_image_file, "rb")
-
-base64_input_image = base64.b64encode(img_input.read()).decode("utf-8")
+with open(input_image_file, "rb") as img_input:
+    base64_input_image = base64.b64encode(img_input.read()).decode("utf-8")
 
 with Progress(
     SpinnerColumn(),
@@ -48,7 +47,7 @@ with Progress(
     transient=True
 ) as progress:
     progress.add_task(
-        description=f"🎨 Generando la máscara de la imagen {input_image_file}...", total=None)
+        description=f"[bold magenta]🎨 Generando la máscara de la imagen [/bold magenta][bold yellow]{input_image_file}[/bold yellow]\n[bold blue]🧠 Modelo: {os.getenv('IMAGE_GENERATION_MODEL')} [/bold blue]", total=None)
     result_mask = client.responses.create(
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=[
@@ -60,12 +59,19 @@ with Progress(
                         "type": "input_image",
                         "image_url": f"data:image/png;base64,{base64_input_image}",
                     },
-
                 ],
             }
         ],
         tools=[{"type": "image_generation"}],
     )
+
+# Procesar respuesta de la API para la máscara
+image_generation_calls = [
+    output
+    for output in result_mask.output
+    if output.type == "image_generation_call"
+]
+image_data = [output.result for output in image_generation_calls]
 
 # Guardar la imagen de la máscara
 print("[cyan]💾 Decodificando y guardando la máscara como mask_image.png...[/cyan]")
@@ -79,23 +85,21 @@ image_generation_calls = [
 
 image_data = [output.result for output in image_generation_calls]
 
+def save_base64_image(image_base64: str, path: str) -> None:
+    """Decodifica y guarda una imagen base64 en el path indicado."""
+    try:
+        with open(path, "wb") as f:
+            f.write(base64.b64decode(image_base64))
+        print(f"[bold green]💾 Imagen guardada como {path}[/bold green]")
+    except Exception as e:
+        print(f"[red]❌ Error guardando la imagen: {e}[/red]")
+
 if image_data:
-    # Guardar la imagen generada
     print("[green]✅ Imagen generada correctamente. Guardando archivo...[/green]")
     image_base64 = image_data[0]
-    with open(f"{output_path}/mask_image.png", "wb") as f:
-        f.write(base64.b64decode(image_base64))
-    print(f"[bold green]💾 Imagen guardada como {output_path}/mask_image.png[/bold green]")
+    save_base64_image(image_base64, f"{output_path}/mask_image.png")
 else:
-    print("[red]❌ No se generó ninguna imagen. Respuesta de la API:[/red]")
-    print(result_mask.output.content)
-
-# print(image_base64)
-
-image_bytes = base64.b64decode(image_base64)
-
-with open(f"{output_path}/mask_image.png", "wb") as f:
-    f.write(image_bytes)
+    print("[red]❌ No se generó ninguna imagen para la máscara.[/red]")
 
 elapsed_time = time.time() - start_time
 print(
@@ -125,17 +129,17 @@ with open(img_path_mask_alpha, "wb") as f:
 
 # Reemplazar en la imagen original la parte del caracol con la máscara generada poniendo en su lugar una seta roja con puntos blancos.
 
-prompt_replace = """
-Sustituye únicamente el caracol azul en la imagen por algo divertido, 
+# Variable para definir con qué queremos reemplazar el caracol
+replacement_object = "algo divertido"
+
+prompt_replace = f"""
+Sustituye únicamente el caracol azul en la imagen por {replacement_object}, 
 asegurándote de que solo el caracol sea reemplazado y el fondo, 
 la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 """
 
-mask = open(f"{output_path}/mask_alpha.png", "rb")
-
-# Convertir la máscara a base64
-base64_mask = base64.b64encode(mask.read()).decode("utf-8")
-
+with open(f"{output_path}/mask_alpha.png", "rb") as mask:
+    base64_mask = base64.b64encode(mask.read()).decode("utf-8")
 
 with Progress(
     SpinnerColumn(),
@@ -144,7 +148,7 @@ with Progress(
     transient=True
 ) as progress:
     progress.add_task(
-        description="🎨 Editando imagen con máscara...", total=None)
+        description=f"[bold bright_cyan]🎨 Editando imagen con máscara...[/bold bright_cyan]\n\n[bold blue]🧠 Modelo: {os.getenv('IMAGE_GENERATION_MODEL')} [/bold blue]", total=None)
     result_mask_edit = client.responses.create(
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=[
@@ -161,11 +165,19 @@ with Progress(
         ],
         tools=[{
             "type": "image_generation",
-            "input_image_mask": {
+            "input_image_mask": { # en este caso la tool recibe una máscara
                 "image_url": f"data:image/png;base64,{base64_mask}"
             }
         }]
     )
+
+# Procesar respuesta de la API para la imagen editada
+image_generation_calls = [
+    output
+    for output in result_mask_edit.output
+    if output.type == "image_generation_call"
+]
+image_data = [output.result for output in image_generation_calls]
 
 # Guardar la imagen editada
 print("[cyan]💾 Decodificando y guardando la imagen editada como edited_image.png...[/cyan]")
@@ -179,12 +191,8 @@ image_generation_calls = [
 image_data = [output.result for output in image_generation_calls]
 
 if image_data:
-    # Guardar la imagen generada
     print("[green]✅ Imagen generada correctamente. Guardando archivo...[/green]")
     image_base64 = image_data[0]
-    with open(f"{output_path}/edited_image.png", "wb") as f:
-        f.write(base64.b64decode(image_base64))
-    print(f"[bold green]💾 Imagen guardada como {output_path}/edited_image.png[/bold green]")
+    save_base64_image(image_base64, f"{output_path}/edited_image.png")
 else:
-    print("[red]❌ No se generó ninguna imagen. Respuesta de la API:[/red]")
-    print(result_mask_edit.output.content)
+    print("[red]❌ No se generó ninguna imagen editada.[/red]")
