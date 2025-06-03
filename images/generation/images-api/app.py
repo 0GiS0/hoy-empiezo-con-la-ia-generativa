@@ -7,7 +7,6 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 import base64
-import random
 import time
 from PIL import Image
 from rich.console import Console
@@ -76,9 +75,6 @@ end_time = time.time()
 # Decodificar la imagen generada desde base64
 image_base64 = response.data[0].b64_json
 image_bytes = base64.b64decode(image_base64)
-
-# Generar un número aleatorio entre 1000 y 9999
-random_number = random.randint(1000, 9999)
 
 # Guardar la imagen en un archivo
 with open(f"{output_file}", "wb") as f:

@@ -41,7 +41,7 @@ base64_image3 = encode_image(
     "/workspaces/hoy-empiezo-con-ia-generativa/images/image-for-demos/composition/no-fail/figure-3.png")
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
-    progress.add_task(description="📡 Enviando solicitud de generación de imagen a la API...", total=None)
+    progress.add_task(description="[bold magenta]📡 Enviando solicitud de generación de imagen a la API...[/bold magenta]", total=None)
     response = client.responses.create(
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=[

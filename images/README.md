@@ -72,6 +72,8 @@ El endpoint `/v1/responses` es más versátil, ya que te permite crear nuevas, e
 
  Por otro lado, el endpoint `/v1/images/generations` es más específico para la generación de imágenes a partir de un texto descriptivo aunque también puedes editar imágenes usando máscaras y prompts. Sólo permite el uso de modelos específicos para generación de imágenes como 'gpt-image-1', 'dall-e-2', 'dall-e-3', lo cual hace que sean imágenes de alta calidad pero también más caras en tokens.
 
+ Y un endpoint no puede usar los modelos del otro, por eso que no son intercambiables.
+
 En el directorio `images/generation` encontrarás ejemplos de cómo usar ambos endpoints para generar imágenes, componerlas y editarlas.
 
 ### Usando `/v1/images/generations`
@@ -182,6 +184,10 @@ y pasándole estas tres imágenes este es el resultado:
 ![Imagen compuesta de los tres objetos](generation/responses-api/example_output/composition.png)
 
 ¡Mola, eh! 😍
+
+Si le pidieramos lo mismo al endpoint `/v1/images/edits` podríamos hacerlo como se muestra en el archivo [generation/images-api/create_image_from_others.py](generation/images-api/create_image_from_others.py). Y este sería el resultado:
+
+![Imagen compuesta de los tres objetos /v1/images/edits](generation/images-api/example_output/composition.png)
 
 ## Edición de imágenes ✏️ usando máscaras
 
