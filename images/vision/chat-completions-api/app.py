@@ -9,7 +9,6 @@ import os
 from dotenv import load_dotenv
 from rich.console import Console
 import time
-import base64
 
 load_dotenv()
 console = Console()

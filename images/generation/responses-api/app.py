@@ -32,7 +32,8 @@ Asegúrate de que el caracol y la rana sean claramente visibles, con texturas re
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 """
 
-console.print(Panel.fit("⏳🖼️ [bold cyan]Generando la primera imagen (caracol y rana de escayola)...[/bold cyan]\nEsto puede tardar unos segundos.", border_style="cyan"))
+console.print(Panel.fit(
+    "⏳🖼️ [bold cyan]Generando la primera imagen (caracol y rana de escayola)...[/bold cyan]\nEsto puede tardar unos segundos.", border_style="cyan"))
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
     progress.add_task(description="Generando imagen...", total=None)
@@ -59,16 +60,20 @@ if image_data:
     filename = f"image_with_responses_{random_number}.png"
     with open(filename, "wb") as f:
         f.write(base64.b64decode(image_base64))
-    console.print(Panel.fit(f"✅🖼️ [bold green]Imagen generada y guardada como[/bold green] [yellow]{filename}[/yellow]", border_style="green"))
+    console.print(Panel.fit(
+        f"✅🖼️ [bold green]Imagen generada y guardada como[/bold green] [yellow]{filename}[/yellow]", border_style="green"))
 else:
-    console.print(Panel.fit("❌🚫 [bold red]No se pudo generar la primera imagen.[/bold red]", border_style="red"))
+    console.print(Panel.fit(
+        "❌🚫 [bold red]No se pudo generar la primera imagen.[/bold red]", border_style="red"))
 
 # Print the execution time
 execution_time = end_time - start_time
-console.print(f"⏱️ [bold]Tiempo de ejecución de la primera generación:[/bold] [cyan]{execution_time:.2f} segundos[/cyan]")
+console.print(
+    f"⏱️ [bold]Tiempo de ejecución de la primera generación:[/bold] [cyan]{execution_time:.2f} segundos[/cyan]")
 
 # Follow up
-console.print(Panel.fit("⏳🦋 [bold magenta]Generando la segunda imagen (añadiendo mariposa amarilla)...[/bold magenta]\nEspera mientras se procesa la petición.", border_style="magenta"))
+console.print(Panel.fit(
+    "⏳🦋 [bold magenta]Generando la segunda imagen (añadiendo mariposa amarilla)...[/bold magenta]\nEspera mientras se procesa la petición.", border_style="magenta"))
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
     progress.add_task(description="Generando imagen...", total=None)
     second_response = client.responses.create(
@@ -95,12 +100,15 @@ if second_image_data:
     filename2 = f"image_with_responses_followup_{random_number}.png"
     with open(filename2, "wb") as f:
         f.write(base64.b64decode(second_image_base64))
-    console.print(Panel.fit(f"✅🦋 [bold green]Segunda imagen generada y guardada como[/bold green] [yellow]{filename2}[/yellow]", border_style="green"))
+    console.print(Panel.fit(
+        f"✅🦋 [bold green]Segunda imagen generada y guardada como[/bold green] [yellow]{filename2}[/yellow]", border_style="green"))
 else:
-    console.print(Panel.fit("❌🚫 [bold red]No se pudo generar la segunda imagen.[/bold red]", border_style="red"))
+    console.print(Panel.fit(
+        "❌🚫 [bold red]No se pudo generar la segunda imagen.[/bold red]", border_style="red"))
 
 # Last but not least, another follow up
-console.print(Panel.fit("⏳🌳 [bold blue]Generando la tercera imagen (escena completamente realista en un bosque)...[/bold blue]\nPor favor, espera.", border_style="blue"))
+console.print(Panel.fit(
+    "⏳🌳 [bold blue]Generando la tercera imagen (escena completamente realista en un bosque)...[/bold blue]\nPor favor, espera.", border_style="blue"))
 third_response_stream = client.responses.create(
     previous_response_id=second_response.id,
     model=os.getenv("IMAGE_GENERATION_MODEL"),
@@ -112,16 +120,27 @@ third_response_stream = client.responses.create(
         "Asegúrate de que los animales se integren perfectamente en el entorno natural del bosque."
     ),
     stream=True,
-    tools=[{"type": "image_generation", "partial_images": 3}],
+    tools=[{"type": "image_generation", "partial_images": 2}],
 )
 
-console.print("🔄🌲 [bold green]Generando la tercera imagen (escena completamente realista en un bosque)... Esto puede tardar un poco.[/bold green]")
+console.print(
+    "🔄🌲 [bold green]Generando la tercera imagen (escena completamente realista en un bosque)... Esto puede tardar un poco.[/bold green]")
 
-for partial_image in third_response_stream:   
+for partial_image in third_response_stream:
     if partial_image.type == "response.image_generation_call.partial_image":
         index = partial_image.partial_image_index
         image_base64 = partial_image.partial_image_b64
         image_bytes = base64.b64decode(image_base64)
-        with open(f"partial_image_{index}.png", "wb") as f:
-            f.write(image_bytes)
-        console.print(f"🖼️ [bold yellow]Imagen parcial generada:[/bold yellow] [cyan]partial_image_{index}.png[/cyan]")
+        # Si es la última imagen parcial, guárdala con el nombre final
+        if index == 2:
+            filename = "final_frog_snail_and_butterfly.png"
+            with open(filename, "wb") as f:
+                f.write(image_bytes)
+            console.print(
+                f"🖼️ [bold green]Imagen final generada:[/bold green] [cyan]{filename}[/cyan]")
+        else:
+            filename = f"partial_image_{index}.png"
+            with open(filename, "wb") as f:
+                f.write(image_bytes)
+            console.print(
+                f"🖼️ [bold yellow]Imagen parcial generada:[/bold yellow] [cyan]{filename}[/cyan]")
