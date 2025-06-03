@@ -14,13 +14,13 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 output_path = "/workspaces/hoy-empiezo-con-ia-generativa/images/generation/responses-api/example_output"
 
-# Setup rich console
+# Configura la consola de rich
 console = Console()
 
-# Load environment variables from a .env file
+# Carga las variables de entorno desde el archivo .env
 load_dotenv()
 
-# Create OpenAI client
+# Crea el cliente de OpenAI
 client = OpenAI(
     base_url=os.getenv("ENDPOINT_URL"),
     api_key=os.getenv("API_KEY")
@@ -29,7 +29,7 @@ client = OpenAI(
 start_time = time.time()
 
 prompt = """
-Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, que se note claramente que son de escayola, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
 Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 """
@@ -37,6 +37,7 @@ La composición debe transmitir tranquilidad y resaltar los colores azul y verde
 console.print(Panel.fit(
     "⏳🖼️ [bold cyan]Generando la primera imagen (caracol y rana de escayola)...[/bold cyan]\nEsto puede tardar unos segundos.", border_style="cyan"))
 
+# Genera la primera imagen
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
     progress.add_task(description="Generando imagen...", total=None)
     response = client.responses.create(
@@ -47,10 +48,10 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
 
 end_time = time.time()
 
-# Randomly generate a number between 1000 and 9999
+# Genera un número aleatorio entre 1000 y 9999
 random_number = random.randint(1000, 9999)
 
-# Save the image to a file
+# Guarda la imagen en un archivo
 image_data = [
     output.result
     for output in response.output
@@ -68,12 +69,12 @@ else:
     console.print(Panel.fit(
         "❌🚫 [bold red]No se pudo generar la primera imagen.[/bold red]", border_style="red"))
 
-# Print the execution time
+# Imprime el tiempo de ejecución
 execution_time = end_time - start_time
 console.print(
     f"⏱️ [bold]Tiempo de ejecución de la primera generación:[/bold] [cyan]{execution_time:.2f} segundos[/cyan]")
 
-# Follow up
+# Segunda generación: añade una mariposa amarilla
 console.print(Panel.fit(
     "⏳🦋 [bold magenta]Generando la segunda imagen (añadiendo mariposa amarilla)...[/bold magenta]\nEspera mientras se procesa la petición.", border_style="magenta"))
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
@@ -82,7 +83,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
         previous_response_id=response.id,
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=(
-            "Añade una mariposa de color amarillo, con alas abiertas y detalles realistas, "
+            "Añade una mariposa de color amarillo, con alas abiertas también de escayola, se tiene que notar claramente, "
             "posada suavemente sobre una hoja cerca del caracol y la rana. "
             "Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, "
             "y que todos los elementos conserven un aspecto hiperrealista y armonioso."
@@ -90,7 +91,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
         tools=[{"type": "image_generation"}],
     )
 
-# Save the second image
+# Guarda la segunda imagen
 second_image_data = [
     output.result
     for output in second_response.output
@@ -108,7 +109,7 @@ else:
     console.print(Panel.fit(
         "❌🚫 [bold red]No se pudo generar la segunda imagen.[/bold red]", border_style="red"))
 
-# Last but not least, another follow up
+# Tercera generación: escena completamente realista en un bosque
 console.print(Panel.fit(
     "⏳🌳 [bold blue]Generando la tercera imagen (escena completamente realista en un bosque)...[/bold blue]\nPor favor, espera.", border_style="blue"))
 third_response_stream = client.responses.create(
@@ -128,6 +129,7 @@ third_response_stream = client.responses.create(
 console.print(
     "🔄🌲 [bold green]Generando la tercera imagen (escena completamente realista en un bosque)... Esto puede tardar un poco.[/bold green]")
 
+# Guarda las imágenes parciales y la imagen final
 for partial_image in third_response_stream:
     if partial_image.type == "response.image_generation_call.partial_image":
         index = partial_image.partial_image_index

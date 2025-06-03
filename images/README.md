@@ -94,7 +94,7 @@ Además, como parte de ese ejemplo también estoy haciendo multi-turno, lo que s
 De hecho, con el primer prompt le pido lo siguiente:
 
 ```
-Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, que se note claramente que son de escayola, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
 Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 ```
@@ -106,8 +106,8 @@ Y me genera algo como esto:
 Luego, tomando esa imagen como referencia, le pido que la mejore:
 
 ```
-Añade una mariposa de color amarillo, con alas abiertas y detalles realistas,
-posada suavemente sobre una hoja cerca del caracol y la rana.
+Añade una mariposa de color amarillo, con alas abiertas también de escayola, se tiene que notar claramente, 
+posada suavemente sobre una hoja cerca del caracol y la rana. 
 Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, 
 y que todos los elementos conserven un aspecto hiperrealista y armonioso.
 ```
