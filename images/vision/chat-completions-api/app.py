@@ -9,6 +9,8 @@ import base64
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
+
+# Configurar la consola de Rich para mostrar mensajes
 console = Console()
 
 # Configurar el cliente de OpenAI con las variables de entorno
