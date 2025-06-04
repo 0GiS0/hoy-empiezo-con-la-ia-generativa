@@ -29,13 +29,13 @@ client = OpenAI(
 start_time = time.time()
 
 prompt = """
-Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, que se note claramente que son de escayola, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
-Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
+Genera una imagen hiperrealista y detallada de un caracol de cristal azul y una rana de cristal verde, que se note claramente que son de cristal, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de cristal, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 """
 
 console.print(Panel.fit(
-    "⏳🖼️ [bold cyan]Generando la primera imagen (caracol y rana de escayola)...[/bold cyan]\nEsto puede tardar unos segundos.", border_style="cyan"))
+    "⏳🖼️ [bold cyan]Generando la primera imagen (caracol y rana de cristal)...[/bold cyan]\nEsto puede tardar unos segundos.", border_style="cyan"))
 
 # Genera la primera imagen
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
@@ -83,7 +83,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
         previous_response_id=response.id,
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=(
-            "Añade una mariposa de color amarillo, con alas abiertas también de escayola, se tiene que notar claramente, "
+            "Añade una mariposa de color amarillo, con alas abiertas también de cristal, se tiene que notar claramente, "
             "posada suavemente sobre una hoja cerca del caracol y la rana. "
             "Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, "
             "y que todos los elementos conserven un aspecto hiperrealista y armonioso."
