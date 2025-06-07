@@ -40,6 +40,7 @@ console.print(Panel.fit(
 # Genera la primera imagen
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
     progress.add_task(description="Generando imagen...", total=None)
+    
     response = client.responses.create(
         model=os.getenv("IMAGE_GENERATION_MODEL"),
         input=prompt,

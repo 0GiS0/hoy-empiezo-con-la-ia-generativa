@@ -60,10 +60,11 @@ with Progress(
     transient=True
 ) as progress:
     progress.add_task(description="Generando imagen...", total=None)
+    
     # Llamada a la API para generar la imagen
     response = client.images.generate(
-        # model=os.getenv("IMAGE_GENERATION_MODEL"),
-        model="gpt-image-1",  # Puedes usar "dall-e-2" o "dall-e-3" si lo prefieres
+        model=os.getenv("IMAGE_GENERATION_MODEL"),
+        # model="gpt-image-1",  # Puedes usar "dall-e-2" o "dall-e-3" si lo prefieres
         prompt=prompt,
         size="auto",  # También puedes usar "1024x1024", "1024x1792" o "1792x1024"
     )

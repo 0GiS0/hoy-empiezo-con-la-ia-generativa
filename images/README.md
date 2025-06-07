@@ -4,16 +4,17 @@
 
 ## Tabla de Contenidos
 
-- [Introducción](#introducción)
-- [Vision 👁️](#vision-)
-  - [Usando `/v1/chat/completions` para analizar imágenes](#usando-v1chatcompletions-para-analizar-imágenes)
-  - [Usando `/v1/responses` para analizar imágenes](#usando-v1responses-para-analizar-imágenes)
-- [Generación de imágenes 🖼](#generación-de-imágenes-)
-  - [¿Cuál es la diferencia entre ambos?](#cuál-es-la-diferencia-entre-ambos)
-  - [Usando `/v1/images/generations`](#usando-v1imagesgenerations)
-  - [Usando `/v1/responses`](#usando-v1responses)
-- [Composición de imágenes 🧩](#composición-de-imágenes-)
-- [Edición de imágenes ✏️ usando máscaras](#edición-de-imágenes-️-usando-máscaras)
+- [¡Imágenes, IA y Magia Generativa! 🧙‍♂️🖼️🤖✨](#imágenes-ia-y-magia-generativa-️️)
+  - [Tabla de Contenidos](#tabla-de-contenidos)
+  - [Introducción](#introducción)
+  - [Vision 👁️](#vision-️)
+    - [Usando `/v1/chat/completions` para analizar imágenes](#usando-v1chatcompletions-para-analizar-imágenes)
+    - [Usando `/v1/responses` para analizar imágenes](#usando-v1responses-para-analizar-imágenes)
+  - [Generación de imágenes 🖼](#generación-de-imágenes-)
+    - [Usando `/v1/images/generations`](#usando-v1imagesgenerations)
+    - [Usando `/v1/responses`](#usando-v1responses)
+  - [Composición de imágenes 🧩](#composición-de-imágenes-)
+  - [Edición de imágenes ✏️ usando máscaras](#edición-de-imágenes-️-usando-máscaras)
 
 ## Introducción
 
@@ -105,8 +106,8 @@ Además, como parte de ese ejemplo también estoy haciendo multi-turno, lo que s
 De hecho, con el primer prompt le pido lo siguiente:
 
 ```
-Genera una imagen hiperrealista y detallada de un caracol de escayola azul y una rana de escayola verde, que se note claramente que son de escayola, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
-Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de escayola, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
+Genera una imagen hiperrealista y detallada de un caracol de cristal azul y una rana de cristal verde, que se note claramente que son de cristal, ambos situados juntos sobre un lecho de hojas y musgo en un entorno natural iluminado suavemente. 
+Asegúrate de que el caracol y la rana sean claramente visibles, con texturas realistas de cristal, y que el fondo muestre vegetación y elementos naturales como piedras o ramas. 
 La composición debe transmitir tranquilidad y resaltar los colores azul y verde de los animales.
 ```
 
@@ -117,7 +118,7 @@ Y me genera algo como esto:
 Luego, tomando esa imagen como referencia, le pido que la mejore:
 
 ```
-Añade una mariposa de color amarillo, con alas abiertas también de escayola, se tiene que notar claramente, 
+Añade una mariposa de color amarillo, con alas abiertas también de cristal, se tiene que notar claramente, 
 posada suavemente sobre una hoja cerca del caracol y la rana. 
 Asegúrate de que la mariposa destaque en la composición, manteniendo la iluminación suave y el entorno natural, 
 y que todos los elementos conserven un aspecto hiperrealista y armonioso.
@@ -127,11 +128,11 @@ Y me devuelve algo como esto:
 
 ![Segunda imagen /v1/responses](generation/responses-api/example_output/second_image.png)
 
-Y por último le pido que ahora quiero que los animales dejen de ser de escayola y sean reales: 
+Y por último le pido que ahora quiero que los animales dejen de ser de cristal y sean reales: 
 
 ```
 Transforma la escena para que tanto el caracol, la rana y la mariposa tengan un aspecto completamente realista, 
-que dejen de ser de escayola y se conviertan en animales vivos, 
+que dejen de ser de cristal y se conviertan en animales vivos, 
 con detalles naturales en sus texturas y colores. Cambia el fondo a un bosque frondoso y realista, 
 con árboles, hojas y luz filtrada entre las ramas, manteniendo la composición armoniosa y la iluminación suave. 
 Asegúrate de que los animales se integren perfectamente en el entorno natural del bosque.

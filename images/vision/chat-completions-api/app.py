@@ -41,7 +41,7 @@ prompt_with_url = [
     {
         "role": "user",
         "content": [
-            {"type": "text", "text": "What do you see in this image?"},
+            {"type": "text", "text": "¿Qué ves en esta imagen?"},
             {
                 "type": "image_url",
                 "image_url": {
@@ -51,14 +51,14 @@ prompt_with_url = [
         ]
     }
 ]
-description_url = "🔍 Analyzing the image retrieved from a URL..."
+description_url = "🔍 Analizando la imagen desde URL..."
 result_url, time_url = analyze_image(description_url, prompt_with_url)
 console.print(
     Panel.fit(
-        f":hourglass_flowing_sand: [green]Response time:[/green] {time_url:.2f} seconds\n\n"
-        f":sparkles: [bold yellow]Generated description:[/bold yellow]\n"
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {time_url:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada:[/bold yellow]\n"
         f"{result_url}",
-        title="Result Image by URL",
+        title="Resultado Imagen desde URL",
         border_style="bright_blue"
     )
 )
@@ -71,7 +71,7 @@ prompt_with_base64 = [
     {
         "role": "user",
         "content": [
-            {"type": "text", "text": "What do you see in this base64 image?"},
+            {"type": "text", "text": "¿Qué ves en esta imagen en base64?"},
             {
                 "type": "image_url",
                 "image_url": {"url": f"data:image/png;base64,{base64_image}"},
@@ -80,14 +80,14 @@ prompt_with_base64 = [
     }
 ]
 
-description_base64 = "🔍 Analyzing base64 image..."
+description_base64 = "🔍 Analizando imagen en base64..."
 result_base64, time_base64 = analyze_image(description_base64, prompt_with_base64)
 console.print(
     Panel.fit(
-        f":hourglass_flowing_sand: [green]Response time:[/green] {time_base64:.2f} seconds\n\n"
-        f":sparkles: [bold yellow]Generated description from base64:[/bold yellow]\n"
+        f":hourglass_flowing_sand: [green]Tiempo de respuesta:[/green] {time_base64:.2f} segundos\n\n"
+        f":sparkles: [bold yellow]Descripción generada desde base64:[/bold yellow]\n"
         f"{result_base64}",
-        title="Result Base64 Image",
+        title="Resultado Imagen en Base64",
         border_style="bright_magenta"
     )
 )

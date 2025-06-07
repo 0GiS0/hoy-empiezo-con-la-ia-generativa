@@ -130,7 +130,7 @@ with open(img_path_mask_alpha, "wb") as f:
 # Reemplazar en la imagen original la parte del caracol con la máscara generada poniendo en su lugar una seta roja con puntos blancos.
 
 # Variable para definir con qué queremos reemplazar el caracol
-replacement_object = "algo divertido"
+replacement_object = "un Pokemón"
 
 prompt_replace = f"""
 Sustituye únicamente el caracol azul en la imagen por {replacement_object}, 

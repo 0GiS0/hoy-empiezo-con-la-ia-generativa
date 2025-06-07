@@ -38,7 +38,8 @@ start_time = time.time()
 # Generar una imagen de máscara
 prompt_mask = """
 Genera una imagen de máscara que cubra el caracol azul que aparece en la imagen.
-Usando blanco donde está el caracol
+Usando blanco donde está el caracol. El fondo y el resto de la imagen deben permanecer intactos.
+Asegúrate de que la máscara sea precisa y cubra únicamente el caracol.
 """
 
 img_input = open(
@@ -104,8 +105,8 @@ asegurándote de que solo el caracol sea reemplazado y el fondo,
 la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 """
 
-mask = open(f"{output_path}/mask_alpha.png", "rb")
-# mask = open(f"{output_path}/mask_image.png", "rb")
+# mask = open(f"{output_path}/mask_alpha.png", "rb")
+mask = open(f"{output_path}/mask_image.png", "rb")
 
 with Progress(
     SpinnerColumn(),
@@ -114,6 +115,7 @@ with Progress(
     transient=True
 ) as progress:
     progress.add_task(description=f"[bold yellow]🎨 Editando imagen con máscara \n🧠 Modelo: {MODEL_NAME}...[/bold yellow]", total=None)
+    
     result_mask_edit = client.images.edit(
         model=MODEL_NAME,
         prompt=prompt_replace,
