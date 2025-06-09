@@ -84,6 +84,14 @@ label {
   letter-spacing: 1px;
 }
 
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ff4081; /* Accent color */
+  font-size: 1.1em;
+}
+
 textarea {
   width: 100%;
   padding: 1rem;
@@ -94,7 +102,7 @@ textarea {
   color: #fff;
   font-family: 'Courier New', monospace;
   resize: vertical;
-  min-height: 100px;
+  min-height: 200px; /* Aumentado desde 100px */
   transition: border-color 0.2s ease;
 }
 
@@ -168,6 +176,10 @@ textarea::placeholder {
 .btn-generate:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.voice-selection-group {
+  margin-top: 40px; /* Aumenta el espacio superior para este grupo específico */
 }
 
 /* Panel derecho - Reproductor */
