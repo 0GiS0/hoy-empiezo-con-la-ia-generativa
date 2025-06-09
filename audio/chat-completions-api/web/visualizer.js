@@ -2,59 +2,180 @@
 // Animación de onda para el reproductor de audio
 
 export function setupAudioVisualizer(audioElement, canvasElement) {
-  const ctx = canvasElement.getContext('2d');
-  let audioCtx, analyser, source, dataArray, animationId;
-
-  function resizeCanvas() {
-    canvasElement.width = canvasElement.offsetWidth;
-    canvasElement.height = 80;
-  }
-
-  function draw() {
-    if (!analyser) return;
-    analyser.getByteTimeDomainData(dataArray);
-    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#00e0ff';
-    ctx.beginPath();
-    const sliceWidth = canvasElement.width / dataArray.length;
-    let x = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-      const v = dataArray[i] / 128.0;
-      const y = (v * canvasElement.height) / 2;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-      x += sliceWidth;
+    if (!audioElement || !canvasElement) {
+        console.warn('⚠️ Audio element o canvas element no encontrados');
+        return;
     }
-    ctx.lineTo(canvasElement.width, canvasElement.height / 2);
-    ctx.stroke();
-    animationId = requestAnimationFrame(draw);
-  }
 
-  function start() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      source = audioCtx.createMediaElementSource(audioElement);
-      source.connect(analyser);
-      analyser.connect(audioCtx.destination);
-      analyser.fftSize = 2048;
-      dataArray = new Uint8Array(analyser.fftSize);
+    const ctx = canvasElement.getContext('2d');
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let animationId;
+
+    // Configurar el contexto de audio
+    function initAudioContext() {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            
+            const source = audioContext.createMediaElementSource(audioElement);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            console.log('🎵 Visualizador de audio inicializado correctamente');
+        } catch (error) {
+            console.error('❌ Error inicializando audio context:', error);
+        }
     }
-    draw();
-  }
 
-  function stop() {
-    if (animationId) cancelAnimationFrame(animationId);
-    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  }
+    // Función de dibujo del visualizador
+    function draw() {
+        if (!analyser || !dataArray) return;
+        
+        animationId = requestAnimationFrame(draw);
+        
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Limpiar canvas
+        ctx.fillStyle = 'rgba(26, 26, 46, 0.8)';
+        ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+        
+        // Configurar estilos
+        const barWidth = (canvasElement.width / dataArray.length) * 2.5;
+        let barHeight;
+        let x = 0;
+        
+        // Dibujar barras del visualizador
+        for (let i = 0; i < dataArray.length; i++) {
+            barHeight = (dataArray[i] / 255) * canvasElement.height * 0.8;
+            
+            // Gradiente para las barras
+            const gradient = ctx.createLinearGradient(0, canvasElement.height - barHeight, 0, canvasElement.height);
+            gradient.addColorStop(0, '#4ecdc4');
+            gradient.addColorStop(0.5, '#45b7d1');
+            gradient.addColorStop(1, '#ff6b6b');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, canvasElement.height - barHeight, barWidth, barHeight);
+            
+            // Efecto de brillo en la parte superior
+            ctx.fillStyle = 'rgba(78, 205, 196, 0.8)';
+            ctx.fillRect(x, canvasElement.height - barHeight, barWidth, 2);
+            
+            x += barWidth + 1;
+        }
+        
+        // Agregar ondas de fondo
+        drawBackgroundWaves();
+    }
 
-  audioElement.addEventListener('play', start);
-  audioElement.addEventListener('pause', stop);
-  audioElement.addEventListener('ended', stop);
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+    // Dibujar ondas de fondo decorativas
+    function drawBackgroundWaves() {
+        const time = Date.now() * 0.001;
+        
+        ctx.strokeStyle = 'rgba(78, 205, 196, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        for (let x = 0; x < canvasElement.width; x += 5) {
+            const y = canvasElement.height * 0.5 + Math.sin((x * 0.01) + time) * 20;
+            if (x === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.stroke();
+        
+        // Segunda onda
+        ctx.strokeStyle = 'rgba(255, 107, 107, 0.2)';
+        ctx.beginPath();
+        
+        for (let x = 0; x < canvasElement.width; x += 5) {
+            const y = canvasElement.height * 0.3 + Math.sin((x * 0.02) + time * 1.5) * 15;
+            if (x === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.stroke();
+    }
+
+    // Función para mostrar visualización estática
+    function drawStaticVisualization() {
+        ctx.fillStyle = 'rgba(26, 26, 46, 0.9)';
+        ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+        
+        // Dibujar barras estáticas
+        const barCount = 32;
+        const barWidth = canvasElement.width / barCount;
+        
+        for (let i = 0; i < barCount; i++) {
+            const barHeight = Math.random() * canvasElement.height * 0.3 + 10;
+            const x = i * barWidth;
+            
+            const gradient = ctx.createLinearGradient(0, canvasElement.height - barHeight, 0, canvasElement.height);
+            gradient.addColorStop(0, 'rgba(78, 205, 196, 0.3)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.6)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, canvasElement.height - barHeight, barWidth - 2, barHeight);
+        }
+        
+        // Texto central
+        ctx.fillStyle = 'rgba(78, 205, 196, 0.8)';
+        ctx.font = '16px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎵 RADIO AI VISUALIZER 🎵', canvasElement.width / 2, canvasElement.height / 2);
+        
+        drawBackgroundWaves();
+    }
+
+    // Event listeners
+    audioElement.addEventListener('play', () => {
+        if (!audioContext) {
+            initAudioContext();
+        }
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        draw();
+        console.log('🎵 Iniciando visualizador');
+    });
+
+    audioElement.addEventListener('pause', () => {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+        console.log('⏸️ Visualizador pausado');
+    });
+
+    audioElement.addEventListener('ended', () => {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+        drawStaticVisualization();
+        console.log('🔚 Audio terminado');
+    });
+
+    // Inicializar con visualización estática
+    drawStaticVisualization();
+    
+    // Animar las ondas de fondo incluso sin audio
+    function animateBackground() {
+        if (!audioElement.paused) return; // Solo animar cuando no hay audio
+        
+        drawStaticVisualization();
+        requestAnimationFrame(animateBackground);
+    }
+    
+    animateBackground();
 }
