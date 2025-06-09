@@ -33,24 +33,33 @@ CORS(app, origins=[
 def generate_audio():
     try:
         data = request.get_json()
-        user_message = data.get(
-            'message', 'Hola amigos, bienvenidos a un nuevo video! Hoy vamos a hablar de...')
-        voice_selection = data.get('voice', 'echo')
+
+        console.print(data)
+
+        user_message = data.get('message')
+        voice_selection = data.get('voice')
+
+        console.print(f"[bold blue]📝 Mensaje recibido[/bold blue]: {user_message}")
+        console.print(f"[bold blue]🎤 Voz seleccionada[/bold blue]: {voice_selection}")
 
         # Mapeo simplificado para las voces
         voices = {
-            "alloy (femenino)": "alloy",
-            "echo (masculino)": "echo",
-            "fable (neutro)": "fable",
-            "onyx (masculino)": "onyx",
-            "nova (femenino)": "nova",
-            "shimmer (femenino)": "shimmer"
+            "alloy": "alloy",
+            "ash": "ash",
+            "ballad": "ballad",
+            "coral": "coral",
+            "echo": "echo",
+            "fable": "fable",
+            "onyx": "onyx",
+            "nova": "nova",
+            "shimmer": "shimmer",
+            "sage": "sage"
         }
 
         prompt = "Puedes generar un rap con el mensaje siguiente: "
         user_message = prompt + user_message
 
-        voice = voices.get(voice_selection.lower(), "echo")
+        voice = voices.get(voice_selection.lower())
 
         console.print(
             f"[bold green]🎙️ Generando audio con voz[/bold green]: {voice}")

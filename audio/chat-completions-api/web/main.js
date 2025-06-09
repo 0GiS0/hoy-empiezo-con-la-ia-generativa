@@ -16,7 +16,42 @@ function initApp() {
     // Setup form submission handler
     form.addEventListener('submit', handleFormSubmission);
     
+    // Setup voice selection listeners
+    const voiceInputs = document.querySelectorAll('input[name="voice"]');
+    voiceInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            console.log('🎭 Cambio de voz detectado:', this.value);
+            // Update UI to show selected voice
+            updateVoiceSelection(this.value);
+        });
+    });
+    
+    // Ensure a voice is selected (fallback to echo if none selected)
+    ensureVoiceSelected();
+    
     console.log('🎤 RAP Generator AI initialized successfully!');
+}
+
+// Ensure a voice is selected, default to 'echo' if none
+function ensureVoiceSelected() {
+    const selectedVoice = document.querySelector('input[name="voice"]:checked');
+    
+    if (!selectedVoice) {
+        const echoVoice = document.getElementById('echo');
+        if (echoVoice) {
+            echoVoice.checked = true;
+            console.log('🎭 Voz por defecto establecida: echo');
+        } else {
+            // If echo doesn't exist, select the first available voice
+            const firstVoice = document.querySelector('input[name="voice"]');
+            if (firstVoice) {
+                firstVoice.checked = true;
+                console.log('🎭 Primera voz disponible seleccionada:', firstVoice.value);
+            }
+        }
+    } else {
+        console.log('🎭 Voz ya seleccionada:', selectedVoice.value);
+    }
 }
 
 // Handle form submission
@@ -27,8 +62,36 @@ async function handleFormSubmission(e) {
     updateUIForLoading();
     
     const message = document.getElementById('message').value;
+    
+    // Ensure a voice is selected before processing
+    ensureVoiceSelected();
+    
+    // Debug: Log all radio buttons
+    const allVoiceInputs = document.querySelectorAll('input[name="voice"]');
+    console.log('🎙️ Todas las voces encontradas:', allVoiceInputs.length);
+    
+    allVoiceInputs.forEach(input => {
+        console.log(`🎵 Voz: ${input.value}, Checked: ${input.checked}`);
+    });
+    
+    // Get selected voice with better detection
     const selectedVoice = document.querySelector('input[name="voice"]:checked');
-    const voice = selectedVoice ? selectedVoice.value : 'echo';
+    console.log('🎤 Voz seleccionada:', selectedVoice);
+    
+    // More robust voice selection with fallback
+    let voice = 'echo'; // Default fallback
+    if (selectedVoice && selectedVoice.value) {
+        voice = selectedVoice.value;
+    } else {
+        console.warn('⚠️ No se encontró voz seleccionada, usando fallback:', voice);
+        // Try to select echo as fallback
+        const echoInput = document.getElementById('echo');
+        if (echoInput) {
+            echoInput.checked = true;
+        }
+    }
+    
+    console.log('🔥 Voz final enviada a la API:', voice);
 
     try {
         const audioBlob = await generateAudio(message, voice);
@@ -43,7 +106,7 @@ async function handleFormSubmission(e) {
 
 // Generate audio from the API
 async function generateAudio(message, voice) {
-    const response = await fetch('http://127.0.0.1:5000/generate-audio', {
+    const response = await fetch('http://127.0.0.1:5001/generate-audio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, voice })
@@ -86,6 +149,21 @@ function updateUIForError(error) {
 function resetGenerateButton() {
     generateBtn.disabled = false;
     generateBtn.innerHTML = '🎬 DROP THE BEAT! 🎵';
+}
+
+// Update voice selection feedback
+function updateVoiceSelection(selectedVoice) {
+    console.log('🎭 Voz actualizada a:', selectedVoice);
+    
+    // You can add visual feedback here if needed
+    // For example, updating a status message
+    const currentStatus = document.getElementById('status');
+    if (currentStatus && !currentStatus.innerHTML.includes('COOKING') && !currentStatus.innerHTML.includes('ERROR')) {
+        const placeholder = currentStatus.querySelector('.placeholder div:last-child');
+        if (placeholder) {
+            placeholder.textContent = `LISTO PARA SOLTAR FUEGO CON ${selectedVoice.toUpperCase()}`;
+        }
+    }
 }
 
 // Initialize when DOM is loaded

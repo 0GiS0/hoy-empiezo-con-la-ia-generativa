@@ -120,6 +120,11 @@ textarea::placeholder {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.voice-option {
+  position: relative;
 }
 
 .voice-option input[type="radio"] {
@@ -140,6 +145,11 @@ textarea::placeholder {
   color: #ccc;
   text-transform: uppercase;
   font-weight: bold;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .voice-option input[type="radio"]:checked + label {
