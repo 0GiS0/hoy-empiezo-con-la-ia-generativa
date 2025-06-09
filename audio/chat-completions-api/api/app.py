@@ -47,10 +47,13 @@ def generate_audio():
             "shimmer": "shimmer"
         }
 
+        prompt = "Puedes generar un rap con el mensaje siguiente: "
+        user_message = prompt + user_message
+
         voice = voices.get(voice_selection.lower(), "echo")
 
         console.print(f"[bold green]🎙️ Generando audio con voz[/bold green]: {voice}")
-        console.print(f"[bold blue]📝 Mensaje[/bold blue]: {user_message[:50]}...")
+        console.print(f"[bold blue]📝 Mensaje[/bold blue]: {user_message}...")
 
         response = client.chat.completions.create(
             model="gpt-4o-audio-preview",
