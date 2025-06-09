@@ -39,12 +39,12 @@ def generate_audio():
 
         # Mapeo simplificado para las voces
         voices = {
-            "alloy": "alloy",
-            "echo": "echo", 
-            "fable": "fable",
-            "onyx": "onyx",
-            "nova": "nova",
-            "shimmer": "shimmer"
+            "alloy (femenino)": "alloy",
+            "echo (masculino)": "echo",
+            "fable (neutro)": "fable",
+            "onyx (masculino)": "onyx",
+            "nova (femenino)": "nova",
+            "shimmer (femenino)": "shimmer"
         }
 
         prompt = "Puedes generar un rap con el mensaje siguiente: "
