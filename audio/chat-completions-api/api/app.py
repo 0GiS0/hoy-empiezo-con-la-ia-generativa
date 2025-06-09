@@ -56,7 +56,7 @@ def generate_audio():
             "sage": "sage"
         }
 
-        prompt = "Puedes generar un rap con el mensaje siguiente: "
+        prompt = "Puedes generar un rap (si añades beatbox mejor) con el mensaje siguiente: "
         user_message = prompt + user_message
 
         voice = voices.get(voice_selection.lower())
