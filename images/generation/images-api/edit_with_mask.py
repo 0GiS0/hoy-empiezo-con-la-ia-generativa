@@ -105,8 +105,8 @@ asegurándote de que solo el caracol sea reemplazado y el fondo,
 la rana y la mariposa permanezcan exactamente igual que en la imagen original.
 """
 
-# mask = open(f"{output_path}/mask_alpha.png", "rb")
-mask = open(f"{output_path}/mask_image.png", "rb")
+mask = open(f"{output_path}/mask_alpha.png", "rb")
+# mask = open(f"{output_path}/mask_image.png", "rb")
 
 with Progress(
     SpinnerColumn(),
