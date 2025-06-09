@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Audio con IA</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    label, select, input, button { margin: 0.5em 0; display: block; }
+    audio { margin-top: 1em; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Generador de Audio con IA</h1>
+  <form id="audioForm">
+    <label for="message">Texto a convertir en audio:</label>
+    <textarea id="message" rows="4" cols="50" required>Hola amigos, bienvenidos a un nuevo video! Hoy vamos a hablar de...</textarea>
+    <label for="voice">Selecciona una voz:</label>
+    <select id="voice">
+      <option>Alloy (neutral)</option>
+      <option selected>Echo (profesional)</option>
+      <option>Fable (juvenil)</option>
+      <option>Onyx (potente)</option>
+      <option>Nova (suave)</option>
+      <option>Shimmer (optimista)</option>
+    </select>
+    <button type="submit">Generar y reproducir audio</button>
+  </form>
+  <div id="studio-container" style="background:#181c20;border-radius:1em;padding:2em;box-shadow:0 4px 24px #0003;max-width:600px;margin:auto;">
+    <div style="display:flex;align-items:center;gap:1em;">
+      <audio id="audioPlayer" controls style="display:none;flex:1"></audio>
+      <canvas id="visualizer" style="width:300px;height:80px;background:#222;border-radius:8px;display:none;"></canvas>
+    </div>
+    <div id="status" style="color:#0ff;margin-top:1em;"></div>
+  </div>
+  <script type="module">
+    import { setupAudioVisualizer } from './visualizer.js';
+    const form = document.getElementById('audioForm');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const statusDiv = document.getElementById('status');
+    const visualizer = document.getElementById('visualizer');
+
+    // Setup visualizer
+    setupAudioVisualizer(audioPlayer, visualizer);
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      audioPlayer.style.display = "none";
+      visualizer.style.display = "none";
+      statusDiv.textContent = "Generando audio...";
+      const message = document.getElementById('message').value;
+      const voice = document.getElementById('voice').value;
+
+      try {
+        const response = await fetch('/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, voice })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al generar el audio');
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.style.display = "block";
+        visualizer.style.display = "block";
+        await audioPlayer.play();
+        statusDiv.textContent = "¡Audio generado!";
+      } catch (err) {
+        statusDiv.textContent = "Error: " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
