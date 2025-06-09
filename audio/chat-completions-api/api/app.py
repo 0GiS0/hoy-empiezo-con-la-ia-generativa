@@ -25,7 +25,7 @@ app = Flask(__name__, static_folder='../web', static_url_path='')
 # Configurar CORS para permitir solicitudes desde diferentes orígenes
 CORS(app, origins=[
     "http://127.0.0.1:5500",
-    "http://localhost:5500"   
+    "http://localhost:5500"
 ])
 
 # Ruta para generar audio a partir de un mensaje de texto
@@ -52,11 +52,12 @@ def generate_audio():
 
         voice = voices.get(voice_selection.lower(), "echo")
 
-        console.print(f"[bold green]🎙️ Generando audio con voz[/bold green]: {voice}")
+        console.print(
+            f"[bold green]🎙️ Generando audio con voz[/bold green]: {voice}")
         console.print(f"[bold blue]📝 Mensaje[/bold blue]: {user_message}...")
 
         response = client.chat.completions.create(
-            model="gpt-4o-audio-preview",
+            model=os.getenv("MODEL_FOR_AUDIO"),
             modalities=["text", "audio"],
             audio={"voice": voice, "format": "wav"},
             messages=[
@@ -64,7 +65,8 @@ def generate_audio():
                     "role": "user",
                     "content": user_message
                 }
-            ]
+            ],
+            temperature=0.9,
         )
 
         wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
@@ -72,30 +74,40 @@ def generate_audio():
             tmpfile.write(wav_bytes)
             tmpfile_path = tmpfile.name
 
-        console.print(f"[bold green]✅ Audio generado exitosamente[/bold green]")
-        
+        console.print(
+            f"[bold green]✅ Audio generado exitosamente[/bold green]")
+
         return send_file(tmpfile_path, mimetype="audio/wav")
 
     except Exception as e:
-        console.print(f"[bold red]❌ Error generando audio[/bold red]: {str(e)}")
+        console.print(
+            f"[bold red]❌ Error generando audio[/bold red]: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Ruta para la página de inicio
+
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
 # Ruta para servir archivos estáticos adicionales (JS, CSS, etc.)
+
+
 @app.route('/<path:filename>')
 def static_files(filename):
     return app.send_static_file(filename)
 
 # Ruta de salud para verificar que la API funciona
+
+
 @app.route('/health')
 def health():
     return jsonify({"status": "🎵 Radio AI Station API funcionando correctamente! 📻"})
 
+
 if __name__ == "__main__":
     console.print("[bold cyan]🚀 Iniciando Radio AI Station API...[/bold cyan]")
-    console.print("[bold yellow]📻 Servidor corriendo en: http://localhost:5001[/bold yellow]")
+    console.print(
+        "[bold yellow]📻 Servidor corriendo en: http://localhost:5001[/bold yellow]")
     app.run(host="0.0.0.0", port=5001, debug=True)
