@@ -15,7 +15,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 # Constantes de rutas de imagen
 IMAGE_URL = "https://i0.wp.com/www.returngis.net/wp-content/uploads/2025/04/Ollama-con-Prompty.png"
-IMAGE_PATH_BASE64 = "/workspaces/hoy-empiezo-con-ia-generativa/images/vision/samples/partida_de_ajedrez.jpg"
+IMAGE_PATH_BASE64 = os.path.join(os.path.dirname(__file__), "../../samples/partida_de_ajedrez.jpg")
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
