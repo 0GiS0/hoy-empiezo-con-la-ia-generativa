@@ -87,4 +87,5 @@ if image_data:
     print(f"[bold green]💾 Imagen guardada como {output_path}[/bold green]")
 else:
     print("[red]❌ No se generó ninguna imagen. Respuesta de la API:[/red]")
-    print(response.output.content)
+    for output in response.output:
+        print(output.content)
