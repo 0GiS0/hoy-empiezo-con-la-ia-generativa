@@ -2,74 +2,79 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>📻 Radio AI Station - Generador de Audio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎤 RAP Generator AI - Beats & Flows</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="radio-waves">
-    <div class="wave"></div>
-    <div class="wave"></div>
-    <div class="wave"></div>
-  </div>
-
-  <div class="radio-header">
-    <div class="radio-logo">📻</div>
-    <div class="station-name">RADIO AI STATION</div>
-    <div class="frequency">🔊 FM 104.7 AI 🔊</div>
-  </div>
-
-  <div class="container">
-    <div class="on-air">🔴 ON AIR</div>
-    
-    <h1>🎙️ Estudio de Grabación IA 🎧</h1>
-    
-    <form id="audioForm">
-      <div class="form-group">
-        <label for="message">📝 ¿Qué quieres que diga tu locutor? 🗣️</label>
-        <textarea id="message" placeholder="¡Escribe tu mensaje y conviértelo en audio profesional! 🎵" required>¡Hola developer! En este vídeo de mi serie sobre IA Generativa te muestro cómo puedes jugar con el audio</textarea>
+  <div class="main-container">
+    <!-- Panel Izquierdo: Formulario -->
+    <div class="form-panel">
+      <div class="header">
+        <div class="logo">🎤</div>
+        <div class="title">RAP GENERATOR AI</div>
+        <p class="subtitle">Drop Your Bars, Create Your Flow</p>
       </div>
 
-      <div class="form-group">
-        <label>🎭 Elige tu locutor estrella 🌟</label>
-        <div class="voice-grid">
-          <div class="voice-option">
-            <input type="radio" id="alloy" name="voice" value="alloy">
-            <label for="alloy">🤖 Alloy<br><small>💼 Neutral Pro</small></label>
+      <div class="form-content">
+        <form id="audioForm">
+          <div class="form-group">
+            <label for="message">🔥 ESCRIBE TUS BARS 🔥</label>
+            <textarea id="message" placeholder="Yo, I'm spitting fire with AI on the track, creating beats that'll never lack..." required>Yo, estoy aquí con la IA más fresh, creando beats que te van a impresionar, desde el barrio hasta el estudio digital, mi flow es internacional.</textarea>
           </div>
-          <div class="voice-option">
-            <input type="radio" id="echo" name="voice" value="echo" checked>
-            <label for="echo">🎩 Echo<br><small>🏆 Profesional</small></label>
+
+          <div class="form-group">
+            <label>🎭 ELIGE TU MC STYLE 🎭</label>
+            <div class="voice-grid">
+              <div class="voice-option">
+                <input type="radio" id="alloy" name="voice" value="alloy">
+                <label for="alloy">ALLOY<br><small>Neutral</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="echo" name="voice" value="echo" checked>
+                <label for="echo">ECHO<br><small>Deep</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="fable" name="voice" value="fable">
+                <label for="fable">FABLE<br><small>Young</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="onyx" name="voice" value="onyx">
+                <label for="onyx">ONYX<br><small>Hard</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="nova" name="voice" value="nova">
+                <label for="nova">NOVA<br><small>Smooth</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="shimmer" name="voice" value="shimmer">
+                <label for="shimmer">SHIMMER<br><small>Fresh</small></label>
+              </div>
+            </div>
           </div>
-          <div class="voice-option">
-            <input type="radio" id="fable" name="voice" value="fable">
-            <label for="fable">🌟 Fable<br><small>😊 Juvenil</small></label>
-          </div>
-          <div class="voice-option">
-            <input type="radio" id="onyx" name="voice" value="onyx">
-            <label for="onyx">💪 Onyx<br><small>🔥 Potente</small></label>
-          </div>
-          <div class="voice-option">
-            <input type="radio" id="nova" name="voice" value="nova">
-            <label for="nova">✨ Nova<br><small>🌸 Suave</small></label>
-          </div>
-          <div class="voice-option">
-            <input type="radio" id="shimmer" name="voice" value="shimmer">
-            <label for="shimmer">🌈 Shimmer<br><small>🎊 Optimista</small></label>
+
+          <button type="submit" class="btn-generate" id="generateBtn">
+            🎬 DROP THE BEAT! 🎵
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Reproductor -->
+    <div class="player-panel">
+      <div class="player-content">
+        <div class="status" id="status">
+          <div class="placeholder">
+            <div class="placeholder-icon">🎵</div>
+            <div>READY TO SPIT FIRE</div>
           </div>
         </div>
+        
+        <div class="audio-container" id="audioContainer" style="display: none;">
+          <audio id="audioPlayer" controls></audio>
+          <canvas id="visualizer"></canvas>
+        </div>
       </div>
-
-      <button type="submit" class="btn-generate" id="generateBtn">
-        🎬 ¡AL AIRE! Generar Audio 📻
-      </button>
-    </form>
-
-    <div class="studio-container" id="studioContainer" style="display: none;">
-      <div class="audio-controls">
-        <audio id="audioPlayer" controls></audio>
-        <canvas id="visualizer"></canvas>
-      </div>
-      <div class="status" id="status"></div>
     </div>
   </div>
 

@@ -6,7 +6,7 @@ const audioPlayer = document.getElementById('audioPlayer');
 const statusDiv = document.getElementById('status');
 const visualizer = document.getElementById('visualizer');
 const generateBtn = document.getElementById('generateBtn');
-const studioContainer = document.getElementById('studioContainer');
+const audioContainer = document.getElementById('audioContainer');
 
 // Initialize the application
 function initApp() {
@@ -16,7 +16,7 @@ function initApp() {
     // Setup form submission handler
     form.addEventListener('submit', handleFormSubmission);
     
-    console.log('🎵 Radio AI Station initialized successfully!');
+    console.log('🎤 RAP Generator AI initialized successfully!');
 }
 
 // Handle form submission
@@ -50,7 +50,7 @@ async function generateAudio(message, voice) {
     });
 
     if (!response.ok) {
-        throw new Error('💥 Error en la transmisión');
+        throw new Error('🔥 Error en el beat');
     }
 
     return await response.blob();
@@ -62,8 +62,7 @@ async function playGeneratedAudio(blob) {
     audioPlayer.src = url;
     
     // Show audio controls
-    audioPlayer.style.display = 'block';
-    visualizer.style.display = 'block';
+    audioContainer.style.display = 'block';
     
     await audioPlayer.play();
 }
@@ -71,24 +70,22 @@ async function playGeneratedAudio(blob) {
 // UI Update functions
 function updateUIForLoading() {
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '⏳ Grabando en Estudio... 🎙️';
-    studioContainer.style.display = 'block';
-    audioPlayer.style.display = 'none';
-    visualizer.style.display = 'none';
-    statusDiv.innerHTML = '<div class="loading"></div> 🎵 Creando tu programa de radio con IA... 📻';
+    generateBtn.innerHTML = '⏳ COOKING THE BEAT...';
+    audioContainer.style.display = 'none';
+    statusDiv.innerHTML = '<div class="loading"></div> 🎵 CREANDO TU RAP CON IA...';
 }
 
 function updateUIForSuccess() {
-    statusDiv.innerHTML = '🎉 ¡Transmisión exitosa! Al aire en Radio AI Station 📻✨';
+    statusDiv.innerHTML = '🔥 ¡BEAT READY! EL RAP ESTÁ ON FIRE 🎤';
 }
 
 function updateUIForError(error) {
-    statusDiv.innerHTML = '⚠️ Problemas técnicos: ' + error.message + ' 🔧';
+    statusDiv.innerHTML = '⚠️ ERROR EN EL STUDIO: ' + error.message + ' 🔧';
 }
 
 function resetGenerateButton() {
     generateBtn.disabled = false;
-    generateBtn.innerHTML = '🎬 ¡AL AIRE! Generar Audio 📻';
+    generateBtn.innerHTML = '🎬 DROP THE BEAT! 🎵';
 }
 
 // Initialize when DOM is loaded

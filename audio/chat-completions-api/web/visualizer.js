@@ -1,5 +1,5 @@
-// visualizer.js
-// Animación de onda para el reproductor de audio
+// RAP Audio Visualizer
+// Static, clean visualization for hip-hop beats
 
 export function setupAudioVisualizer(audioElement, canvasElement) {
     if (!audioElement || !canvasElement) {
@@ -27,7 +27,7 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
             source.connect(analyser);
             analyser.connect(audioContext.destination);
             
-            console.log('🎵 Visualizador de audio inicializado correctamente');
+            console.log('🎤 RAP Visualizer initialized');
         } catch (error) {
             console.error('❌ Error inicializando audio context:', error);
         }
@@ -42,7 +42,7 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
         analyser.getByteFrequencyData(dataArray);
         
         // Limpiar canvas
-        ctx.fillStyle = 'rgba(26, 26, 46, 0.8)';
+        ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
         
         // Configurar estilos
@@ -54,64 +54,25 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
         for (let i = 0; i < dataArray.length; i++) {
             barHeight = (dataArray[i] / 255) * canvasElement.height * 0.8;
             
-            // Gradiente para las barras
-            const gradient = ctx.createLinearGradient(0, canvasElement.height - barHeight, 0, canvasElement.height);
-            gradient.addColorStop(0, '#4ecdc4');
-            gradient.addColorStop(0.5, '#45b7d1');
-            gradient.addColorStop(1, '#ff6b6b');
+            // Colores RAP: oro y rojo
+            const intensity = dataArray[i] / 255;
+            if (intensity > 0.7) {
+                ctx.fillStyle = '#ffd700'; // Oro para frecuencias altas
+            } else if (intensity > 0.4) {
+                ctx.fillStyle = '#ff4444'; // Rojo para frecuencias medias
+            } else {
+                ctx.fillStyle = '#666'; // Gris para frecuencias bajas
+            }
             
-            ctx.fillStyle = gradient;
             ctx.fillRect(x, canvasElement.height - barHeight, barWidth, barHeight);
-            
-            // Efecto de brillo en la parte superior
-            ctx.fillStyle = 'rgba(78, 205, 196, 0.8)';
-            ctx.fillRect(x, canvasElement.height - barHeight, barWidth, 2);
             
             x += barWidth + 1;
         }
-        
-        // Agregar ondas de fondo
-        drawBackgroundWaves();
-    }
-
-    // Dibujar ondas de fondo decorativas
-    function drawBackgroundWaves() {
-        const time = Date.now() * 0.001;
-        
-        ctx.strokeStyle = 'rgba(78, 205, 196, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        for (let x = 0; x < canvasElement.width; x += 5) {
-            const y = canvasElement.height * 0.5 + Math.sin((x * 0.01) + time) * 20;
-            if (x === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        
-        ctx.stroke();
-        
-        // Segunda onda
-        ctx.strokeStyle = 'rgba(255, 107, 107, 0.2)';
-        ctx.beginPath();
-        
-        for (let x = 0; x < canvasElement.width; x += 5) {
-            const y = canvasElement.height * 0.3 + Math.sin((x * 0.02) + time * 1.5) * 15;
-            if (x === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        
-        ctx.stroke();
     }
 
     // Función para mostrar visualización estática
     function drawStaticVisualization() {
-        ctx.fillStyle = 'rgba(26, 26, 46, 0.9)';
+        ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
         
         // Dibujar barras estáticas
@@ -122,21 +83,15 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
             const barHeight = Math.random() * canvasElement.height * 0.3 + 10;
             const x = i * barWidth;
             
-            const gradient = ctx.createLinearGradient(0, canvasElement.height - barHeight, 0, canvasElement.height);
-            gradient.addColorStop(0, 'rgba(78, 205, 196, 0.3)');
-            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.6)');
-            
-            ctx.fillStyle = gradient;
+            ctx.fillStyle = '#333';
             ctx.fillRect(x, canvasElement.height - barHeight, barWidth - 2, barHeight);
         }
         
         // Texto central
-        ctx.fillStyle = 'rgba(78, 205, 196, 0.8)';
-        ctx.font = '16px Courier New';
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 16px Impact';
         ctx.textAlign = 'center';
-        ctx.fillText('🎵 RADIO AI VISUALIZER 🎵', canvasElement.width / 2, canvasElement.height / 2);
-        
-        drawBackgroundWaves();
+        ctx.fillText('🎤 RAP VISUALIZER 🎵', canvasElement.width / 2, canvasElement.height / 2);
     }
 
     // Event listeners
@@ -148,14 +103,14 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
             audioContext.resume();
         }
         draw();
-        console.log('🎵 Iniciando visualizador');
+        console.log('🎵 RAP beat started');
     });
 
     audioElement.addEventListener('pause', () => {
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
-        console.log('⏸️ Visualizador pausado');
+        console.log('⏸️ Beat paused');
     });
 
     audioElement.addEventListener('ended', () => {
@@ -163,19 +118,9 @@ export function setupAudioVisualizer(audioElement, canvasElement) {
             cancelAnimationFrame(animationId);
         }
         drawStaticVisualization();
-        console.log('🔚 Audio terminado');
+        console.log('🔚 Beat finished');
     });
 
     // Inicializar con visualización estática
     drawStaticVisualization();
-    
-    // Animar las ondas de fondo incluso sin audio
-    function animateBackground() {
-        if (!audioElement.paused) return; // Solo animar cuando no hay audio
-        
-        drawStaticVisualization();
-        requestAnimationFrame(animateBackground);
-    }
-    
-    animateBackground();
 }
