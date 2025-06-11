@@ -1,0 +1,18 @@
+# Dependencias principales para WebRTC y audio
+aiortc>=1.6.0
+websockets>=11.0.0
+numpy>=1.24.0
+av>=10.0.0
+
+# Dependencias adicionales para procesamiento de audio
+scipy>=1.10.0
+librosa>=0.10.0
+
+# Utilidades
+aiofiles>=23.0.0
+python-dotenv>=1.0.0
+
+# Para desarrollo y debugging
+pytest==8.4.0
+pytest-asyncio>=0.21.0
+rich==14.0.0

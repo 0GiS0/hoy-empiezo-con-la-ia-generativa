@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio en Tiempo Real - WebRTC</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 Audio en Tiempo Real con WebRTC</h1>
+            <p>Captura y procesa audio en tiempo real usando WebRTC</p>
+        </header>
+
+        <main>
+            <div class="controls-section">
+                <div class="connection-status">
+                    <div class="status-indicator" id="connectionStatus"></div>
+                    <span id="statusText">Desconectado</span>
+                </div>
+
+                <div class="audio-controls">
+                    <button id="startBtn" class="btn btn-primary" type="button">
+                        <span class="icon">🎙️</span>
+                        Iniciar Audio
+                    </button>
+                    <button id="stopBtn" class="btn btn-secondary" type="button" disabled>
+                        <span class="icon">⏹️</span>
+                        Detener Audio
+                    </button>
+                </div>
+
+                <div class="volume-meter">
+                    <label for="volumeLevel">Nivel de Audio:</label>
+                    <div class="volume-bar">
+                        <div class="volume-fill" id="volumeFill"></div>
+                    </div>
+                    <span id="volumeText">0%</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-card">
+                    <h3>📊 Estadísticas de Conexión</h3>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Estado:</span>
+                            <span class="stat-value" id="connectionState">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Bytes enviados:</span>
+                            <span class="stat-value" id="bytesSent">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Packets enviados:</span>
+                            <span class="stat-value" id="packetsSent">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Latencia:</span>
+                            <span class="stat-value" id="latency">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>🔊 Configuración de Audio</h3>
+                    <div class="audio-config">
+                        <div class="config-item">
+                            <label for="sampleRate">Sample Rate:</label>
+                            <select id="sampleRate">
+                                <option value="16000">16 kHz</option>
+                                <option value="22050">22.05 kHz</option>
+                                <option value="44100" selected>44.1 kHz</option>
+                                <option value="48000">48 kHz</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <label for="bitrate">Bitrate:</label>
+                            <select id="bitrate">
+                                <option value="64000">64 kbps</option>
+                                <option value="128000" selected>128 kbps</option>
+                                <option value="192000">192 kbps</option>
+                                <option value="256000">256 kbps</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <h3>📝 Log de Eventos</h3>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry info">
+                        <span class="timestamp">[${new Date().toLocaleTimeString()}]</span>
+                        <span class="message">Aplicación iniciada</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>🚀 Creado con WebRTC API y Python Backend</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
