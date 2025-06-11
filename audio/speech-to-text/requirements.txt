@@ -2,3 +2,4 @@ moviepy==2.2.1
 openai==1.82.1
 rich==14.0.0
 pydub==0.25.1
+tiktoken==0.9.0
