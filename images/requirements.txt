@@ -1,5 +1,5 @@
 python-dotenv==1.1.0
 openai==1.82.1
 ollama==0.5.1
-pillow==11.2.1
+pillow==11.3.0
 rich==14.0.0
