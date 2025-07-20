@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversación por Voz con IA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-microphone"></i> Conversación por Voz con IA</h1>
+            <p>Habla con la IA usando tu voz y escucha sus respuestas</p>
+        </header>
+
+        <main>
+            <!-- Panel de control -->
+            <div class="control-panel">
+                <button id="recordBtn" class="record-btn">
+                    <i class="fas fa-microphone"></i>
+                    <span>Mantén presionado para hablar</span>
+                </button>
+                
+                <div class="controls">
+                    <button id="clearBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Limpiar conversación
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estado de grabación -->
+            <div id="recordingStatus" class="recording-status hidden">
+                <div class="recording-indicator">
+                    <i class="fas fa-microphone-alt"></i>
+                    <span>Grabando... Suelta para enviar</span>
+                </div>
+                <div class="audio-visualizer">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+            </div>
+
+            <!-- Estado de procesamiento -->
+            <div id="processingStatus" class="processing-status hidden">
+                <div class="spinner"></div>
+                <span>Procesando tu mensaje...</span>
+            </div>
+
+            <!-- Historial de conversación -->
+            <div class="conversation-container">
+                <div id="conversationHistory" class="conversation-history">
+                    <div class="welcome-message">
+                        <i class="fas fa-robot"></i>
+                        <p>¡Hola! Soy tu asistente de IA. Mantén presionado el botón de micrófono para hablarme.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del sistema -->
+            <div class="system-info">
+                <div class="info-item">
+                    <i class="fas fa-comments"></i>
+                    <span id="messageCount">0 mensajes</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-signal"></i>
+                    <span id="connectionStatus">Conectado</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="errorModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('errorModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Confirmar</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">¿Estás seguro de que quieres limpiar toda la conversación?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancelar</button>
+                <button id="confirmYes" class="btn btn-primary">Sí, limpiar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio-recorder.js"></script>
+    <script src="js/conversation.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
