@@ -4,7 +4,7 @@
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
-		"ghcr.io/prulloac/devcontainer-features/ollama:1": {},
+		// "ghcr.io/prulloac/devcontainer-features/ollama:1": {}, // Habilitalo solo si quieres usar Ollama dentro de tu dev container
 		"ghcr.io/devcontainers-extra/features/ffmpeg-apt-get:1": {},
 		"ghcr.io/devcontainers/features/node:1": {
 			"nodeGypDependencies": true,
@@ -27,14 +27,15 @@
 			]
 		}
 	},
-	"hostRequirements": {
-		"memory": "16gb",
-		"cpus": 4
-	},
+	// "hostRequirements": {
+	// 	"memory": "16gb",
+	// 	"cpus": 4
+	// },
 	"forwardPorts": [
 		6333		
 	],
 	"containerEnv": {
 		"OLLAMA_HOST": "http://host.docker.internal:11434"
-	}	
+	},
+	"postStartCommand": "pip install --upgrade pip"
 }

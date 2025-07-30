@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from pydub import AudioSegment
-from openai import OpenAIError
-import tiktoken
 
 console = Console()
 load_dotenv()
@@ -16,6 +14,9 @@ MAX_MB = 25
 # 10 minutos en milisegundos (ajusta según necesidad)
 CHUNK_MS = 10 * 60 * 1000
 FORMAT = "srt"
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+MEDIA_FOLDER = os.path.join(ROOT, "/audio/basico/speech-to-text/media/")
 
 with Progress(
     SpinnerColumn(),
@@ -26,7 +27,7 @@ with Progress(
     transient=True,
 ) as progress:
     task = progress.add_task("Buscando video...", total=None)
-    video_files = glob.glob("audio/speech-to-text/media/*.mp4")
+    video_files = glob.glob(os.path.abspath(MEDIA_FOLDER + "*.mp4"))
     if not video_files:
         console.print(
             "[bold red]No se encontró ningún archivo .mp4 en la carpeta especificada.[/bold red]")

@@ -45,18 +45,7 @@ Esta demo te permite transcribir archivos de audio y video a texto utilizando el
 - ✅ Múltiples formatos de salida (SRT, JSON)
 - ✅ Interfaz con indicadores de progreso
 
-**Cómo usarlo:**
-```bash
-cd speech-to-text
-pip install -r requirements.txt
-# Coloca tu archivo .mp4 en la carpeta media/
-python app.py
-```
-
-**Archivos principales:**
-- `app.py` - Script principal de transcripción
-- `media/` - Carpeta para tus archivos de video/audio
-- `requirements.txt` - Dependencias específicas
+Sigue por [👉🏻 aquí](speech-to-text/README.md) para saber cómo usarlo.
 
 ### 2. 📝 Transcription (Transcripción Avanzada)
 
