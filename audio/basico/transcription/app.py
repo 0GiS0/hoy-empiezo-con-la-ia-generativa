@@ -53,9 +53,9 @@ def translate_text(text, target_language="en", max_tokens=2000):
     return "\n".join(translated_chunks)
 
  # Traducir transcripción a otro idioma
-with open(f"audio/speech-to-text/media/transcripcion.{FORMAT}", "rb") as f:
+with open(f"audio/basico/speech-to-text/media/transcripcion.{FORMAT}", "rb") as f:
     translated_text = translate_text(
         f.read().decode(), target_language="en")
-    with open(f"audio/speech-to-text/media/transcripcion_traducida.{FORMAT}", "w") as f:
+    with open(f"audio/basico/speech-to-text/media/transcripcion_traducida.{FORMAT}", "w") as f:
         f.write(translated_text)
         console.print(f"[green]Transcripción traducida y guardada en transcripcion_traducida.{FORMAT}[/green]")
