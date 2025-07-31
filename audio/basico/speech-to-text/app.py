@@ -11,12 +11,17 @@ console = Console()
 load_dotenv()
 
 MAX_MB = 25
-# 10 minutos en milisegundos (ajusta según necesidad)
+# 10 minutos en milisegundos
 CHUNK_MS = 10 * 60 * 1000
 FORMAT = "srt"
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-MEDIA_FOLDER = os.path.join(ROOT, "/audio/basico/speech-to-text/media/")
+
+print("[bold blue]Directorio raíz:[/bold blue]", ROOT)
+
+MEDIA_FOLDER = os.path.join(ROOT, "media/")
+
+print("[bold blue]Carpeta de medios:[/bold blue]", MEDIA_FOLDER)
 
 with Progress(
     SpinnerColumn(),
@@ -37,7 +42,7 @@ with Progress(
     video = VideoFileClip(video_path)
     progress.update(task, description="Extrayendo audio...")
     audio = video.audio
-    audio_path = "audio/speech-to-text/media/audio_extraido.mp3"
+    audio_path = os.path.join(MEDIA_FOLDER, "audio.mp3")
     audio.write_audiofile(audio_path, logger=None)
     progress.update(task, description="Audio extraído.")
     progress.stop()
@@ -83,7 +88,7 @@ try:
                 f"[cyan]Transcribiendo trozo {idx+1}/{len(chunks)} ({chunk_size_mb:.2f} MB)...[/cyan]")
             text = transcribe_file(chunk_path, idx+1)
             all_text += text + "\n"
-        with open(f"audio/speech-to-text/media/transcripcion.{FORMAT}", "w") as f:
+        with open(f"{MEDIA_FOLDER}/transcripcion.{FORMAT}", "w") as f:
             f.write(all_text)
         console.print(
             f"[green]Transcripción completa y guardada en transcripcion.{FORMAT}[/green]")
@@ -92,7 +97,7 @@ try:
         text = transcribe_file(audio_path)
         console.print("[green]Transcripción completada:[/green]")
         console.print(text)
-        with open(f"audio/speech-to-text/media/transcripcion.{FORMAT}", "w") as f:
+        with open(f"{MEDIA_FOLDER}/transcripcion.{FORMAT}", "w") as f:
             f.write(text)
         console.print(
             f"[green]Transcripción guardada en transcripcion.{FORMAT}[/green]")  
