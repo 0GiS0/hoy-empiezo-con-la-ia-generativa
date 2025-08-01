@@ -1,6 +1,7 @@
 
-from openai import OpenAIError
+from openai import OpenAI, OpenAIError
 import tiktoken
+import os
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from dotenv import load_dotenv
@@ -10,6 +11,16 @@ FORMAT = "srt"
 
 console = Console()
 load_dotenv()
+
+# Configurar el cliente OpenAI
+client = OpenAI(
+    base_url=os.getenv("ENDPOINT_URL"),
+    api_key=os.getenv("API_KEY")
+)
+
+# Configurar rutas
+ROOT = os.path.dirname(os.path.abspath(__file__))
+MEDIA_FOLDER = os.path.join(ROOT, "../speech-to-text/media/")
 
 
 def translate_text(text, target_language="en", max_tokens=2000):
@@ -53,9 +64,21 @@ def translate_text(text, target_language="en", max_tokens=2000):
     return "\n".join(translated_chunks)
 
  # Traducir transcripción a otro idioma
-with open(f"audio/basico/speech-to-text/media/transcripcion.{FORMAT}", "rb") as f:
-    translated_text = translate_text(
-        f.read().decode(), target_language="en")
-    with open(f"audio/basico/speech-to-text/media/transcripcion_traducida.{FORMAT}", "w") as f:
+transcription_path = os.path.join(MEDIA_FOLDER, f"transcripcion.{FORMAT}")
+translated_path = os.path.join(MEDIA_FOLDER, f"transcripcion_traducida.{FORMAT}")
+
+try:
+    with open(transcription_path, "r", encoding="utf-8") as f:
+        original_text = f.read()
+        
+    translated_text = translate_text(original_text, target_language="en")
+    
+    with open(translated_path, "w", encoding="utf-8") as f:
         f.write(translated_text)
-        console.print(f"[green]Transcripción traducida y guardada en transcripcion_traducida.{FORMAT}[/green]")
+        console.print(f"[green]Transcripción traducida y guardada en {translated_path}[/green]")
+        
+except FileNotFoundError:
+    console.print(f"[bold red]No se encontró el archivo de transcripción en {transcription_path}[/bold red]")
+    console.print("[yellow]Asegúrate de ejecutar primero el script de speech-to-text.[/yellow]")
+except Exception as e:
+    console.print(f"[bold red]Error al procesar la traducción: {e}[/bold red]")
