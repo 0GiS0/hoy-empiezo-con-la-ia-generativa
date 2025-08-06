@@ -113,7 +113,12 @@ def conversation():
 def get_audio(filename):
     """Endpoint para servir archivos de audio generados"""
     try:
-        audio_path = os.path.join(tempfile.gettempdir(), filename)
+        base_dir = tempfile.gettempdir()
+        # Normalize and validate the path to prevent path traversal
+        audio_path = os.path.normpath(os.path.join(base_dir, filename))
+        if not audio_path.startswith(base_dir):
+            logger.warning(f"Intento de acceso no permitido: {audio_path}")
+            return jsonify({"error": "Acceso no permitido"}), 403
         if os.path.exists(audio_path):
             return send_file(audio_path, mimetype='audio/wav')
         else:
