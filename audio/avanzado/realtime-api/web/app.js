@@ -194,7 +194,6 @@ class AudioRTCClient {
         this.log('Configurando WebRTC...', 'info');
 
         debugger;
-
         // Crear peer connection
         this.peerConnection = new RTCPeerConnection({
             iceServers: this.config.iceServers
