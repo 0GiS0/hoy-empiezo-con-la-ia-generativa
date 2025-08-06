@@ -1,6 +1,22 @@
+
+/*
+-------------------------------------------------------------
+🎤 RAP Generator AI - Interfaz Web
+
+Este archivo gestiona la interacción del usuario para generar raps con IA.
+Flujo principal:
+1️⃣ El usuario escribe un mensaje y selecciona una voz.
+2️⃣ Al enviar el formulario, se llama a la API para generar el audio.
+3️⃣ Se reproduce el audio generado y se visualiza el beat.
+4️⃣ Los estados y mensajes se actualizan dinámicamente.
+
+Todos los comentarios están en español y con emojis para que sea fácil de seguir y didáctico.
+-------------------------------------------------------------
+*/
+
 import { setupAudioVisualizer } from './visualizer.js';
 
-// DOM elements
+// 🎚️ Elementos del DOM
 const form = document.getElementById('audioForm');
 const audioPlayer = document.getElementById('audioPlayer');
 const statusDiv = document.getElementById('status');
@@ -8,41 +24,41 @@ const visualizer = document.getElementById('visualizer');
 const generateBtn = document.getElementById('generateBtn');
 const audioContainer = document.getElementById('audioContainer');
 
-// Initialize the application
+// 🚀 Inicializa la aplicación y los listeners
 function initApp() {
-    // Setup audio visualizer
+    // 🎵 Inicializa el visualizador de audio
     setupAudioVisualizer(audioPlayer, visualizer);
-    
-    // Setup form submission handler
+
+    // 📨 Listener para el envío del formulario
     form.addEventListener('submit', handleFormSubmission);
-    
-    // Setup voice selection listeners
+
+    // 🎭 Listener para el cambio de voz
     const voiceInputs = document.querySelectorAll('input[name="voice"]');
     voiceInputs.forEach(input => {
         input.addEventListener('change', function() {
             console.log('🎭 Cambio de voz detectado:', this.value);
-            // Update UI to show selected voice
+            // Actualiza la UI para mostrar la voz seleccionada
             updateVoiceSelection(this.value);
         });
     });
-    
-    // Ensure a voice is selected (fallback to echo if none selected)
+
+    // 🛡️ Asegura que haya una voz seleccionada (por defecto 'echo')
     ensureVoiceSelected();
-    
-    console.log('🎤 RAP Generator AI initialized successfully!');
+
+    console.log('🎤 RAP Generator AI inicializado correctamente!');
 }
 
-// Ensure a voice is selected, default to 'echo' if none
+// 🛡️ Asegura que haya una voz seleccionada, por defecto 'echo'
 function ensureVoiceSelected() {
     const selectedVoice = document.querySelector('input[name="voice"]:checked');
-    
+
     if (!selectedVoice) {
         const echoVoice = document.getElementById('echo');
         if (echoVoice) {
             echoVoice.checked = true;
             console.log('🎭 Voz por defecto establecida: echo');
         } else {
-            // If echo doesn't exist, select the first available voice
+            // Si no existe 'echo', selecciona la primera voz disponible
             const firstVoice = document.querySelector('input[name="voice"]');
             if (firstVoice) {
                 firstVoice.checked = true;
@@ -54,57 +70,60 @@ function ensureVoiceSelected() {
     }
 }
 
-// Handle form submission
+// 📨 Maneja el envío del formulario para generar el rap
 async function handleFormSubmission(e) {
     e.preventDefault();
-    
-    // Update UI for loading state
+
+    // ⏳ Actualiza la UI para mostrar estado de carga
     updateUIForLoading();
-    
+
     const message = document.getElementById('message').value;
-    
-    // Ensure a voice is selected before processing
+
+    // 🛡️ Asegura que haya una voz seleccionada antes de procesar
     ensureVoiceSelected();
-    
-    // Debug: Log all radio buttons
+
+    // 🕵️‍♂️ Debug: Muestra todas las voces disponibles
     const allVoiceInputs = document.querySelectorAll('input[name="voice"]');
     console.log('🎙️ Todas las voces encontradas:', allVoiceInputs.length);
-    
     allVoiceInputs.forEach(input => {
         console.log(`🎵 Voz: ${input.value}, Checked: ${input.checked}`);
     });
-    
-    // Get selected voice with better detection
+
+    // 🎤 Obtiene la voz seleccionada, con fallback
     const selectedVoice = document.querySelector('input[name="voice"]:checked');
     console.log('🎤 Voz seleccionada:', selectedVoice);
-    
-    // More robust voice selection with fallback
-    let voice = 'echo'; // Default fallback
+
+    let voice = 'echo'; // Fallback por defecto
     if (selectedVoice && selectedVoice.value) {
         voice = selectedVoice.value;
     } else {
         console.warn('⚠️ No se encontró voz seleccionada, usando fallback:', voice);
-        // Try to select echo as fallback
+        // Intenta seleccionar 'echo' como fallback
         const echoInput = document.getElementById('echo');
         if (echoInput) {
             echoInput.checked = true;
         }
     }
-    
+
     console.log('🔥 Voz final enviada a la API:', voice);
 
     try {
+        // 🛠️ Llama a la API para generar el audio
         const audioBlob = await generateAudio(message, voice);
+        // 🔊 Reproduce el audio generado
         await playGeneratedAudio(audioBlob);
+        // 🎉 Actualiza la UI para mostrar éxito
         updateUIForSuccess();
     } catch (error) {
+        // ⚠️ Muestra error en la UI
         updateUIForError(error);
     } finally {
+        // 🔄 Restablece el botón de generar
         resetGenerateButton();
     }
 }
 
-// Generate audio from the API
+// 🛠️ Llama a la API para generar el audio
 async function generateAudio(message, voice) {
     const response = await fetch('http://localhost:5001/generate-audio', {
         method: 'POST',
@@ -119,18 +138,18 @@ async function generateAudio(message, voice) {
     return await response.blob();
 }
 
-// Play the generated audio
+// 🔊 Reproduce el audio generado
 async function playGeneratedAudio(blob) {
     const url = URL.createObjectURL(blob);
     audioPlayer.src = url;
-    
-    // Show audio controls
+
+    // 🎚️ Muestra los controles de audio
     audioContainer.style.display = 'block';
-    
+
     await audioPlayer.play();
 }
 
-// UI Update functions
+// 🖥️ Funciones para actualizar la UI
 function updateUIForLoading() {
     generateBtn.disabled = true;
     generateBtn.innerHTML = '⏳ COOKING THE BEAT...';
@@ -151,12 +170,12 @@ function resetGenerateButton() {
     generateBtn.innerHTML = '🎬 DROP THE BEAT! 🎵';
 }
 
-// Update voice selection feedback
+// 🎭 Actualiza el feedback visual al cambiar la voz
 function updateVoiceSelection(selectedVoice) {
     console.log('🎭 Voz actualizada a:', selectedVoice);
-    
-    // You can add visual feedback here if needed
-    // For example, updating a status message
+
+    // Puedes añadir feedback visual aquí si lo necesitas
+    // Por ejemplo, actualizar un mensaje de estado
     const currentStatus = document.getElementById('status');
     if (currentStatus && !currentStatus.innerHTML.includes('COOKING') && !currentStatus.innerHTML.includes('ERROR')) {
         const placeholder = currentStatus.querySelector('.placeholder div:last-child');
@@ -166,5 +185,5 @@ function updateVoiceSelection(selectedVoice) {
     }
 }
 
-// Initialize when DOM is loaded
+// 🚦 Inicializa la app cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', initApp);
