@@ -3,7 +3,6 @@ from openai import OpenAI, OpenAIError
 import tiktoken
 import os
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from dotenv import load_dotenv
 
 # Variables de entorno

@@ -59,7 +59,7 @@ Desde el directorio raíz del proyecto de audio:
 
 ```bash
 # Instalar dependencias principales
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 
 # O específicamente para esta demo
 pip install openai flask flask-cors python-dotenv rich
