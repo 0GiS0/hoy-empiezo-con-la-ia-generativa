@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio en Tiempo Real - WebRTC</title>
+    <title>Cliente OpenAI Realtime API</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎤 Audio en Tiempo Real con WebRTC</h1>
-            <p>Captura y procesa audio en tiempo real usando WebRTC</p>
+            <h1>🎤 Cliente OpenAI Realtime API</h1>
+            <p>Conversación en tiempo real con OpenAI usando WebRTC</p>
         </header>
 
         <main>
@@ -23,12 +23,29 @@
                 <div class="audio-controls">
                     <button id="startBtn" class="btn btn-primary" type="button">
                         <span class="icon">🎙️</span>
-                        Iniciar Audio
+                        Iniciar Sesión
                     </button>
                     <button id="stopBtn" class="btn btn-secondary" type="button" disabled>
                         <span class="icon">⏹️</span>
-                        Detener Audio
+                        Detener Sesión
                     </button>
+                </div>
+
+                <div class="text-input-section">
+                    <h3>💬 Enviar Mensaje de Texto</h3>
+                    <div class="text-input-container">
+                        <input 
+                            type="text" 
+                            id="textInput" 
+                            placeholder="Escribe un mensaje aquí..." 
+                            disabled
+                        />
+                        <button id="sendTextBtn" class="btn btn-text" type="button" disabled>
+                            <span class="icon">📤</span>
+                            Enviar
+                        </button>
+                    </div>
+                    <p class="help-text">También puedes hablar directamente al micrófono</p>
                 </div>
 
                 <div class="volume-meter">

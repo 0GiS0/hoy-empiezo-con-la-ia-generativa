@@ -1,4 +1,9 @@
 /**
+ * 🎤 Cliente OpenAI Realtime API usando WebRTC
+ * Basado en el ejemplo oficial de OpenAI: https://platform.openai.com/docs/guides/realtime
+ */
+
+/**
  * Escapes HTML special characters in a string to prevent XSS.
  * @param {string} str
  * @returns {string}
@@ -12,30 +17,30 @@ function escapeHTML(str) {
         .replace(/'/g, '&#39;');
 }
 
-class AudioRTCClient {
+class OpenAIRealtimeClient {
     constructor() {
-        this.peerConnection = null;
-        this.localStream = null;
+        // Estado de la aplicación
+        this.isSessionActive = false;
+        this.isConnecting = false;
+        this.events = [];
         this.dataChannel = null;
-        this.websocket = null;
-        this.audioContext = null;
-        this.analyser = null;
-        this.isConnected = false;
-        this.isStreaming = false;
+        this.peerConnection = null;
+        this.audioElement = null;
         
         // Configuración
         this.config = {
-            get wsUrl() {
-                const proto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                // const host = window.location.hostname;
-                const host = '127.0.0.1'
-                const port = 8765;
-                return `${proto}${host}:${port}`;
+            // URL del servidor local para obtener ephemeral keys
+            get tokenUrl() {
+                const protocol = window.location.protocol === 'https:' ? 'https://' : 'http://';
+                const host = window.location.hostname;
+                const port = 8000; // Puerto del servidor Python
+                return `${protocol}${host}:${port}/token`;
             },
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
+            // OpenAI Realtime API configuration
+            openai: {
+                baseUrl: "https://api.openai.com/v1/realtime",
+                model: "gpt-4o-realtime-preview-2024-12-17"
+            }
         };
         
         // Elementos del DOM
@@ -52,7 +57,9 @@ class AudioRTCClient {
             latency: document.getElementById('latency'),
             logContainer: document.getElementById('logContainer'),
             sampleRate: document.getElementById('sampleRate'),
-            bitrate: document.getElementById('bitrate')
+            bitrate: document.getElementById('bitrate'),
+            textInput: document.getElementById('textInput'),
+            sendTextBtn: document.getElementById('sendTextBtn')
         };
         
         this.init();
@@ -61,378 +68,519 @@ class AudioRTCClient {
     init() {
         this.setupEventListeners();
         this.updateUI();
-        this.log('Aplicación inicializada', 'info');
+        this.log('🎤 Cliente OpenAI Realtime inicializado', 'info');
+        this.log('💡 Basado en el ejemplo oficial de OpenAI con WebRTC', 'info');
     }
     
     setupEventListeners() {
-        this.elements.startBtn.addEventListener('click', () => this.startAudio());
-        this.elements.stopBtn.addEventListener('click', () => this.stopAudio());
+        this.elements.startBtn.addEventListener('click', () => this.startSession());
+        this.elements.stopBtn.addEventListener('click', () => this.stopSession());
         
-        // Detectar cambios en la configuración
-        this.elements.sampleRate.addEventListener('change', () => {
-            if (this.isStreaming) {
-                this.log('Reiniciando para aplicar nueva configuración...', 'warning');
-                this.stopAudio();
-                setTimeout(() => this.startAudio(), 1000);
+        // Text input functionality
+        this.elements.sendTextBtn.addEventListener('click', () => this.handleTextInput());
+        this.elements.textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.handleTextInput();
             }
         });
         
-        this.elements.bitrate.addEventListener('change', () => {
-            if (this.isStreaming) {
-                this.log('Reiniciando para aplicar nueva configuración...', 'warning');
-                this.stopAudio();
-                setTimeout(() => this.startAudio(), 1000);
+        // Detectar cambios en la configuración
+        this.elements.sampleRate.addEventListener('change', () => {
+            if (this.isSessionActive) {
+                this.log('⚠️ Configuración cambiada, reiniciando sesión...', 'warning');
+                this.stopSession();
+                setTimeout(() => this.startSession(), 1000);
             }
         });
     }
     
-    async startAudio() {
+    /**
+     * 🚀 Inicia una nueva sesión con OpenAI Realtime API
+     */
+    async startSession() {
+        if (this.isConnecting || this.isSessionActive) {
+            this.log('⚠️ Ya hay una sesión activa o conectando', 'warning');
+            return;
+        }
+        
         try {
-            this.log('Iniciando captura de audio...', 'info');
-            // Conectar WebSocket primero
-            await this.connectWebSocket();
-            // Obtener stream de audio
-            await this.getUserMedia();
-            // Configurar WebRTC
-            await this.setupWebRTC();
-            // Configurar análisis de audio
-            this.setupAudioAnalysis();
-            // Actualizar UI
-            this.isStreaming = true;
+            this.isConnecting = true;
             this.updateUI();
-            this.log('Audio iniciado correctamente', 'info');
+            this.log('🚀 Iniciando sesión con OpenAI Realtime API...', 'info');
+            
+            // 1. Obtener ephemeral key del servidor local
+            const ephemeralKey = await this.getEphemeralKey();
+            
+            // 2. Crear peer connection
+            this.peerConnection = new RTCPeerConnection();
+            
+            // 3. Configurar audio para reproducir respuestas del modelo
+            this.setupAudioPlayback();
+            
+            // 4. Configurar captura de micrófono
+            await this.setupMicrophoneInput();
+            
+            // 5. Configurar data channel para eventos
+            this.setupDataChannel();
+            
+            // 6. Configurar event listeners de WebRTC
+            this.setupWebRTCEventListeners();
+            
+            // 7. Crear offer y conectar a OpenAI
+            await this.connectToOpenAI(ephemeralKey);
+            
+            this.log('✅ Sesión iniciada correctamente', 'success');
+            
         } catch (error) {
-            this.log(`Error al iniciar audio: ${error && error.stack ? error.stack : error}`, 'error');
-            this.stopAudio();
+            this.log(`❌ Error iniciando sesión: ${error.message}`, 'error');
+            console.error('Error detallado:', error);
+            this.stopSession();
+        } finally {
+            this.isConnecting = false;
+            this.updateUI();
         }
     }
-
-    async stopAudio() {
-        this.log('Deteniendo transmisión de audio...', 'info');
-        this.isStreaming = false;
-        // Cerrar WebRTC
-        if (this.peerConnection) {
-            this.peerConnection.close();
-            this.peerConnection = null;
+    
+    /**
+     * 🛑 Detiene la sesión actual
+     */
+    stopSession() {
+        this.log('🛑 Deteniendo sesión...', 'info');
+        
+        try {
+            // Cerrar data channel
+            if (this.dataChannel) {
+                this.dataChannel.close();
+                this.dataChannel = null;
+            }
+            
+            // Detener tracks de audio
+            if (this.peerConnection) {
+                this.peerConnection.getSenders().forEach(sender => {
+                    if (sender.track) {
+                        sender.track.stop();
+                    }
+                });
+                
+                // Cerrar peer connection
+                this.peerConnection.close();
+                this.peerConnection = null;
+            }
+            
+            // Limpiar audio element
+            if (this.audioElement) {
+                this.audioElement.pause();
+                this.audioElement.srcObject = null;
+                this.audioElement = null;
+            }
+            
+            this.isSessionActive = false;
+            this.updateUI();
+            this.log('✅ Sesión detenida', 'info');
+            
+        } catch (error) {
+            this.log(`❌ Error deteniendo sesión: ${error.message}`, 'error');
         }
-        // Cerrar WebSocket
-        if (this.websocket) {
-            this.websocket.close();
-            this.websocket = null;
-        }
-        // Detener stream local
-        if (this.localStream) {
-            this.localStream.getTracks().forEach(track => track.stop());
-            this.localStream = null;
-        }
-        // Cerrar audio context
-        if (this.audioContext) {
-            await this.audioContext.close();
-            this.audioContext = null;
-        }
-        this.isConnected = false;
-        this.updateUI();
-        this.log('Audio detenido', 'info');
     }
-
-    async connectWebSocket() {
-        return new Promise((resolve, reject) => {
-            this.log('Conectando al servidor WebSocket...', 'info');
-            this.websocket = new WebSocket(this.config.wsUrl);
-            this.websocket.onopen = () => {
-                this.log('WebSocket conectado', 'info');
-                this.isConnected = true;
-                this.updateUI();
-                resolve();
-            };
-            this.websocket.onmessage = async (event) => {
-                this.log(`WebSocket mensaje recibido: ${event.data}`, 'debug');
-                const data = JSON.parse(event.data);
-                await this.handleWebSocketMessage(data);
-            };
-            this.websocket.onerror = (error) => {
-                this.log(`Error en WebSocket: ${JSON.stringify(error)}`, 'error');
-                reject(new Error('Error de conexión WebSocket'));
-            };
-            this.websocket.onclose = (event) => {
-                this.log(`WebSocket desconectado (code=${event.code}, reason=${event.reason})`, 'warning');
-                this.isConnected = false;
-                this.updateUI();
-            };
-            // Timeout de conexión
-            setTimeout(() => {
-                if (this.websocket.readyState !== WebSocket.OPEN) {
-                    reject(new Error('Timeout de conexión WebSocket'));
+    
+    /**
+     * 🔑 Obtiene ephemeral key del servidor local
+     */
+    async getEphemeralKey() {
+        this.log('🔑 Obteniendo ephemeral key del servidor...', 'info');
+        
+        try {
+            const response = await fetch(this.config.tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-            }, 5000);
-        });
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.client_secret || !data.client_secret.value) {
+                throw new Error('Ephemeral key no encontrada en la respuesta');
+            }
+            
+            this.log('✅ Ephemeral key obtenida correctamente', 'success');
+            return data.client_secret.value;
+            
+        } catch (error) {
+            throw new Error(`Error obteniendo ephemeral key: ${error.message}`);
+        }
     }
-
-    async getUserMedia() {
-        const sampleRate = parseInt(this.elements.sampleRate.value);
+    
+    /**
+     * 🔊 Configura la reproducción de audio desde OpenAI
+     */
+    setupAudioPlayback() {
+        this.audioElement = document.createElement("audio");
+        this.audioElement.autoplay = true;
+        
+        // Cuando llega un track de audio desde OpenAI, reproducirlo
+        this.peerConnection.ontrack = (event) => {
+            this.log('🎵 Audio track recibido desde OpenAI', 'info');
+            this.audioElement.srcObject = event.streams[0];
+        };
+    }
+    
+    /**
+     * 🎤 Configura la captura del micrófono
+     */
+    async setupMicrophoneInput() {
+        this.log('🎤 Configurando captura de micrófono...', 'info');
+        
         const constraints = {
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true,
-                sampleRate: sampleRate,
-                channelCount: 1
-            },
-            video: false
-        };
-        this.log(`Solicitando acceso al micrófono (${sampleRate}Hz) con constraints: ${JSON.stringify(constraints)}`, 'info');
-        try {
-            this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-            this.log('Micrófono accesible', 'info');
-        } catch (err) {
-            this.log(`Error en getUserMedia: ${err && err.stack ? err.stack : err}`, 'error');
-            throw err;
-        }
-    }
-
-    async setupWebRTC() {
-        this.log('Configurando WebRTC...', 'info');
-
-        debugger;
-        // Crear peer connection
-        this.peerConnection = new RTCPeerConnection({
-            iceServers: this.config.iceServers
-        });
-        // Agregar stream local
-        this.localStream.getTracks().forEach(track => {
-            this.peerConnection.addTrack(track, this.localStream);
-        });
-        // Configurar data channel para metadatos
-        this.dataChannel = this.peerConnection.createDataChannel('audio-metadata', {
-            ordered: true
-        });
-        this.dataChannel.onopen = () => {
-            this.log('Canal de datos abierto', 'info');
-            this.sendAudioConfig();
-        };
-        this.dataChannel.onclose = () => {
-            this.log('Canal de datos cerrado', 'warning');
-        };
-        this.dataChannel.onerror = (e) => {
-            this.log(`Error en DataChannel: ${e && e.message ? e.message : e}`, 'error');
-        };
-        this.dataChannel.onmessage = (e) => {
-            this.log(`Mensaje recibido en DataChannel: ${e.data}`, 'debug');
-        };
-        // PeerConnection event listeners
-        this.peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                this.log(`Enviando ICE candidate al servidor: ${JSON.stringify(event.candidate)}`, 'debug');
-                this.websocket.send(JSON.stringify({
-                    type: 'ice-candidate',
-                    candidate: event.candidate
-                }));
-            } else {
-                this.log('ICE gathering complete (no más candidates)', 'debug');
-            }
-        };
-        this.peerConnection.onicegatheringstatechange = () => {
-            this.log(`ICE gathering state: ${this.peerConnection.iceGatheringState}`, 'debug');
-        };
-        this.peerConnection.onsignalingstatechange = () => {
-            this.log(`Signaling state: ${this.peerConnection.signalingState}`, 'debug');
-        };
-        this.peerConnection.onconnectionstatechange = () => {
-            this.elements.connectionState.textContent = this.peerConnection.connectionState;
-            this.log(`Estado de conexión: ${this.peerConnection.connectionState}`, 'info');
-        };
-        this.peerConnection.oniceconnectionstatechange = () => {
-            this.log(`ICE connection state: ${this.peerConnection.iceConnectionState}`, 'debug');
-        };
-        this.peerConnection.ontrack = (event) => {
-            this.log('Track recibido del servidor (no se espera en este flujo)', 'debug');
-        };
-        this.peerConnection.onnegotiationneeded = () => {
-            this.log('onnegotiationneeded disparado', 'debug');
-        };
-        // Crear offer
-        const offer = await this.peerConnection.createOffer();
-        this.log(`Offer creado: ${JSON.stringify(offer)}`, 'debug');
-        await this.peerConnection.setLocalDescription(offer);
-        this.log(`LocalDescription establecida: ${JSON.stringify(this.peerConnection.localDescription)}`, 'debug');
-        // Enviar offer por WebSocket
-        this.log('Enviando offer al servidor...', 'debug');
-        this.websocket.send(JSON.stringify({
-            type: 'offer',
-            offer: offer
-        }));
-        // Iniciar monitoreo de estadísticas
-        this.startStatsMonitoring();
-    }
-
-    async handleWebSocketMessage(data) {
-        this.log(`Procesando mensaje WebSocket: ${JSON.stringify(data)}`, 'debug');
-        switch (data.type) {
-            case 'answer':
-                this.log(`Recibido answer: ${JSON.stringify(data.answer)}`, 'debug');
-                await this.peerConnection.setRemoteDescription(data.answer);
-                this.log('Respuesta WebRTC recibida y establecida como remoteDescription', 'info');
-                break;
-            case 'ice-candidate':
-                this.log(`Recibido ICE candidate del servidor: ${JSON.stringify(data.candidate)}`, 'debug');
-                try {
-                    await this.peerConnection.addIceCandidate(data.candidate);
-                    this.log('ICE candidate añadido correctamente', 'info');
-                } catch (err) {
-                    this.log(`Error añadiendo ICE candidate: ${err && err.stack ? err.stack : err}`, 'error');
-                }
-                break;
-            case 'audio-processed':
-                this.log(`Audio procesado: ${data.message}`, 'info');
-                break;
-            case 'error':
-                this.log(`Error del servidor: ${data.message}`, 'error');
-                break;
-            default:
-                this.log(`Mensaje desconocido: ${data.type}`, 'warning');
-        }
-    }
-    
-    setupAudioAnalysis() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.analyser = this.audioContext.createAnalyser();
-        
-        const source = this.audioContext.createMediaStreamSource(this.localStream);
-        source.connect(this.analyser);
-        
-        this.analyser.fftSize = 256;
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        
-        const updateVolume = () => {
-            if (!this.isStreaming) return;
-            
-            this.analyser.getByteFrequencyData(dataArray);
-            
-            // Calcular nivel promedio
-            let sum = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                sum += dataArray[i];
-            }
-            const average = sum / bufferLength;
-            const percentage = Math.round((average / 255) * 100);
-            
-            // Actualizar UI
-            this.elements.volumeFill.style.width = `${percentage}%`;
-            this.elements.volumeText.textContent = `${percentage}%`;
-            
-            requestAnimationFrame(updateVolume);
-        };
-        
-        updateVolume();
-    }
-    
-    sendAudioConfig() {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
-            const config = {
                 sampleRate: parseInt(this.elements.sampleRate.value),
-                bitrate: parseInt(this.elements.bitrate.value),
-                channels: 1,
-                format: 'webm'
+                channelCount: 1
+            }
+        };
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            // Agregar track de audio al peer connection
+            const audioTrack = stream.getAudioTracks()[0];
+            this.peerConnection.addTrack(audioTrack);
+            
+            this.log('✅ Micrófono configurado correctamente', 'success');
+            
+        } catch (error) {
+            throw new Error(`Error configurando micrófono: ${error.message}`);
+        }
+    }
+    
+    /**
+     * 📡 Configura el data channel para intercambio de eventos
+     */
+    setupDataChannel() {
+        // Crear data channel para eventos OpenAI
+        this.dataChannel = this.peerConnection.createDataChannel("oai-events");
+        
+        this.dataChannel.onopen = () => {
+            this.log('📡 Data channel abierto', 'success');
+            this.isSessionActive = true;
+            this.updateUI();
+            
+            // Enviar evento inicial de configuración
+            this.sendClientEvent({
+                type: "session.update",
+                session: {
+                    instructions: "Eres un asistente útil. Responde de manera conversacional y natural en español.",
+                    voice: "verse",
+                    input_audio_format: "pcm16",
+                    output_audio_format: "pcm16",
+                    input_audio_transcription: {
+                        model: "whisper-1"
+                    }
+                }
+            });
+        };
+        
+        this.dataChannel.onclose = () => {
+            this.log('📡 Data channel cerrado', 'warning');
+            this.isSessionActive = false;
+            this.updateUI();
+        };
+        
+        this.dataChannel.onerror = (error) => {
+            this.log(`❌ Error en data channel: ${error}`, 'error');
+        };
+        
+        this.dataChannel.onmessage = (event) => {
+            try {
+                const serverEvent = JSON.parse(event.data);
+                this.handleServerEvent(serverEvent);
+            } catch (error) {
+                this.log(`❌ Error procesando evento del servidor: ${error.message}`, 'error');
+            }
+        };
+    }
+    
+    /**
+     * 🔗 Configura los event listeners de WebRTC
+     */
+    setupWebRTCEventListeners() {
+        this.peerConnection.onconnectionstatechange = () => {
+            const state = this.peerConnection.connectionState;
+            this.elements.connectionState.textContent = state;
+            this.log(`🔗 Estado de conexión: ${state}`, 'info');
+            
+            if (state === 'failed' || state === 'disconnected') {
+                this.log('❌ Conexión perdida, deteniendo sesión', 'error');
+                this.stopSession();
+            }
+        };
+        
+        this.peerConnection.onicegatheringstatechange = () => {
+            this.log(`🧊 ICE gathering state: ${this.peerConnection.iceGatheringState}`, 'debug');
+        };
+        
+        this.peerConnection.onsignalingstatechange = () => {
+            this.log(`📡 Signaling state: ${this.peerConnection.signalingState}`, 'debug');
+        };
+    }
+    
+    /**
+     * 🌐 Conecta a OpenAI usando WebRTC
+     */
+    async connectToOpenAI(ephemeralKey) {
+        this.log('🌐 Conectando a OpenAI Realtime API...', 'info');
+        
+        try {
+            // Crear offer
+            const offer = await this.peerConnection.createOffer();
+            await this.peerConnection.setLocalDescription(offer);
+            
+            // Enviar SDP a OpenAI
+            const url = `${this.config.openai.baseUrl}?model=${this.config.openai.model}`;
+            
+            const response = await fetch(url, {
+                method: "POST",
+                body: offer.sdp,
+                headers: {
+                    Authorization: `Bearer ${ephemeralKey}`,
+                    "Content-Type": "application/sdp",
+                },
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Configurar answer
+            const answerSdp = await response.text();
+            const answer = {
+                type: "answer",
+                sdp: answerSdp,
             };
             
-            this.dataChannel.send(JSON.stringify({
-                type: 'audio-config',
-                config: config
-            }));
+            await this.peerConnection.setRemoteDescription(answer);
             
-            this.log(`Configuración enviada: ${JSON.stringify(config)}`, 'info');
+            this.log('✅ Conectado a OpenAI Realtime API', 'success');
+            
+        } catch (error) {
+            throw new Error(`Error conectando a OpenAI: ${error.message}`);
         }
     }
     
-    startStatsMonitoring() {
-        const updateStats = async () => {
-            if (!this.peerConnection || !this.isStreaming) return;
-            
-            try {
-                const stats = await this.peerConnection.getStats();
-                
-                stats.forEach(report => {
-                    if (report.type === 'outbound-rtp' && report.mediaType === 'audio') {
-                        this.elements.bytesSent.textContent = this.formatBytes(report.bytesSent || 0);
-                        this.elements.packetsSent.textContent = (report.packetsSent || 0).toLocaleString();
-                    }
-                    
-                    if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-                        this.elements.latency.textContent = report.currentRoundTripTime ? 
-                            `${Math.round(report.currentRoundTripTime * 1000)}ms` : '-';
-                    }
-                });
-                
-            } catch (error) {
-                this.log(`Error obteniendo estadísticas: ${error.message}`, 'warning');
-            }
-            
-            setTimeout(updateStats, 1000);
-        };
+    /**
+     * 📤 Envía un evento al modelo de OpenAI
+     */
+    sendClientEvent(event) {
+        if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+            this.log('⚠️ Data channel no disponible para enviar eventos', 'warning');
+            return;
+        }
         
-        updateStats();
+        try {
+            // Agregar ID único y timestamp
+            event.event_id = event.event_id || this.generateEventId();
+            
+            // Enviar evento
+            this.dataChannel.send(JSON.stringify(event));
+            
+            // Agregar timestamp para el log
+            event.timestamp = new Date().toLocaleTimeString();
+            this.events.unshift(event);
+            
+            this.log(`📤 Evento enviado: ${event.type}`, 'debug');
+            
+        } catch (error) {
+            this.log(`❌ Error enviando evento: ${error.message}`, 'error');
+        }
     }
     
-    formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    /**
+     * 📥 Maneja eventos recibidos del servidor OpenAI
+     */
+    handleServerEvent(event) {
+        // Agregar timestamp
+        event.timestamp = event.timestamp || new Date().toLocaleTimeString();
+        this.events.unshift(event);
+        
+        this.log(`📥 Evento recibido: ${event.type}`, 'debug');
+        
+        // Manejar eventos específicos
+        switch (event.type) {
+            case 'session.created':
+                this.log('✅ Sesión creada en OpenAI', 'success');
+                break;
+                
+            case 'session.updated':
+                this.log('🔄 Sesión actualizada', 'info');
+                break;
+                
+            case 'input_audio_buffer.speech_started':
+                this.log('🗣️ Inicio de habla detectado', 'info');
+                break;
+                
+            case 'input_audio_buffer.speech_stopped':
+                this.log('🤐 Fin de habla detectado', 'info');
+                break;
+                
+            case 'conversation.item.created':
+                this.log('💬 Nuevo ítem de conversación creado', 'info');
+                break;
+                
+            case 'response.audio.delta':
+                // Audio streaming en tiempo real
+                this.log('🎵 Audio delta recibido', 'debug');
+                break;
+                
+            case 'response.audio.done':
+                this.log('🎵 Audio de respuesta completado', 'info');
+                break;
+                
+            case 'response.text.delta':
+                this.log(`💭 Texto: ${event.delta || ''}`, 'info');
+                break;
+                
+            case 'error':
+                this.log(`❌ Error del servidor: ${event.error?.message || 'Error desconocido'}`, 'error');
+                break;
+                
+            default:
+                this.log(`📝 Evento: ${event.type}`, 'debug');
+        }
     }
     
+    /**
+     * 💬 Maneja el input de texto del usuario
+     */
+    handleTextInput() {
+        const message = this.elements.textInput.value.trim();
+        if (message) {
+            this.sendTextMessage(message);
+            this.elements.textInput.value = '';
+        }
+    }
+    
+    /**
+     * 💬 Envía un mensaje de texto al modelo
+     */
+    sendTextMessage(message) {
+        if (!message.trim()) return;
+        
+        // Crear ítem de conversación
+        this.sendClientEvent({
+            type: "conversation.item.create",
+            item: {
+                type: "message",
+                role: "user",
+                content: [{
+                    type: "input_text",
+                    text: message
+                }]
+            }
+        });
+        
+        // Solicitar respuesta
+        this.sendClientEvent({
+            type: "response.create"
+        });
+        
+        this.log(`💬 Mensaje enviado: "${message}"`, 'info');
+    }
+    
+    /**
+     * 🆔 Genera un ID único para eventos
+     */
+    generateEventId() {
+        return 'event_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    /**
+     * 🎨 Actualiza la interfaz de usuario
+     */
     updateUI() {
-        // Actualizar estado de conexión
+        // Estado de conexión
+        const isConnected = this.isSessionActive;
         this.elements.connectionStatus.className = `status-indicator ${
-            this.isConnected ? 'connected' : 'disconnected'
+            isConnected ? 'connected' : 'disconnected'
         }`;
         
-        this.elements.statusText.textContent = this.isConnected ? 'Conectado' : 'Desconectado';
+        this.elements.statusText.textContent = isConnected ? 'Conectado' : 'Desconectado';
         
-        // Actualizar botones
-        this.elements.startBtn.disabled = this.isStreaming;
-        this.elements.stopBtn.disabled = !this.isStreaming;
+        // Botones principales
+        this.elements.startBtn.disabled = this.isSessionActive || this.isConnecting;
+        this.elements.stopBtn.disabled = !this.isSessionActive && !this.isConnecting;
         
-        // Actualizar configuración
-        this.elements.sampleRate.disabled = this.isStreaming;
-        this.elements.bitrate.disabled = this.isStreaming;
+        // Input de texto
+        this.elements.textInput.disabled = !this.isSessionActive;
+        this.elements.sendTextBtn.disabled = !this.isSessionActive;
+        
+        // Configuración
+        this.elements.sampleRate.disabled = this.isSessionActive || this.isConnecting;
+        this.elements.bitrate.disabled = this.isSessionActive || this.isConnecting;
+        
+        // Texto de botones
+        if (this.isConnecting) {
+            this.elements.startBtn.textContent = 'Conectando...';
+        } else {
+            this.elements.startBtn.textContent = 'Iniciar Sesión';
+        }
     }
     
+    /**
+     * 📝 Sistema de logging
+     */
     log(message, type = 'info') {
         const timestamp = new Date().toLocaleTimeString();
         const logEntry = document.createElement('div');
         logEntry.className = `log-entry ${type}`;
+        
+        // Iconos para diferentes tipos de log
+        const icons = {
+            'info': 'ℹ️',
+            'success': '✅',
+            'warning': '⚠️',
+            'error': '❌',
+            'debug': '🔍'
+        };
+        
         logEntry.innerHTML = `
             <span class="timestamp">[${timestamp}]</span>
+            <span class="icon">${icons[type] || 'ℹ️'}</span>
             <span class="message">${escapeHTML(message)}</span>
         `;
         
         this.elements.logContainer.appendChild(logEntry);
         this.elements.logContainer.scrollTop = this.elements.logContainer.scrollHeight;
         
-        // Limitar el número de entradas del log
+        // Limitar entradas del log
         const entries = this.elements.logContainer.children;
         if (entries.length > 100) {
             this.elements.logContainer.removeChild(entries[0]);
         }
         
+        // También log a consola
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
 }
 
-// Handler global para errores JS
-window.onerror = function(message, source, lineno, colno, error) {
-    alert("JS Error: " + message + " en " + source + ":" + lineno);
-    console.error("JS Error:", message, source, lineno, colno, error);
-};
-
-// Log para detectar recarga de página
-window.addEventListener('beforeunload', () => {
-    console.log('La página se va a recargar o cerrar');
-});
-
-// Inicializar la aplicación cuando el DOM esté listo
+// 🚀 Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    new AudioRTCClient();
+    window.realtimeClient = new OpenAIRealtimeClient();
+    
+    // Exponer función para enviar mensajes desde la consola del navegador
+    window.sendMessage = (message) => {
+        if (window.realtimeClient.isSessionActive) {
+            window.realtimeClient.sendTextMessage(message);
+        } else {
+            console.log('❌ Sesión no activa. Inicia una sesión primero.');
+        }
+    };
+    
+    console.log('🎤 Cliente OpenAI Realtime inicializado');
+    console.log('💡 Usa sendMessage("tu mensaje") para enviar mensajes de texto');
 });
