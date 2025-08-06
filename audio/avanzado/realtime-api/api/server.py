@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from typing import Dict, Any
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -42,11 +42,37 @@ if not OPENAI_API_KEY:
 
 OPENAI_REALTIME_URL = "https://api.openai.com/v1/realtime/sessions"
 
+# 📁 Configuración de archivos estáticos
+# El directorio web está un nivel arriba del directorio api
+WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'web')
+
 # =========================
 # 🛣️ RUTAS DE LA API
 # =========================
 
-@app.route('/health', methods=['GET'])
+@app.route('/')
+def index():
+    """🏠 Página principal - servir index.html del directorio web."""
+    try:
+        return send_file(os.path.join(WEB_DIR, 'index.html'))
+    except FileNotFoundError:
+        return jsonify({
+            'error': 'Frontend no encontrado',
+            'message': 'Asegúrate de que el directorio web existe'
+        }), 404
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """📁 Servir archivos estáticos del directorio web."""
+    try:
+        return send_from_directory(WEB_DIR, filename)
+    except FileNotFoundError:
+        return jsonify({
+            'error': 'Archivo no encontrado',
+            'message': f'El archivo {filename} no existe'
+        }), 404
+
+@app.route('/api/health', methods=['GET'])
 def health_check():
     """🏥 Endpoint de salud para verificar que el servidor está funcionando."""
     return jsonify({
@@ -55,7 +81,7 @@ def health_check():
         'service': 'OpenAI Realtime Token Service'
     })
 
-@app.route('/token', methods=['GET', 'POST'])
+@app.route('/api/token', methods=['GET', 'POST'])
 def get_ephemeral_key():
     """
     🔑 Genera una ephemeral key para conectarse a la API de OpenAI Realtime.
@@ -121,7 +147,7 @@ def get_ephemeral_key():
             'details': str(e)
         }), 500
 
-@app.route('/session/config', methods=['GET'])
+@app.route('/api/session/config', methods=['GET'])
 def get_session_config():
     """⚙️ Devuelve la configuración disponible para las sesiones."""
     config = {
@@ -167,9 +193,10 @@ def main():
     try:
         logger.info("🚀 Iniciando servidor de ephemeral keys...")
         logger.info("💡 Endpoints disponibles:")
-        logger.info("   GET  /health - Verificar estado del servidor")
-        logger.info("   POST /token  - Generar ephemeral key")
-        logger.info("   GET  /session/config - Configuración disponible")
+        logger.info("   GET  /               - Interfaz web")
+        logger.info("   GET  /api/health     - Verificar estado del servidor")
+        logger.info("   POST /api/token      - Generar ephemeral key")
+        logger.info("   GET  /api/session/config - Configuración disponible")
         
         # Configuración del servidor
         host = os.getenv('HOST', '0.0.0.0')
@@ -177,6 +204,7 @@ def main():
         debug = os.getenv('DEBUG', 'False').lower() == 'true'
         
         logger.info(f"🌐 Servidor ejecutándose en http://{host}:{port}")
+        logger.info(f"🎨 Interfaz web disponible en http://{host}:{port}")
         logger.info("💡 Presiona Ctrl+C para detener el servidor")
         
         app.run(

@@ -33,8 +33,8 @@ class OpenAIRealtimeClient {
             get tokenUrl() {
                 const protocol = window.location.protocol === 'https:' ? 'https://' : 'http://';
                 const host = window.location.hostname;
-                const port = 8000; // Puerto del servidor Python
-                return `${protocol}${host}:${port}/token`;
+                const port = window.location.port || 8000; // Usar el puerto actual o 8000 por defecto
+                return `${protocol}${host}:${port}/api/token`;
             },
             // OpenAI Realtime API configuration
             openai: {
@@ -59,7 +59,11 @@ class OpenAIRealtimeClient {
             sampleRate: document.getElementById('sampleRate'),
             bitrate: document.getElementById('bitrate'),
             textInput: document.getElementById('textInput'),
-            sendTextBtn: document.getElementById('sendTextBtn')
+            sendTextBtn: document.getElementById('sendTextBtn'),
+            chatMessages: document.getElementById('chatMessages'),
+            logPanel: document.getElementById('logPanel'),
+            logToggleBtn: document.getElementById('logToggleBtn'),
+            clearLogsBtn: document.getElementById('clearLogsBtn')
         };
         
         this.init();
@@ -67,7 +71,9 @@ class OpenAIRealtimeClient {
     
     init() {
         this.setupEventListeners();
+        this.setupLogPanel();
         this.updateUI();
+        this.clearWelcomeMessage();
         this.log('🎤 Cliente OpenAI Realtime inicializado', 'info');
         this.log('💡 Basado en el ejemplo oficial de OpenAI con WebRTC', 'info');
     }
@@ -92,6 +98,100 @@ class OpenAIRealtimeClient {
                 setTimeout(() => this.startSession(), 1000);
             }
         });
+    }
+    
+    /**
+     * 📋 Configurar panel de logs
+     */
+    setupLogPanel() {
+        // Toggle panel de logs
+        this.elements.logToggleBtn.addEventListener('click', () => {
+            const isHidden = this.elements.logPanel.classList.contains('hidden');
+            if (isHidden) {
+                this.elements.logPanel.classList.remove('hidden');
+                this.elements.logToggleBtn.classList.add('active');
+                this.elements.logToggleBtn.title = 'Ocultar logs';
+            } else {
+                this.elements.logPanel.classList.add('hidden');
+                this.elements.logToggleBtn.classList.remove('active');
+                this.elements.logToggleBtn.title = 'Mostrar logs';
+            }
+        });
+        
+        // Limpiar logs
+        this.elements.clearLogsBtn.addEventListener('click', () => {
+            this.clearLogs();
+        });
+    }
+    
+    /**
+     * 🗑️ Limpiar todos los logs
+     */
+    clearLogs() {
+        if (this.elements.logContainer) {
+            this.elements.logContainer.innerHTML = '';
+            this.log('🧹 Logs limpiados', 'info');
+        }
+    }
+    
+    /**
+     * 🗨️ Limpiar mensaje de bienvenida al iniciar conversación
+     */
+    clearWelcomeMessage() {
+        const welcomeMessage = this.elements.chatMessages.querySelector('.welcome-message');
+        if (welcomeMessage && this.elements.chatMessages.children.length > 1) {
+            welcomeMessage.remove();
+        }
+    }
+    
+    /**
+     * 💬 Agregar mensaje al chat
+     */
+    addMessage(content, isUser = false) {
+        this.clearWelcomeMessage();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble';
+        bubbleDiv.textContent = content;
+        
+        messageDiv.appendChild(bubbleDiv);
+        this.elements.chatMessages.appendChild(messageDiv);
+        
+        // Scroll al final
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+    
+    /**
+     * ⏳ Mostrar indicador de escritura
+     */
+    showTypingIndicator() {
+        this.hideTypingIndicator(); // Eliminar indicador previo
+        
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message assistant typing-message';
+        typingDiv.innerHTML = `
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        
+        this.elements.chatMessages.appendChild(typingDiv);
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+    
+    /**
+     * 🚫 Ocultar indicador de escritura
+     */
+    hideTypingIndicator() {
+        const typingMessage = this.elements.chatMessages.querySelector('.typing-message');
+        if (typingMessage) {
+            typingMessage.remove();
+        }
     }
     
     /**
@@ -422,14 +522,36 @@ class OpenAIRealtimeClient {
                 
             case 'input_audio_buffer.speech_started':
                 this.log('🗣️ Inicio de habla detectado', 'info');
+                this.elements.startBtn.classList.add('recording');
+                const startBtnSpan = this.elements.startBtn.querySelector('span');
+                if (startBtnSpan) startBtnSpan.textContent = 'Grabando...';
                 break;
                 
             case 'input_audio_buffer.speech_stopped':
                 this.log('🤐 Fin de habla detectado', 'info');
+                this.elements.startBtn.classList.remove('recording');
+                const stopBtnSpan = this.elements.startBtn.querySelector('span');
+                if (stopBtnSpan) stopBtnSpan.textContent = 'Hablar';
+                this.showTypingIndicator();
                 break;
                 
             case 'conversation.item.created':
                 this.log('💬 Nuevo ítem de conversación creado', 'info');
+                // Si es un mensaje del usuario con transcripción
+                if (event.item && event.item.role === 'user' && event.item.content) {
+                    const transcript = event.item.content.find(c => c.type === 'input_text' || c.transcript);
+                    if (transcript) {
+                        const text = transcript.text || transcript.transcript;
+                        if (text) {
+                            this.addMessage(text, true);
+                        }
+                    }
+                }
+                break;
+                
+            case 'response.created':
+                this.log('🔄 Generando respuesta...', 'info');
+                this.showTypingIndicator();
                 break;
                 
             case 'response.audio.delta':
@@ -438,20 +560,67 @@ class OpenAIRealtimeClient {
                 break;
                 
             case 'response.audio.done':
-                this.log('🎵 Audio de respuesta completado', 'info');
+                this.log('🎵 Audio completo recibido', 'info');
                 break;
                 
             case 'response.text.delta':
-                this.log(`💭 Texto: ${event.delta || ''}`, 'info');
+                // Texto streaming - agregar al chat
+                if (event.delta) {
+                    this.handleTextDelta(event.delta);
+                }
+                break;
+                
+            case 'response.text.done':
+                this.log('� Texto completo recibido', 'info');
+                this.hideTypingIndicator();
+                break;
+                
+            case 'response.done':
+                this.log('✅ Respuesta completada', 'success');
+                this.hideTypingIndicator();
                 break;
                 
             case 'error':
                 this.log(`❌ Error del servidor: ${event.error?.message || 'Error desconocido'}`, 'error');
+                this.hideTypingIndicator();
                 break;
                 
             default:
                 this.log(`📝 Evento: ${event.type}`, 'debug');
         }
+    }
+    
+    /**
+     * 📝 Maneja deltas de texto streaming
+     */
+    handleTextDelta(delta) {
+        this.hideTypingIndicator();
+        
+        // Buscar el último mensaje del asistente o crear uno nuevo
+        const messages = this.elements.chatMessages.querySelectorAll('.message.assistant:not(.typing-message)');
+        let lastAssistantMessage = messages[messages.length - 1];
+        
+        if (!lastAssistantMessage) {
+            // Crear nuevo mensaje
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = delta;
+            
+            messageDiv.appendChild(bubbleDiv);
+            this.elements.chatMessages.appendChild(messageDiv);
+        } else {
+            // Agregar al mensaje existente
+            const bubble = lastAssistantMessage.querySelector('.message-bubble');
+            if (bubble) {
+                bubble.textContent += delta;
+            }
+        }
+        
+        // Scroll al final
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
     }
     
     /**
@@ -471,6 +640,9 @@ class OpenAIRealtimeClient {
     sendTextMessage(message) {
         if (!message.trim()) return;
         
+        // Mostrar mensaje del usuario en el chat
+        this.addMessage(message, true);
+        
         // Crear ítem de conversación
         this.sendClientEvent({
             type: "conversation.item.create",
@@ -489,6 +661,9 @@ class OpenAIRealtimeClient {
             type: "response.create"
         });
         
+        // Mostrar indicador de escritura
+        this.showTypingIndicator();
+        
         this.log(`💬 Mensaje enviado: "${message}"`, 'info');
     }
     
@@ -505,7 +680,7 @@ class OpenAIRealtimeClient {
     updateUI() {
         // Estado de conexión
         const isConnected = this.isSessionActive;
-        this.elements.connectionStatus.className = `status-indicator ${
+        this.elements.connectionStatus.className = `status-dot ${
             isConnected ? 'connected' : 'disconnected'
         }`;
         
@@ -520,38 +695,61 @@ class OpenAIRealtimeClient {
         this.elements.sendTextBtn.disabled = !this.isSessionActive;
         
         // Configuración
-        this.elements.sampleRate.disabled = this.isSessionActive || this.isConnecting;
-        this.elements.bitrate.disabled = this.isSessionActive || this.isConnecting;
-        
-        // Texto de botones
-        if (this.isConnecting) {
-            this.elements.startBtn.textContent = 'Conectando...';
-        } else {
-            this.elements.startBtn.textContent = 'Iniciar Sesión';
+        if (this.elements.sampleRate) {
+            this.elements.sampleRate.disabled = this.isSessionActive || this.isConnecting;
         }
+        if (this.elements.bitrate) {
+            this.elements.bitrate.disabled = this.isSessionActive || this.isConnecting;
+        }
+        
+        // Texto y estado de botones de voz
+        const startBtnSpan = this.elements.startBtn.querySelector('span');
+        if (this.isConnecting) {
+            if (startBtnSpan) startBtnSpan.textContent = 'Conectando...';
+            this.elements.startBtn.classList.remove('recording');
+        } else if (this.isSessionActive) {
+            if (startBtnSpan) startBtnSpan.textContent = 'Hablar';
+            this.elements.startBtn.classList.remove('recording');
+        } else {
+            if (startBtnSpan) startBtnSpan.textContent = 'Hablar';
+            this.elements.startBtn.classList.remove('recording');
+        }
+        
+        const stopBtnSpan = this.elements.stopBtn.querySelector('span');
+        if (stopBtnSpan) stopBtnSpan.textContent = 'Detener';
     }
     
     /**
-     * 📝 Sistema de logging
+     * 📝 Sistema de logging mejorado con colores y mejor formato
      */
     log(message, type = 'info') {
+        // Solo crear elementos de log si el contenedor existe (elementos ocultos)
+        if (!this.elements.logContainer) return;
+        
         const timestamp = new Date().toLocaleTimeString();
         const logEntry = document.createElement('div');
-        logEntry.className = `log-entry ${type}`;
+        logEntry.className = `log-entry log-${type}`;
         
-        // Iconos para diferentes tipos de log
-        const icons = {
-            'info': 'ℹ️',
-            'success': '✅',
-            'warning': '⚠️',
-            'error': '❌',
-            'debug': '🔍'
+        // Iconos y colores para diferentes tipos de log
+        const logTypes = {
+            'info': { icon: '💡', label: 'INFO', color: '#3b82f6' },
+            'success': { icon: '✅', label: 'SUCCESS', color: '#10b981' },
+            'warning': { icon: '⚠️', label: 'WARNING', color: '#f59e0b' },
+            'error': { icon: '❌', label: 'ERROR', color: '#ef4444' },
+            'debug': { icon: '🔍', label: 'DEBUG', color: '#8b5cf6' }
         };
         
+        const logType = logTypes[type] || logTypes['info'];
+        
         logEntry.innerHTML = `
-            <span class="timestamp">[${timestamp}]</span>
-            <span class="icon">${icons[type] || 'ℹ️'}</span>
-            <span class="message">${escapeHTML(message)}</span>
+            <div class="log-entry-content">
+                <div class="log-header">
+                    <span class="log-icon">${logType.icon}</span>
+                    <span class="log-type" style="color: ${logType.color};">${logType.label}</span>
+                    <span class="log-timestamp">${timestamp}</span>
+                </div>
+                <div class="log-message">${escapeHTML(message)}</div>
+            </div>
         `;
         
         this.elements.logContainer.appendChild(logEntry);
@@ -563,8 +761,20 @@ class OpenAIRealtimeClient {
             this.elements.logContainer.removeChild(entries[0]);
         }
         
-        // También log a consola
-        console.log(`[${type.toUpperCase()}] ${message}`);
+        // También log a consola con colores
+        const consoleColors = {
+            'info': 'color: #3b82f6; font-weight: bold;',
+            'success': 'color: #10b981; font-weight: bold;',
+            'warning': 'color: #f59e0b; font-weight: bold;',
+            'error': 'color: #ef4444; font-weight: bold;',
+            'debug': 'color: #8b5cf6; font-weight: bold;'
+        };
+        
+        console.log(
+            `%c[${logType.label}] %c${message}`,
+            consoleColors[type] || consoleColors['info'],
+            'color: inherit; font-weight: normal;'
+        );
     }
 }
 
