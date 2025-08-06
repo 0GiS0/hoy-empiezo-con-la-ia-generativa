@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Cargar variables de entorno
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../web', static_url_path='')
 CORS(app, resources={r"*": {"origins": "*"}})
 
 # Configurar logging
@@ -174,6 +174,20 @@ def export_conversation():
     except Exception as e:
         logger.error(f"Error exportando conversación: {str(e)}")
         return jsonify({"error": "Error exportando conversación"}), 500
+
+
+# 🏠 Endpoint para la página de inicio
+@app.route('/')
+def index():
+    """Sirve el archivo index.html de la carpeta web."""
+    return app.send_static_file('index.html')
+
+# 📦 Endpoint para archivos estáticos (JS, CSS, etc.)
+@app.route('/<path:filename>')
+def static_files(filename):
+    """Sirve archivos estáticos adicionales."""
+    return app.send_static_file(filename)
+
 
 if __name__ == '__main__':
     # Verificar que la API key está configurada
