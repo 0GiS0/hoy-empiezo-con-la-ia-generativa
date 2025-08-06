@@ -1,3 +1,17 @@
+/**
+ * Escapes HTML special characters in a string to prevent XSS.
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 class AudioRTCClient {
     constructor() {
         this.peerConnection = null;
@@ -392,7 +406,7 @@ class AudioRTCClient {
         logEntry.className = `log-entry ${type}`;
         logEntry.innerHTML = `
             <span class="timestamp">[${timestamp}]</span>
-            <span class="message">${message}</span>
+            <span class="message">${escapeHTML(message)}</span>
         `;
         
         this.elements.logContainer.appendChild(logEntry);
