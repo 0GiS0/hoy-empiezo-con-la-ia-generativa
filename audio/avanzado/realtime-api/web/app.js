@@ -17,108 +17,127 @@ function escapeHTML(str) {
         .replace(/'/g, '&#39;');
 }
 
+/**
+ * 🎯 Clase principal que maneja la comunicación con OpenAI Realtime API
+ * Esta clase utiliza WebRTC para establecer una conexión bidireccional en tiempo real
+ * permitiendo envío de audio del micrófono y recepción de respuestas de voz del modelo
+ */
 class OpenAIRealtimeClient {
     constructor() {
-        // Estado de la aplicación
-        this.isSessionActive = false;
-        this.isConnecting = false;
-        this.events = [];
-        this.dataChannel = null;
-        this.peerConnection = null;
-        this.audioElement = null;
+        // 🏗️ Estado de la aplicación - Variables que controlan el flujo de la app
+        this.isSessionActive = false;    // 🔴 ¿Hay una sesión activa con OpenAI?
+        this.isConnecting = false;       // 🟡 ¿Estamos en proceso de conectar?
+        this.events = [];               // 📋 Historial de eventos enviados/recibidos
+        this.dataChannel = null;        // 📡 Canal de datos WebRTC para eventos JSON
+        this.peerConnection = null;     // 🔗 Conexión WebRTC principal
+        this.audioElement = null;       // 🔊 Elemento HTML para reproducir audio de OpenAI
         
-        // Configuración
+        // ⚙️ Configuración - URLs y parámetros del cliente
         this.config = {
-            // URL del servidor local para obtener ephemeral keys
+            // 🌐 URL del servidor local para obtener ephemeral keys
+            // Los ephemeral keys son tokens temporales que permiten conectar a OpenAI
+            // sin exponer tu API key real en el frontend
             get tokenUrl() {
                 const protocol = window.location.protocol === 'https:' ? 'https://' : 'http://';
                 const host = window.location.hostname;
                 const port = window.location.port || 8000; // Usar el puerto actual o 8000 por defecto
                 return `${protocol}${host}:${port}/api/token`;
             },
-            // OpenAI Realtime API configuration
+            // 🤖 OpenAI Realtime API configuration
             openai: {
-                baseUrl: "https://api.openai.com/v1/realtime",
-                model: "gpt-4o-realtime-preview-2024-12-17"
+                baseUrl: "https://api.openai.com/v1/realtime",         // 🔗 Endpoint oficial de OpenAI
+                model: "gpt-4o-realtime-preview-2024-12-17"            // 🧠 Modelo específico para tiempo real
             }
         };
         
-        // Elementos del DOM
+        // 🎯 Elementos del DOM - Referencias a todos los elementos HTML que necesitamos
         this.elements = {
-            startBtn: document.getElementById('startBtn'),
-            stopBtn: document.getElementById('stopBtn'),
-            connectionStatus: document.getElementById('connectionStatus'),
-            statusText: document.getElementById('statusText'),
-            volumeFill: document.getElementById('volumeFill'),
-            volumeText: document.getElementById('volumeText'),
-            connectionState: document.getElementById('connectionState'),
-            bytesSent: document.getElementById('bytesSent'),
-            packetsSent: document.getElementById('packetsSent'),
-            latency: document.getElementById('latency'),
-            logContainer: document.getElementById('logContainer'),
-            sampleRate: document.getElementById('sampleRate'),
-            bitrate: document.getElementById('bitrate'),
-            textInput: document.getElementById('textInput'),
-            sendTextBtn: document.getElementById('sendTextBtn'),
-            chatMessages: document.getElementById('chatMessages'),
-            logPanel: document.getElementById('logPanel'),
-            logToggleBtn: document.getElementById('logToggleBtn'),
-            clearLogsBtn: document.getElementById('clearLogsBtn')
+            startBtn: document.getElementById('startBtn'),              // 🎤 Botón para iniciar sesión de voz
+            stopBtn: document.getElementById('stopBtn'),                // 🛑 Botón para detener sesión
+            connectionStatus: document.getElementById('connectionStatus'), // 🔴🟢 Indicador visual de conexión
+            statusText: document.getElementById('statusText'),          // 📝 Texto del estado actual
+            volumeFill: document.getElementById('volumeFill'),          // 📊 Indicador visual de volumen
+            volumeText: document.getElementById('volumeText'),          // 📊 Texto del nivel de volumen
+            connectionState: document.getElementById('connectionState'), // 🔗 Estado detallado de WebRTC
+            bytesSent: document.getElementById('bytesSent'),            // 📈 Contador de bytes enviados
+            packetsSent: document.getElementById('packetsSent'),        // 📦 Contador de paquetes enviados
+            latency: document.getElementById('latency'),                // ⏱️ Medidor de latencia
+            logContainer: document.getElementById('logContainer'),      // 📋 Contenedor de logs
+            sampleRate: document.getElementById('sampleRate'),          // 🎵 Selector de frecuencia de muestreo
+            bitrate: document.getElementById('bitrate'),                // 💾 Selector de bitrate
+            textInput: document.getElementById('textInput'),            // ⌨️ Input para mensajes de texto
+            sendTextBtn: document.getElementById('sendTextBtn'),        // 📤 Botón enviar texto
+            chatMessages: document.getElementById('chatMessages'),      // 💬 Contenedor de mensajes del chat
+            logPanel: document.getElementById('logPanel'),              // 📊 Panel de logs técnicos
+            logToggleBtn: document.getElementById('logToggleBtn'),      // 👁️ Botón mostrar/ocultar logs
+            clearLogsBtn: document.getElementById('clearLogsBtn')       // 🗑️ Botón limpiar logs
         };
         
+        // 🚀 Inicializar la aplicación
         this.init();
     }
     
+    /**
+     * 🔧 Método de inicialización principal
+     * Configura todos los componentes necesarios para que la app funcione
+     */
     init() {
-        this.setupEventListeners();
-        this.setupLogPanel();
-        this.updateUI();
-        this.clearWelcomeMessage();
+        this.setupEventListeners();    // 👂 Configurar escuchadores de eventos
+        this.setupLogPanel();          // 📋 Configurar panel de logs
+        this.updateUI();               // 🎨 Actualizar interfaz inicial
+        this.clearWelcomeMessage();    // 🧹 Limpiar mensaje de bienvenida si existe
         this.log('🎤 Cliente OpenAI Realtime inicializado', 'info');
         this.log('💡 Basado en el ejemplo oficial de OpenAI con WebRTC', 'info');
     }
     
+    /**
+     * 👂 Configurar todos los event listeners de la interfaz
+     * Aquí conectamos los botones y elementos con sus respectivas funciones
+     */
     setupEventListeners() {
+        // 🎤 Botones principales de control de sesión
         this.elements.startBtn.addEventListener('click', () => this.startSession());
         this.elements.stopBtn.addEventListener('click', () => this.stopSession());
         
-        // Text input functionality
+        // ⌨️ Funcionalidad de input de texto - dos formas de enviar mensaje
         this.elements.sendTextBtn.addEventListener('click', () => this.handleTextInput());
         this.elements.textInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter') {  // 📤 Enviar con Enter
                 this.handleTextInput();
             }
         });
         
-        // Detectar cambios en la configuración
+        // ⚙️ Detectar cambios en la configuración de audio
+        // Si cambia el sample rate durante una sesión activa, necesitamos reiniciar
         this.elements.sampleRate.addEventListener('change', () => {
             if (this.isSessionActive) {
                 this.log('⚠️ Configuración cambiada, reiniciando sesión...', 'warning');
                 this.stopSession();
-                setTimeout(() => this.startSession(), 1000);
+                setTimeout(() => this.startSession(), 1000); // 🔄 Reiniciar después de 1 segundo
             }
         });
     }
     
     /**
-     * 📋 Configurar panel de logs
+     * 📋 Configurar panel de logs técnicos
+     * Los logs ayudan a debuggear y entender qué está pasando internamente
      */
     setupLogPanel() {
-        // Toggle panel de logs
+        // 👁️ Toggle panel de logs - mostrar/ocultar
         this.elements.logToggleBtn.addEventListener('click', () => {
             const isHidden = this.elements.logPanel.classList.contains('hidden');
             if (isHidden) {
-                this.elements.logPanel.classList.remove('hidden');
+                this.elements.logPanel.classList.remove('hidden');        // 👀 Mostrar logs
                 this.elements.logToggleBtn.classList.add('active');
                 this.elements.logToggleBtn.title = 'Ocultar logs';
             } else {
-                this.elements.logPanel.classList.add('hidden');
+                this.elements.logPanel.classList.add('hidden');           // 🙈 Ocultar logs
                 this.elements.logToggleBtn.classList.remove('active');
                 this.elements.logToggleBtn.title = 'Mostrar logs';
             }
         });
         
-        // Limpiar logs
+        // 🗑️ Limpiar todos los logs
         this.elements.clearLogsBtn.addEventListener('click', () => {
             this.clearLogs();
         });
@@ -145,11 +164,14 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 💬 Agregar mensaje al chat
+     * 💬 Agregar un mensaje al chat visual
+     * @param {string} content - El texto del mensaje
+     * @param {boolean} isUser - true si es mensaje del usuario, false si es del asistente
      */
     addMessage(content, isUser = false) {
-        this.clearWelcomeMessage();
+        this.clearWelcomeMessage(); // 🧹 Quitar mensaje de bienvenida al empezar a chatear
         
+        // 🏗️ Crear estructura HTML del mensaje
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
         
@@ -160,23 +182,25 @@ class OpenAIRealtimeClient {
         messageDiv.appendChild(bubbleDiv);
         this.elements.chatMessages.appendChild(messageDiv);
         
-        // Scroll al final
+        // 📜 Scroll automático al último mensaje
         this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
     }
     
     /**
-     * ⏳ Mostrar indicador de escritura
+     * ⏳ Mostrar indicador de "escribiendo..." mientras el asistente piensa
+     * Proporciona feedback visual de que la IA está procesando la respuesta
      */
     showTypingIndicator() {
-        this.hideTypingIndicator(); // Eliminar indicador previo
+        this.hideTypingIndicator(); // 🧹 Eliminar indicador previo por si acaso
         
+        // 🎭 Crear animación de puntos que se mueven
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message assistant typing-message';
         typingDiv.innerHTML = `
             <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>    <!-- 🔵 Punto 1 -->
+                <div class="typing-dot"></div>    <!-- 🔵 Punto 2 -->
+                <div class="typing-dot"></div>    <!-- 🔵 Punto 3 -->
             </div>
         `;
         
@@ -195,9 +219,11 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 🚀 Inicia una nueva sesión con OpenAI Realtime API
+     * 🚀 Método principal que inicia una nueva sesión con OpenAI Realtime API
+     * Este es el corazón de la aplicación - establece la conexión completa
      */
     async startSession() {
+        // 🚫 Prevenir múltiples conexiones simultáneas
         if (this.isConnecting || this.isSessionActive) {
             this.log('⚠️ Ya hay una sesión activa o conectando', 'warning');
             return;
@@ -208,25 +234,25 @@ class OpenAIRealtimeClient {
             this.updateUI();
             this.log('🚀 Iniciando sesión con OpenAI Realtime API...', 'info');
             
-            // 1. Obtener ephemeral key del servidor local
+            // 🔐 1. Obtener ephemeral key del servidor local (token temporal)
             const ephemeralKey = await this.getEphemeralKey();
             
-            // 2. Crear peer connection
+            // 🔗 2. Crear peer connection WebRTC (la conexión principal)
             this.peerConnection = new RTCPeerConnection();
             
-            // 3. Configurar audio para reproducir respuestas del modelo
+            // 🔊 3. Configurar audio para reproducir respuestas del modelo
             this.setupAudioPlayback();
             
-            // 4. Configurar captura de micrófono
+            // 🎤 4. Configurar captura de micrófono del usuario
             await this.setupMicrophoneInput();
             
-            // 5. Configurar data channel para eventos
+            // 📡 5. Configurar data channel para intercambio de eventos JSON
             this.setupDataChannel();
             
-            // 6. Configurar event listeners de WebRTC
+            // 👂 6. Configurar event listeners de WebRTC (monitoreo de conexión)
             this.setupWebRTCEventListeners();
             
-            // 7. Crear offer y conectar a OpenAI
+            // 🌐 7. Crear offer y conectar a OpenAI (handshake final)
             await this.connectToOpenAI(ephemeralKey);
             
             this.log('✅ Sesión iniciada correctamente', 'success');
@@ -234,7 +260,7 @@ class OpenAIRealtimeClient {
         } catch (error) {
             this.log(`❌ Error iniciando sesión: ${error.message}`, 'error');
             console.error('Error detallado:', error);
-            this.stopSession();
+            this.stopSession(); // 🧹 Limpiar en caso de error
         } finally {
             this.isConnecting = false;
             this.updateUI();
@@ -242,35 +268,36 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 🛑 Detiene la sesión actual
+     * 🛑 Detiene la sesión actual y limpia todos los recursos
+     * Importante hacer cleanup completo para evitar memory leaks
      */
     stopSession() {
         this.log('🛑 Deteniendo sesión...', 'info');
         
         try {
-            // Cerrar data channel
+            // 📡 Cerrar data channel (canal de eventos JSON)
             if (this.dataChannel) {
                 this.dataChannel.close();
                 this.dataChannel = null;
             }
             
-            // Detener tracks de audio
+            // 🎤 Detener todos los tracks de audio (liberar micrófono)
             if (this.peerConnection) {
                 this.peerConnection.getSenders().forEach(sender => {
                     if (sender.track) {
-                        sender.track.stop();
+                        sender.track.stop(); // 🔇 Liberar el micrófono
                     }
                 });
                 
-                // Cerrar peer connection
+                // 🔗 Cerrar la conexión WebRTC completamente
                 this.peerConnection.close();
                 this.peerConnection = null;
             }
             
-            // Limpiar audio element
+            // 🔊 Limpiar elemento de audio (detener reproducción)
             if (this.audioElement) {
                 this.audioElement.pause();
-                this.audioElement.srcObject = null;
+                this.audioElement.srcObject = null; // 🧹 Liberar stream
                 this.audioElement = null;
             }
             
@@ -285,11 +312,14 @@ class OpenAIRealtimeClient {
     
     /**
      * 🔑 Obtiene ephemeral key del servidor local
+     * Los ephemeral keys son tokens temporales que permiten usar la API
+     * sin exponer la API key real en el frontend (más seguro)
      */
     async getEphemeralKey() {
         this.log('🔑 Obteniendo ephemeral key del servidor...', 'info');
         
         try {
+            // 🌐 Hacer petición POST al servidor local
             const response = await fetch(this.config.tokenUrl, {
                 method: 'POST',
                 headers: {
@@ -297,18 +327,20 @@ class OpenAIRealtimeClient {
                 }
             });
             
+            // ⚠️ Verificar que la respuesta sea exitosa
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
             
+            // 🔍 Verificar que el token esté en la respuesta
             if (!data.client_secret || !data.client_secret.value) {
                 throw new Error('Ephemeral key no encontrada en la respuesta');
             }
             
             this.log('✅ Ephemeral key obtenida correctamente', 'success');
-            return data.client_secret.value;
+            return data.client_secret.value; // 🎟️ Retornar el token
             
         } catch (error) {
             throw new Error(`Error obteniendo ephemeral key: ${error.message}`);
@@ -317,39 +349,46 @@ class OpenAIRealtimeClient {
     
     /**
      * 🔊 Configura la reproducción de audio desde OpenAI
+     * Cuando OpenAI envía respuestas de voz, las reproducimos automáticamente
      */
     setupAudioPlayback() {
+        // 🎵 Crear elemento de audio HTML5 para reproducir respuestas
         this.audioElement = document.createElement("audio");
-        this.audioElement.autoplay = true;
+        this.audioElement.autoplay = true; // ▶️ Reproducir automáticamente
         
-        // Cuando llega un track de audio desde OpenAI, reproducirlo
+        // 🎧 Cuando llega un track de audio desde OpenAI, conectarlo al reproductor
         this.peerConnection.ontrack = (event) => {
             this.log('🎵 Audio track recibido desde OpenAI', 'info');
+            // 🔗 Conectar el stream de audio al elemento HTML
             this.audioElement.srcObject = event.streams[0];
         };
     }
     
     /**
-     * 🎤 Configura la captura del micrófono
+     * 🎤 Configura la captura del micrófono del usuario
+     * Solicita permisos y configura el stream de audio con parámetros optimizados
      */
     async setupMicrophoneInput() {
         this.log('🎤 Configurando captura de micrófono...', 'info');
         
+        // ⚙️ Configuración de audio optimizada para conversación
         const constraints = {
             audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                sampleRate: parseInt(this.elements.sampleRate.value),
-                channelCount: 1
+                echoCancellation: true,    // 🔇 Cancelar eco para evitar feedback
+                noiseSuppression: true,    // 🔇 Suprimir ruido de fondo
+                autoGainControl: true,     // 📊 Control automático de ganancia
+                sampleRate: parseInt(this.elements.sampleRate.value), // 🎵 Frecuencia configurada
+                channelCount: 1           // 🔊 Mono (una sola canal)
             }
         };
         
         try {
+            // 🎤 Solicitar acceso al micrófono del usuario
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // Agregar track de audio al peer connection
+            // 🎧 Obtener el track de audio del stream
             const audioTrack = stream.getAudioTracks()[0];
+            // 📡 Agregar el track a la conexión WebRTC (enviar a OpenAI)
             this.peerConnection.addTrack(audioTrack);
             
             this.log('✅ Micrófono configurado correctamente', 'success');
@@ -360,46 +399,51 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 📡 Configura el data channel para intercambio de eventos
+     * 📡 Configura el data channel para intercambio de eventos JSON
+     * Los data channels permiten enviar datos estructurados (eventos) además de audio
      */
     setupDataChannel() {
-        // Crear data channel para eventos OpenAI
+        // 🚧 Crear canal de datos etiquetado para eventos OpenAI
         this.dataChannel = this.peerConnection.createDataChannel("oai-events");
         
+        // ✅ Cuando el canal se abre, configurar la sesión
         this.dataChannel.onopen = () => {
             this.log('📡 Data channel abierto', 'success');
             this.isSessionActive = true;
             this.updateUI();
             
-            // Enviar evento inicial de configuración
+            // 🔧 Enviar configuración inicial a OpenAI
             this.sendClientEvent({
                 type: "session.update",
                 session: {
-                    instructions: "Eres un asistente útil. Responde de manera conversacional y natural en español.",
-                    voice: "verse",
-                    input_audio_format: "pcm16",
-                    output_audio_format: "pcm16",
-                    input_audio_transcription: {
+                    instructions: "Eres un asistente útil. Responde de manera conversacional y natural en español.", // 🗣️ Personalidad
+                    voice: "verse",                        // 🎭 Voz específica
+                    input_audio_format: "pcm16",          // 🎵 Formato audio entrada
+                    output_audio_format: "pcm16",         // 🎵 Formato audio salida
+                    input_audio_transcription: {          // 📝 Transcripción automática
                         model: "whisper-1"
                     }
                 }
             });
         };
         
+        // ⚠️ Cuando el canal se cierra
         this.dataChannel.onclose = () => {
             this.log('📡 Data channel cerrado', 'warning');
             this.isSessionActive = false;
             this.updateUI();
         };
         
+        // ❌ Manejo de errores del canal
         this.dataChannel.onerror = (error) => {
             this.log(`❌ Error en data channel: ${error}`, 'error');
         };
         
+        // 📥 Cuando llegan eventos desde OpenAI
         this.dataChannel.onmessage = (event) => {
             try {
-                const serverEvent = JSON.parse(event.data);
-                this.handleServerEvent(serverEvent);
+                const serverEvent = JSON.parse(event.data); // 🔄 Parsear JSON
+                this.handleServerEvent(serverEvent);        // 🎯 Procesar evento
             } catch (error) {
                 this.log(`❌ Error procesando evento del servidor: ${error.message}`, 'error');
             }
@@ -407,63 +451,72 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 🔗 Configura los event listeners de WebRTC
+     * 🔗 Configura los event listeners de WebRTC para monitorear la conexión
+     * WebRTC tiene varios estados que nos ayudan a debuggear problemas
      */
     setupWebRTCEventListeners() {
+        // 🔄 Monitorear cambios en el estado de la conexión
         this.peerConnection.onconnectionstatechange = () => {
             const state = this.peerConnection.connectionState;
             this.elements.connectionState.textContent = state;
             this.log(`🔗 Estado de conexión: ${state}`, 'info');
             
+            // 💔 Si la conexión falla o se desconecta, limpiar todo
             if (state === 'failed' || state === 'disconnected') {
                 this.log('❌ Conexión perdida, deteniendo sesión', 'error');
                 this.stopSession();
             }
         };
         
+        // 🧊 Monitorear el proceso de ICE gathering (recolección de candidatos)
         this.peerConnection.onicegatheringstatechange = () => {
             this.log(`🧊 ICE gathering state: ${this.peerConnection.iceGatheringState}`, 'debug');
         };
         
+        // 📡 Monitorear cambios en el signaling state (negociación WebRTC)
         this.peerConnection.onsignalingstatechange = () => {
             this.log(`📡 Signaling state: ${this.peerConnection.signalingState}`, 'debug');
         };
     }
     
     /**
-     * 🌐 Conecta a OpenAI usando WebRTC
+     * 🌐 Conecta a OpenAI usando WebRTC con el protocolo SDP
+     * SDP (Session Description Protocol) describe los parámetros de la sesión multimedia
      */
     async connectToOpenAI(ephemeralKey) {
         this.log('🌐 Conectando a OpenAI Realtime API...', 'info');
         
         try {
-            // Crear offer
+            // 📋 1. Crear "offer" - describe qué podemos enviar/recibir
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
             
-            // Enviar SDP a OpenAI
+            // 🌐 2. Construir URL con el modelo específico
             const url = `${this.config.openai.baseUrl}?model=${this.config.openai.model}`;
             
+            // 📤 3. Enviar SDP offer a OpenAI con autenticación
             const response = await fetch(url, {
                 method: "POST",
-                body: offer.sdp,
+                body: offer.sdp,                                // 📋 Descripción de sesión
                 headers: {
-                    Authorization: `Bearer ${ephemeralKey}`,
-                    "Content-Type": "application/sdp",
+                    Authorization: `Bearer ${ephemeralKey}`,    // 🔑 Token de autenticación
+                    "Content-Type": "application/sdp",         // 📄 Tipo de contenido SDP
                 },
             });
             
+            // ⚠️ Verificar respuesta exitosa
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            // Configurar answer
+            // 📥 4. Configurar "answer" - respuesta de OpenAI con sus capacidades
             const answerSdp = await response.text();
             const answer = {
                 type: "answer",
                 sdp: answerSdp,
             };
             
+            // 🔗 5. Establecer la descripción remota (completar handshake)
             await this.peerConnection.setRemoteDescription(answer);
             
             this.log('✅ Conectado a OpenAI Realtime API', 'success');
@@ -474,24 +527,26 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 📤 Envía un evento al modelo de OpenAI
+     * 📤 Envía un evento JSON al modelo de OpenAI a través del data channel
+     * Los eventos permiten controlar la conversación y enviar comandos específicos
      */
     sendClientEvent(event) {
+        // 🚫 Verificar que el canal esté disponible antes de enviar
         if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
             this.log('⚠️ Data channel no disponible para enviar eventos', 'warning');
             return;
         }
         
         try {
-            // Agregar ID único y timestamp
+            // 🆔 Agregar ID único y timestamp para tracking
             event.event_id = event.event_id || this.generateEventId();
             
-            // Enviar evento
+            // 📤 Convertir a JSON y enviar por el canal
             this.dataChannel.send(JSON.stringify(event));
             
-            // Agregar timestamp para el log
+            // 📝 Guardar en historial para debugging
             event.timestamp = new Date().toLocaleTimeString();
-            this.events.unshift(event);
+            this.events.unshift(event); // Agregar al inicio del array
             
             this.log(`📤 Evento enviado: ${event.type}`, 'debug');
             
@@ -521,6 +576,7 @@ class OpenAIRealtimeClient {
                 break;
                 
             case 'input_audio_buffer.speech_started':
+                // 🗣️ Usuario empezó a hablar - indicador visual
                 this.log('🗣️ Inicio de habla detectado', 'info');
                 this.elements.startBtn.classList.add('recording');
                 const startBtnSpan = this.elements.startBtn.querySelector('span');
@@ -528,22 +584,23 @@ class OpenAIRealtimeClient {
                 break;
                 
             case 'input_audio_buffer.speech_stopped':
+                // 🤐 Usuario dejó de hablar - procesar audio
                 this.log('🤐 Fin de habla detectado', 'info');
                 this.elements.startBtn.classList.remove('recording');
                 const stopBtnSpan = this.elements.startBtn.querySelector('span');
                 if (stopBtnSpan) stopBtnSpan.textContent = 'Hablar';
-                this.showTypingIndicator();
+                this.showTypingIndicator(); // ⏳ Mostrar que está procesando
                 break;
                 
             case 'conversation.item.created':
                 this.log('💬 Nuevo ítem de conversación creado', 'info');
-                // Si es un mensaje del usuario con transcripción
+                // 📝 Si es un mensaje del usuario con transcripción, mostrarlo
                 if (event.item && event.item.role === 'user' && event.item.content) {
                     const transcript = event.item.content.find(c => c.type === 'input_text' || c.transcript);
                     if (transcript) {
                         const text = transcript.text || transcript.transcript;
                         if (text) {
-                            this.addMessage(text, true);
+                            this.addMessage(text, true); // 👤 Mensaje del usuario
                         }
                     }
                 }
@@ -591,110 +648,115 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 📝 Maneja deltas de texto streaming
+     * 📝 Maneja deltas de texto streaming para mostrar respuestas en tiempo real
+     * Los deltas son fragmentos de texto que llegan gradualmente, creando efecto de escritura
      */
     handleTextDelta(delta) {
-        this.hideTypingIndicator();
+        this.hideTypingIndicator(); // 🚫 Quitar puntos de "escribiendo"
         
-        // Buscar el último mensaje del asistente o crear uno nuevo
+        // 🔍 Buscar el último mensaje del asistente o crear uno nuevo
         const messages = this.elements.chatMessages.querySelectorAll('.message.assistant:not(.typing-message)');
         let lastAssistantMessage = messages[messages.length - 1];
         
         if (!lastAssistantMessage) {
-            // Crear nuevo mensaje
+            // 🆕 Crear nuevo mensaje si no existe
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message assistant';
             
             const bubbleDiv = document.createElement('div');
             bubbleDiv.className = 'message-bubble';
-            bubbleDiv.textContent = delta;
+            bubbleDiv.textContent = delta; // 📝 Primer fragmento de texto
             
             messageDiv.appendChild(bubbleDiv);
             this.elements.chatMessages.appendChild(messageDiv);
         } else {
-            // Agregar al mensaje existente
+            // ➕ Agregar al mensaje existente (efecto streaming)
             const bubble = lastAssistantMessage.querySelector('.message-bubble');
             if (bubble) {
-                bubble.textContent += delta;
+                bubble.textContent += delta; // 📝 Concatenar nuevo texto
             }
         }
         
-        // Scroll al final
+        // 📜 Scroll automático al final para seguir el texto
         this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
     }
     
     /**
-     * 💬 Maneja el input de texto del usuario
+     * 💬 Maneja el input de texto del usuario desde la interfaz
+     * Procesa el texto escrito y lo prepara para envío
      */
     handleTextInput() {
         const message = this.elements.textInput.value.trim();
         if (message) {
-            this.sendTextMessage(message);
-            this.elements.textInput.value = '';
+            this.sendTextMessage(message);          // 📤 Enviar mensaje
+            this.elements.textInput.value = '';     // 🧹 Limpiar input
         }
     }
     
     /**
-     * 💬 Envía un mensaje de texto al modelo
+     * 💬 Envía un mensaje de texto al modelo usando eventos estructurados
+     * Alternativa al audio - permite comunicación por texto
      */
     sendTextMessage(message) {
-        if (!message.trim()) return;
+        if (!message.trim()) return; // 🚫 No enviar mensajes vacíos
         
-        // Mostrar mensaje del usuario en el chat
+        // 💬 Mostrar mensaje del usuario inmediatamente en el chat
         this.addMessage(message, true);
         
-        // Crear ítem de conversación
+        // 📋 Crear ítem de conversación en el formato que espera OpenAI
         this.sendClientEvent({
             type: "conversation.item.create",
             item: {
                 type: "message",
-                role: "user",
+                role: "user",        // 👤 Especificar que es del usuario
                 content: [{
                     type: "input_text",
-                    text: message
+                    text: message    // 📝 El texto del mensaje
                 }]
             }
         });
         
-        // Solicitar respuesta
+        // 🚀 Solicitar que OpenAI genere una respuesta
         this.sendClientEvent({
             type: "response.create"
         });
         
-        // Mostrar indicador de escritura
+        // ⏳ Mostrar indicador de que está procesando
         this.showTypingIndicator();
         
         this.log(`💬 Mensaje enviado: "${message}"`, 'info');
     }
     
     /**
-     * 🆔 Genera un ID único para eventos
+     * 🆔 Genera un ID único para eventos usando timestamp y números aleatorios
+     * Cada evento necesita un ID único para tracking y debugging
      */
     generateEventId() {
         return 'event_' + Math.random().toString(36).substr(2, 9);
     }
     
     /**
-     * 🎨 Actualiza la interfaz de usuario
+     * 🎨 Actualiza toda la interfaz de usuario según el estado actual
+     * Centraliza el control visual de botones, textos e indicadores
      */
     updateUI() {
-        // Estado de conexión
+        // 🔗 Estado de conexión visual
         const isConnected = this.isSessionActive;
         this.elements.connectionStatus.className = `status-dot ${
-            isConnected ? 'connected' : 'disconnected'
+            isConnected ? 'connected' : 'disconnected'  // 🟢 Verde si conectado, 🔴 rojo si no
         }`;
         
         this.elements.statusText.textContent = isConnected ? 'Conectado' : 'Desconectado';
         
-        // Botones principales
+        // 🎮 Estados de botones principales
         this.elements.startBtn.disabled = this.isSessionActive || this.isConnecting;
         this.elements.stopBtn.disabled = !this.isSessionActive && !this.isConnecting;
         
-        // Input de texto
+        // ⌨️ Habilitar/deshabilitar inputs de texto según conexión
         this.elements.textInput.disabled = !this.isSessionActive;
         this.elements.sendTextBtn.disabled = !this.isSessionActive;
         
-        // Configuración
+        // ⚙️ Deshabilitar configuración durante sesión activa
         if (this.elements.sampleRate) {
             this.elements.sampleRate.disabled = this.isSessionActive || this.isConnecting;
         }
@@ -702,7 +764,7 @@ class OpenAIRealtimeClient {
             this.elements.bitrate.disabled = this.isSessionActive || this.isConnecting;
         }
         
-        // Texto y estado de botones de voz
+        // 📝 Actualizar texto de botones según estado
         const startBtnSpan = this.elements.startBtn.querySelector('span');
         if (this.isConnecting) {
             if (startBtnSpan) startBtnSpan.textContent = 'Conectando...';
@@ -720,27 +782,29 @@ class OpenAIRealtimeClient {
     }
     
     /**
-     * 📝 Sistema de logging mejorado con colores y mejor formato
+     * 📝 Sistema de logging mejorado con colores, iconos y mejor formato
+     * Proporciona feedback visual detallado para debugging y monitoreo
      */
     log(message, type = 'info') {
-        // Solo crear elementos de log si el contenedor existe (elementos ocultos)
+        // ✋ Solo crear elementos de log si el contenedor existe
         if (!this.elements.logContainer) return;
         
         const timestamp = new Date().toLocaleTimeString();
         const logEntry = document.createElement('div');
         logEntry.className = `log-entry log-${type}`;
         
-        // Iconos y colores para diferentes tipos de log
+        // 🎨 Iconos y colores específicos para cada tipo de mensaje
         const logTypes = {
-            'info': { icon: '💡', label: 'INFO', color: '#3b82f6' },
-            'success': { icon: '✅', label: 'SUCCESS', color: '#10b981' },
-            'warning': { icon: '⚠️', label: 'WARNING', color: '#f59e0b' },
-            'error': { icon: '❌', label: 'ERROR', color: '#ef4444' },
-            'debug': { icon: '🔍', label: 'DEBUG', color: '#8b5cf6' }
+            'info': { icon: '💡', label: 'INFO', color: '#3b82f6' },      // 🔵 Azul - información
+            'success': { icon: '✅', label: 'SUCCESS', color: '#10b981' }, // 🟢 Verde - éxito
+            'warning': { icon: '⚠️', label: 'WARNING', color: '#f59e0b' }, // 🟡 Amarillo - advertencia
+            'error': { icon: '❌', label: 'ERROR', color: '#ef4444' },     // 🔴 Rojo - error
+            'debug': { icon: '🔍', label: 'DEBUG', color: '#8b5cf6' }      // 🟣 Púrpura - debug
         };
         
         const logType = logTypes[type] || logTypes['info'];
         
+        // 🏗️ Construir HTML del log con estructura visual
         logEntry.innerHTML = `
             <div class="log-entry-content">
                 <div class="log-header">
@@ -752,16 +816,17 @@ class OpenAIRealtimeClient {
             </div>
         `;
         
+        // 📋 Agregar al contenedor y hacer scroll automático
         this.elements.logContainer.appendChild(logEntry);
         this.elements.logContainer.scrollTop = this.elements.logContainer.scrollHeight;
         
-        // Limitar entradas del log
+        // 🧹 Limitar entradas del log para evitar usar demasiada memoria
         const entries = this.elements.logContainer.children;
         if (entries.length > 100) {
-            this.elements.logContainer.removeChild(entries[0]);
+            this.elements.logContainer.removeChild(entries[0]); // Eliminar el más antiguo
         }
         
-        // También log a consola con colores
+        // 🖥️ También enviar a la consola del navegador con colores
         const consoleColors = {
             'info': 'color: #3b82f6; font-weight: bold;',
             'success': 'color: #10b981; font-weight: bold;',
@@ -778,11 +843,13 @@ class OpenAIRealtimeClient {
     }
 }
 
-// 🚀 Inicializar la aplicación cuando el DOM esté listo
+// 🚀 Inicializar la aplicación cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', () => {
+    // 🎯 Crear instancia global del cliente para poder acceder desde la consola
     window.realtimeClient = new OpenAIRealtimeClient();
     
-    // Exponer función para enviar mensajes desde la consola del navegador
+    // 🛠️ Exponer función útil para testing desde la consola del navegador
+    // Permite enviar mensajes rápidamente escribiendo: sendMessage("hola")
     window.sendMessage = (message) => {
         if (window.realtimeClient.isSessionActive) {
             window.realtimeClient.sendTextMessage(message);
@@ -791,6 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // 📝 Logs informativos para desarrolladores
     console.log('🎤 Cliente OpenAI Realtime inicializado');
     console.log('💡 Usa sendMessage("tu mensaje") para enviar mensajes de texto');
+    console.log('🔍 Usa window.realtimeClient para acceder a la instancia completa');
 });
