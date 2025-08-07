@@ -146,6 +146,18 @@ body {
     color: #991b1b;
 }
 
+.metric-value.processing {
+    background-color: #e0e7ff;
+    border-color: #6366f1;
+    color: #4338ca;
+    animation: metricPulse 2s infinite;
+}
+
+@keyframes metricPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* Main content */
 .main {
     flex: 1;
@@ -456,6 +468,92 @@ body {
         transform: scale(1);
         opacity: 1;
     }
+}
+
+/* Transcripción en tiempo real */
+.transcription-message {
+    justify-content: flex-end;
+}
+
+.transcription-bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border-bottom-right-radius: 0.25rem;
+    max-width: 70%;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.transcription-bubble.completed {
+    background: var(--primary-color);
+    transform: scale(0.98);
+}
+
+.transcription-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transcription-icon {
+    font-size: 1rem;
+}
+
+.transcription-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.transcription-wave {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-left: auto;
+}
+
+.wave-dot {
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius-full);
+    animation: waveAnimation 1.4s infinite ease-in-out;
+}
+
+.wave-dot:nth-child(1) { animation-delay: -0.32s; }
+.wave-dot:nth-child(2) { animation-delay: -0.16s; }
+.wave-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes waveAnimation {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+.transcription-text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    min-height: 1.4rem;
+    font-style: italic;
+}
+
+.transcription-bubble.completed .transcription-text {
+    font-style: normal;
+    font-weight: 500;
+}
+
+.transcription-bubble.completed .transcription-wave {
+    display: none;
 }
 
 /* Accessibility */

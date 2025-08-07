@@ -19,30 +19,8 @@ function escapeHTML(str) {
 
 /**
  * 🎯 Clase principal que maneja la comunicación con OpenAI Realtime API
- * Esta clase utiliza WebRTC para establecer una conexión bidireccional en tiempo             case 'response.text.delta':
-                // Texto streaming - agregar al chat
-                if (event.delta) {
-                    // ⏱️ Marcar inicio de texto si es el primer delta
-                    if (!this.responseTimers.textStart) {
-                        this.responseTimers.textStart = Date.now();
-                    }
-                    this.handleTextDelta(event.delta);
-                }
-                break;
-                
-            case 'response.text.done':
-                this.responseTimers.textEnd = Date.now(); // ⏱️ Marcar fin de texto
-                this.log('📝 Texto completo recibido', 'info');
-                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos
-                this.hideTypingIndicator();
-                break;
-                
-            case 'response.done':
-                this.responseTimers.responseEnd = Date.now(); // ⏱️ Marcar fin de respuesta
-                this.log('✅ Respuesta completada', 'success');
-                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos finales
-                this.hideTypingIndicator();
-                break;ndo envío de audio del micrófono y recepción de respuestas de voz del modelo
+ * Esta clase utiliza WebRTC para establecer una conexión bidireccional en tiempo real
+ * permitiendo envío de audio del micrófono y recepción de respuestas de voz del modelo
  */
 class OpenAIRealtimeClient {
     constructor() {
@@ -62,6 +40,8 @@ class OpenAIRealtimeClient {
             responseEnd: null,          // ✅ Timestamp cuando termina la respuesta
             textStart: null,            // 📝 Timestamp cuando empieza respuesta de texto
             textEnd: null,              // ✅ Timestamp cuando termina respuesta de texto
+            audioStart: null,           // 🎵 Timestamp cuando empieza respuesta de audio
+            audioEnd: null,             // 🎵 Timestamp cuando termina respuesta de audio
         };
         
         // ⚙️ Configuración - URLs y parámetros del cliente
@@ -250,6 +230,83 @@ class OpenAIRealtimeClient {
             typingMessage.remove();
         }
     }
+
+    /**
+     * 📝 Mostrar indicador de transcripción en tiempo real
+     */
+    showTranscriptionIndicator() {
+        this.hideTranscriptionIndicator(); // 🧹 Eliminar indicador previo
+
+        // 🎭 Crear elemento para mostrar transcripción en tiempo real
+        const transcriptionDiv = document.createElement('div');
+        transcriptionDiv.className = 'message user transcription-message';
+        transcriptionDiv.innerHTML = `
+            <div class="transcription-bubble">
+                <div class="transcription-header">
+                    <span class="transcription-icon">🎤</span>
+                    <span class="transcription-label">Transcribiendo...</span>
+                    <div class="transcription-wave">
+                        <div class="wave-dot"></div>
+                        <div class="wave-dot"></div>
+                        <div class="wave-dot"></div>
+                    </div>
+                </div>
+                <div class="transcription-text" id="live-transcription">
+                    Escuchando...
+                </div>
+            </div>
+        `;
+
+        this.elements.chatMessages.appendChild(transcriptionDiv);
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+
+    /**
+     * 🚫 Ocultar indicador de transcripción
+     */
+    hideTranscriptionIndicator() {
+        const transcriptionMessage = this.elements.chatMessages.querySelector('.transcription-message');
+        if (transcriptionMessage) {
+            transcriptionMessage.remove();
+        }
+    }
+
+    /**
+     * 📝 Actualizar texto de transcripción en tiempo real
+     * @param {string} text - Texto transcrito
+     * @param {boolean} isComplete - Si la transcripción está completa
+     */
+    updateTranscriptionDisplay(text, isComplete = false) {
+        const transcriptionText = document.getElementById('live-transcription');
+        if (transcriptionText) {
+            transcriptionText.textContent = text;
+            
+            if (isComplete) {
+                // 🎯 Marcar como completada con estilo diferente
+                const transcriptionBubble = transcriptionText.closest('.transcription-bubble');
+                if (transcriptionBubble) {
+                    transcriptionBubble.classList.add('completed');
+                    const label = transcriptionBubble.querySelector('.transcription-label');
+                    if (label) label.textContent = 'Transcrito';
+                }
+            }
+        }
+
+        // 📜 Scroll automático
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+
+    /**
+     * ✅ Finalizar transcripción y convertirla en mensaje definitivo
+     * @param {string} finalText - Texto final transcrito
+     */
+    finalizeTranscription(finalText) {
+        // 🧹 Remover indicador de transcripción
+        this.hideTranscriptionIndicator();
+        
+        // 💬 Añadir mensaje final del usuario
+        this.addMessage(finalText, true);
+    }
     
     /**
      * 🚀 Método principal que inicia una nueva sesión con OpenAI Realtime API
@@ -392,6 +449,14 @@ class OpenAIRealtimeClient {
         // 🎧 Cuando llega un track de audio desde OpenAI, conectarlo al reproductor
         this.peerConnection.ontrack = (event) => {
             this.log('🎵 Audio track recibido desde OpenAI', 'info');
+            
+            // ⏱️ Marcar primera recepción de audio si no se ha marcado aún
+            if (!this.responseTimers.audioStart && this.responseTimers.speechEnd) {
+                this.responseTimers.audioStart = Date.now();
+                this.log('🎵 Primera recepción de audio detectada', 'info');
+                this.calculateAndShowResponseTime(); // Mostrar tiempo parcial
+            }
+            
             // 🔗 Conectar el stream de audio al elemento HTML
             this.audioElement.srcObject = event.streams[0];
         };
@@ -615,6 +680,13 @@ class OpenAIRealtimeClient {
                 this.elements.startBtn.classList.add('recording');
                 const startBtnSpan = this.elements.startBtn.querySelector('span');
                 if (startBtnSpan) startBtnSpan.textContent = 'Grabando...';
+                
+                // 🧹 Limpiar indicador de tiempo de respuesta para nueva medición
+                this.elements.responseTime.textContent = 'Midiendo...';
+                this.elements.responseTime.className = 'metric-value processing';
+                
+                // 📝 Mostrar indicador de transcripción en tiempo real
+                this.showTranscriptionIndicator();
                 break;
                 
             case 'input_audio_buffer.speech_stopped':
@@ -624,18 +696,44 @@ class OpenAIRealtimeClient {
                 this.elements.startBtn.classList.remove('recording');
                 const stopBtnSpan = this.elements.startBtn.querySelector('span');
                 if (stopBtnSpan) stopBtnSpan.textContent = 'Hablar';
+                
+                // 📊 Actualizar indicador de tiempo de respuesta
+                this.elements.responseTime.textContent = 'Procesando...';
+                this.elements.responseTime.className = 'metric-value processing';
+                
                 this.showTypingIndicator(); // ⏳ Mostrar que está procesando
+                break;
+
+            case 'input_audio_buffer.committed':
+                this.log('📝 Audio buffer confirmado', 'debug');
+                // 🧹 Ocultar indicador de transcripción cuando se confirma el audio
+                this.hideTranscriptionIndicator();
+                break;
+
+            case 'input_audio_buffer.transcription_completed':
+                // 📝 Transcripción completa del audio del usuario
+                if (event.transcript) {
+                    this.log(`📝 Transcripción completa: "${event.transcript}"`, 'info');
+                    this.updateTranscriptionDisplay(event.transcript, true); // true = completada
+                }
+                break;
+
+            case 'input_audio_buffer.transcription_failed':
+                this.log('❌ Error en transcripción', 'error');
+                this.hideTranscriptionIndicator();
                 break;
                 
             case 'conversation.item.created':
                 this.log('💬 Nuevo ítem de conversación creado', 'info');
                 // 📝 Si es un mensaje del usuario con transcripción, mostrarlo
                 if (event.item && event.item.role === 'user' && event.item.content) {
-                    const transcript = event.item.content.find(c => c.type === 'input_text' || c.transcript);
+                    const transcript = event.item.content.find(c => c.type === 'input_audio_transcription' || c.type === 'input_text');
                     if (transcript) {
-                        const text = transcript.text || transcript.transcript;
+                        const text = transcript.transcript || transcript.text;
                         if (text) {
-                            this.addMessage(text, true); // 👤 Mensaje del usuario
+                            this.log(`👤 Transcripción del usuario: "${text}"`, 'info');
+                            // � Actualizar el mensaje de transcripción con el texto final
+                            this.finalizeTranscription(text);
                         }
                     }
                 }
@@ -647,17 +745,36 @@ class OpenAIRealtimeClient {
                 this.showTypingIndicator();
                 break;
                 
+            case 'response.output_item.added':
+                // 📋 Se agregó un nuevo item de respuesta (puede ser texto o audio)
+                this.log('📋 Item de respuesta agregado', 'info');
+                
+                // ⏱️ Marcar primer output si no hemos empezado aún
+                if (!this.responseTimers.textStart && !this.responseTimers.audioStart && this.responseTimers.speechEnd) {
+                    const now = Date.now();
+                    if (event.item && event.item.type === 'audio') {
+                        this.responseTimers.audioStart = now;
+                        this.log('🎵 Primera respuesta de audio iniciada', 'info');
+                    } else {
+                        this.responseTimers.textStart = now;
+                        this.log('📝 Primera respuesta de texto iniciada', 'info');
+                    }
+                    this.calculateAndShowResponseTime(); // Mostrar tiempo parcial
+                }
+                break;
+                
             case 'response.audio.delta':
                 // Audio streaming en tiempo real
                 // ⏱️ Marcar inicio de audio si es el primer delta
-                if (!this.responseTimers.textStart) {
-                    this.responseTimers.textStart = Date.now();
+                if (!this.responseTimers.audioStart) {
+                    this.responseTimers.audioStart = Date.now();
+                    this.log('🎵 Primera respuesta de audio recibida', 'info');
                 }
                 this.log('🎵 Audio delta recibido', 'debug');
                 break;
                 
             case 'response.audio.done':
-                this.responseTimers.textEnd = Date.now(); // ⏱️ Marcar fin de audio
+                this.responseTimers.audioEnd = Date.now(); // ⏱️ Marcar fin de audio
                 this.log('🎵 Audio completo recibido', 'info');
                 this.calculateAndShowResponseTime(); // 📊 Calcular tiempos para audio
                 break;
@@ -683,6 +800,12 @@ class OpenAIRealtimeClient {
             case 'response.done':
                 this.responseTimers.responseEnd = Date.now(); // ⏱️ Marcar fin de respuesta
                 this.log('✅ Respuesta completada', 'success');
+                
+                // 📊 Si no tenemos un tiempo de fin específico de texto/audio, usar este
+                if (!this.responseTimers.textEnd && !this.responseTimers.audioEnd) {
+                    this.responseTimers.textEnd = this.responseTimers.responseEnd;
+                }
+                
                 this.calculateAndShowResponseTime(); // 📊 Calcular tiempos finales
                 this.hideTypingIndicator();
                 break;
@@ -693,7 +816,18 @@ class OpenAIRealtimeClient {
                 break;
                 
             default:
-                this.log(`📝 Evento: ${event.type}`, 'debug');
+                this.log(`📝 Evento no manejado: ${event.type}`, 'debug');
+                
+                // 🔍 Para eventos de respuesta que no estamos manejando específicamente
+                if (event.type.startsWith('response.') && this.responseTimers.speechEnd) {
+                    // ⏱️ Si es el primer evento de respuesta, marcarlo
+                    if (!this.responseTimers.textStart && !this.responseTimers.audioStart) {
+                        const now = Date.now();
+                        this.responseTimers.textStart = now;
+                        this.log(`🎯 Primer evento de respuesta detectado: ${event.type}`, 'info');
+                        this.calculateAndShowResponseTime(); // Mostrar tiempo parcial
+                    }
+                }
         }
     }
     
@@ -754,6 +888,10 @@ class OpenAIRealtimeClient {
         this.responseTimers.speechStart = Date.now();
         this.responseTimers.speechEnd = Date.now();
         
+        // 🧹 Limpiar indicador de tiempo de respuesta para nueva medición
+        this.elements.responseTime.textContent = 'Midiendo...';
+        this.elements.responseTime.className = 'metric-value processing';
+        
         // 💬 Mostrar mensaje del usuario inmediatamente en el chat
         this.addMessage(message, true);
         
@@ -785,7 +923,8 @@ class OpenAIRealtimeClient {
      * ⏱️ Calcula y muestra los tiempos de respuesta en la interfaz
      */
     calculateAndShowResponseTime() {
-        if (!this.responseTimers.speechEnd || !this.responseTimers.responseStart) return;
+        // 🔍 Debug: Mostrar estado actual de los timers
+        this.log(`🔍 Timers estado: speechEnd=${this.responseTimers.speechEnd}, responseStart=${this.responseTimers.responseStart}, textStart=${this.responseTimers.textStart}, audioStart=${this.responseTimers.audioStart}, textEnd=${this.responseTimers.textEnd}, audioEnd=${this.responseTimers.audioEnd}`, 'debug');
         
         const times = {};
         
@@ -794,17 +933,19 @@ class OpenAIRealtimeClient {
             times.processingTime = this.responseTimers.responseStart - this.responseTimers.speechEnd;
         }
         
-        // 📝 Tiempo hasta primer texto (TTFT - Time To First Token)
-        if (this.responseTimers.speechEnd && this.responseTimers.textStart) {
-            times.timeToFirstToken = this.responseTimers.textStart - this.responseTimers.speechEnd;
+        // 📝 Tiempo hasta primer token (texto o audio)
+        const firstResponseTime = this.responseTimers.textStart || this.responseTimers.audioStart;
+        if (this.responseTimers.speechEnd && firstResponseTime) {
+            times.timeToFirstToken = firstResponseTime - this.responseTimers.speechEnd;
         }
         
-        // ✅ Tiempo total de respuesta
-        if (this.responseTimers.speechEnd && this.responseTimers.responseEnd) {
-            times.totalResponseTime = this.responseTimers.responseEnd - this.responseTimers.speechEnd;
+        // ✅ Tiempo total de respuesta (priorizar el que termine último)
+        const responseEndTime = this.responseTimers.textEnd || this.responseTimers.audioEnd || this.responseTimers.responseEnd;
+        if (this.responseTimers.speechEnd && responseEndTime) {
+            times.totalResponseTime = responseEndTime - this.responseTimers.speechEnd;
         }
         
-        // 🎯 Actualizar interfaz con los tiempos calculados
+        // 🎯 Actualizar interfaz con los tiempos calculados (incluso si no están todos)
         this.updateResponseTimeDisplay(times);
         
         // 📊 Log detallado de rendimiento
@@ -814,9 +955,14 @@ class OpenAIRealtimeClient {
         if (times.timeToFirstToken) {
             this.log(`🚀 Tiempo al primer token: ${times.timeToFirstToken}ms`, 'info');
         }
+        if (times.processingTime) {
+            this.log(`⚙️ Tiempo de procesamiento: ${times.processingTime}ms`, 'info');
+        }
         
-        // 🧹 Resetear timers para próxima interacción
-        this.resetResponseTimers();
+        // 🧹 Solo resetear timers cuando tengamos una respuesta completa
+        if (times.totalResponseTime) {
+            this.resetResponseTimers();
+        }
     }
 
     /**
@@ -830,6 +976,8 @@ class OpenAIRealtimeClient {
             responseEnd: null,
             textStart: null,
             textEnd: null,
+            audioStart: null,
+            audioEnd: null,
         };
     }
 
@@ -840,12 +988,13 @@ class OpenAIRealtimeClient {
         if (!this.elements.responseTime) return;
         
         let displayText = '';
+        let colorClass = '';
         
+        // 🏆 Priorizar mostrar tiempo total si está disponible
         if (times.totalResponseTime) {
             displayText = `${times.totalResponseTime}ms`;
             
             // 🎨 Código de colores basado en rendimiento
-            let colorClass = '';
             if (times.totalResponseTime < 1000) {
                 colorClass = 'excellent'; // 🟢 Excelente < 1s
             } else if (times.totalResponseTime < 2000) {
@@ -855,25 +1004,39 @@ class OpenAIRealtimeClient {
             } else {
                 colorClass = 'poor';      // 🔴 Lento > 5s
             }
-            
-            this.elements.responseTime.className = `metric-value ${colorClass}`;
-            
-            // 📝 Tooltip con detalles adicionales
-            let tooltip = `Tiempo total: ${times.totalResponseTime}ms`;
-            if (times.timeToFirstToken) {
-                tooltip += `\nPrimer token: ${times.timeToFirstToken}ms`;
-            }
-            if (times.processingTime) {
-                tooltip += `\nProcesamiento: ${times.processingTime}ms`;
-            }
-            
-            this.elements.responseTime.title = tooltip;
-        } else {
+        } 
+        // 🚀 Si no hay tiempo total, mostrar tiempo al primer token
+        else if (times.timeToFirstToken) {
+            displayText = `${times.timeToFirstToken}ms (parcial)`;
+            colorClass = 'processing';
+        }
+        // ⚙️ Si solo hay tiempo de procesamiento, mostrarlo
+        else if (times.processingTime) {
+            displayText = `${times.processingTime}ms (procesando)`;
+            colorClass = 'processing';
+        }
+        // 📝 Si no hay datos, mostrar estado por defecto
+        else {
             displayText = '--';
-            this.elements.responseTime.className = 'metric-value';
+            colorClass = '';
         }
         
+        this.elements.responseTime.className = `metric-value ${colorClass}`;
         this.elements.responseTime.textContent = displayText;
+        
+        // 📝 Tooltip con detalles adicionales
+        let tooltip = '';
+        if (times.totalResponseTime) {
+            tooltip = `Tiempo total: ${times.totalResponseTime}ms`;
+        }
+        if (times.timeToFirstToken) {
+            tooltip += (tooltip ? '\n' : '') + `Primer token: ${times.timeToFirstToken}ms`;
+        }
+        if (times.processingTime) {
+            tooltip += (tooltip ? '\n' : '') + `Procesamiento: ${times.processingTime}ms`;
+        }
+        
+        this.elements.responseTime.title = tooltip || 'Tiempo de respuesta';
     }
     
     /**
@@ -1007,8 +1170,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // 🧪 Función de test para verificar el sistema de medición de tiempos
+    window.testTimers = () => {
+        const client = window.realtimeClient;
+        console.log('🧪 Iniciando test de timers...');
+        
+        // Simular flujo de medición de tiempo
+        client.responseTimers.speechStart = Date.now() - 3000;
+        client.responseTimers.speechEnd = Date.now() - 2000;
+        client.responseTimers.responseStart = Date.now() - 1500;
+        client.responseTimers.textStart = Date.now() - 1000;
+        client.responseTimers.textEnd = Date.now();
+        
+        console.log('📊 Timers simulados:', client.responseTimers);
+        client.calculateAndShowResponseTime();
+        console.log('✅ Test completado. Revisa el indicador de tiempo de respuesta.');
+    };
+    
     // 📝 Logs informativos para desarrolladores
     console.log('🎤 Cliente OpenAI Realtime inicializado');
     console.log('💡 Usa sendMessage("tu mensaje") para enviar mensajes de texto');
+    console.log('🧪 Usa testTimers() para probar el sistema de medición de tiempos');
     console.log('🔍 Usa window.realtimeClient para acceder a la instancia completa');
 });
