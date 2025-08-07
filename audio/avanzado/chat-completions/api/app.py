@@ -29,14 +29,6 @@ conversation_history = [
     {"role": "system", "content": "Eres un asistente útil y amigable. Responde de manera concisa y conversacional."}
 ]
 
-
-@app.route('/health', methods=['GET'])
-def health():
-    """Endpoint para verificar el estado del servicio"""
-    console.print("[bold green]🏥 Health check solicitado[/bold green]")
-    return jsonify({"status": "ok", "message": "Servicio de conversación por voz funcionando"})
-
-
 @app.route('/conversation', methods=['POST'])
 def conversation():
     """
