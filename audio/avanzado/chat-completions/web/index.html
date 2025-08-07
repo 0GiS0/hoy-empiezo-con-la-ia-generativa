@@ -1,117 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversación por Voz con IA</title>
+    <title>Chat por Voz - Demo Simple</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-microphone-lines"></i> Chat por Voz</h1>
-            <p>Habla naturalmente con la IA y escucha sus respuestas</p>
+            <p>Demostración simple con OpenAI Chat Completions API</p>
         </header>
 
         <main>
-            <!-- Panel de control -->
-            <div class="control-panel">
-                <button id="recordBtn" class="record-btn" data-tooltip="Pulsa aquí para hablar">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                
-                <div class="controls">
-                    <button id="clearBtn" class="btn btn-secondary">
-                        <i class="fas fa-broom"></i> Limpiar
-                    </button>
-                    <button id="exportBtn" class="btn btn-secondary">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
-                </div>
+            <!-- Barra de estado -->
+            <div class="status-bar">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Verificando conexión...</span>
             </div>
 
-            <!-- Estado de grabación -->
-            <div id="recordingStatus" class="recording-status hidden">
-                <div class="recording-indicator">
-                    <i class="fas fa-circle"></i>
-                    <span>Grabando... Suelta para enviar</span>
-                </div>
-                <div class="audio-visualizer">
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
+            <!-- Panel de control -->
+            <div class="control-panel">
+                <button id="recordBtn" class="record-btn" aria-label="Iniciar grabación">
+                    <i class="fas fa-microphone"></i>
+                </button>
+
+                <div class="instructions" id="instructions">
+                    Mantén presionado el botón para grabar (o usa la barra espaciadora)
                 </div>
             </div>
 
             <!-- Estado de procesamiento -->
             <div id="processingStatus" class="processing-status hidden">
                 <div class="spinner"></div>
-                <span>Procesando tu mensaje...</span>
+                <span>Procesando audio y generando respuesta...</span>
             </div>
 
             <!-- Historial de conversación -->
             <div class="conversation-container">
                 <div id="conversationHistory" class="conversation-history">
-                    <div class="welcome-message">
-                        <i class="fas fa-robot"></i>
-                        <p>¡Hola! Soy tu asistente de IA. Mantén presionado el botón para hablarme.</p>
-                    </div>
+                    
                 </div>
-            </div>
-
-            <!-- Información del sistema -->
-            <div class="system-info">
-                <div class="info-item">
-                    <i class="fas fa-message"></i>
-                    <span id="messageCount">0 mensajes</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-wifi"></i>
-                    <span id="connectionStatus" class="connection-status connected">Conectado</span>
-                </div>
-            </div>
+            </div>           
         </main>
     </div>
 
-    <!-- Modales -->
-    <div id="errorModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="errorMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="closeModal('errorModal')">Entendido</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-question-circle"></i> Confirmar acción</h3>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="confirmMessage">¿Estás seguro de que quieres limpiar toda la conversación?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancelar</button>
-                <button id="confirmYes" class="btn btn-primary">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
-    <script src="js/audio-recorder.js"></script>
-    <script src="js/conversation.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/app.js"></script>
+    <script src="app.js"></script>
 </body>
+
 </html>

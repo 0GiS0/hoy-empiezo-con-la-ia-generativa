@@ -5,6 +5,11 @@ from flask_cors import CORS
 from openai import OpenAI
 import logging
 from dotenv import load_dotenv
+from rich.console import Console
+import base64
+
+
+console = Console()
 
 # Cargar variables de entorno
 load_dotenv()
@@ -24,10 +29,12 @@ conversation_history = [
     {"role": "system", "content": "Eres un asistente útil y amigable. Responde de manera concisa y conversacional."}
 ]
 
+
 @app.route('/health', methods=['GET'])
 def health():
     """Endpoint para verificar el estado del servicio"""
     return jsonify({"status": "ok", "message": "Servicio de conversación por voz funcionando"})
+
 
 @app.route('/conversation', methods=['POST'])
 def conversation():
@@ -39,17 +46,17 @@ def conversation():
         # Verificar que se recibió un archivo de audio
         if 'audio' not in request.files:
             return jsonify({"error": "No se encontró archivo de audio"}), 400
-        
+
         audio_file = request.files['audio']
         if audio_file.filename == '':
             return jsonify({"error": "No se seleccionó archivo"}), 400
-        
+
         logger.info(f"Procesando archivo de audio: {audio_file.filename}")
-        
+
         # Guardar temporalmente el archivo de audio
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_input:
             audio_file.save(temp_input.name)
-            
+
             # 1. Transcribir audio a texto usando Whisper
             logger.info("Transcribiendo audio...")
             with open(temp_input.name, 'rb') as audio_data:
@@ -58,74 +65,117 @@ def conversation():
                     file=audio_data,
                     language="es"  # Especificar español
                 )
-            
+
             user_message = transcription.text
             logger.info(f"Texto transcrito: {user_message}")
-            
+
             # Limpiar archivo temporal
             os.unlink(temp_input.name)
-        
+
         # 2. Agregar mensaje del usuario al historial
         conversation_history.append({"role": "user", "content": user_message})
-        
+
         # 3. Generar respuesta usando ChatGPT
         logger.info("Generando respuesta...")
-        chat_response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = client.chat.completions.create(
+            model=os.getenv("MODEL_FOR_AUDIO"),
+            modalities=["text", "audio"],
+            audio={"voice": "nova", "format": "wav"},
             messages=conversation_history,
-            max_tokens=150,
-            temperature=0.7
         )
-        
-        assistant_message = chat_response.choices[0].message.content
-        logger.info(f"Respuesta generada: {assistant_message}")
-        
-        # 4. Agregar respuesta del asistente al historial
-        conversation_history.append({"role": "assistant", "content": assistant_message})
-        
-        # 5. Convertir respuesta a audio usando TTS
-        logger.info("Convirtiendo respuesta a audio...")
-        tts_response = client.audio.speech.create(
-            model="tts-1",
-            voice="nova",  # Voz femenina en español
-            input=assistant_message,
-            response_format="wav"
-        )
-        
-        # Guardar audio de respuesta temporalmente
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_output:
-            temp_output.write(tts_response.content)
-            output_path = temp_output.name
-        
-        # 6. Devolver respuesta con texto y audio
-        return jsonify({
-            "user_message": user_message,
-            "assistant_message": assistant_message,
-            "audio_url": f"/audio/{os.path.basename(output_path)}",
-            "conversation_length": len(conversation_history) - 1  # Excluir mensaje del sistema
-        })
-        
+
+        wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
+            tmpfile.write(wav_bytes)
+            tmpfile_path = tmpfile.name
+
+        console.print(
+            f"[bold green]✅ Audio generado exitosamente[/bold green] 🟢")
+
+        return send_file(tmpfile_path, mimetype="audio/wav")
+
     except Exception as e:
         logger.error(f"Error en conversación: {str(e)}")
         return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
 
-@app.route('/audio/<filename>', methods=['GET'])
-def get_audio(filename):
-    """Endpoint para servir archivos de audio generados"""
+
+@app.route('/conversation/simple', methods=['POST'])
+def conversation_simple():
+    """
+    Endpoint simplificado que devuelve JSON con la transcripción y la respuesta.
+    Útil para demostraciones donde queremos ver el texto además del audio.
+    """
     try:
-        base_dir = tempfile.gettempdir()
-        # Normalize and validate the path to prevent path traversal
-        audio_path = os.path.normpath(os.path.join(base_dir, filename))
-        if not audio_path.startswith(base_dir):
-            logger.warning(f"Intento de acceso no permitido: {audio_path}")
-            return jsonify({"error": "Acceso no permitido"}), 403
-        if os.path.exists(audio_path):
-            return send_file(audio_path, mimetype='audio/wav')
-        else:
-            return jsonify({"error": "Archivo de audio no encontrado"}), 404
+        # Verificar que se recibió un archivo de audio
+        if 'audio' not in request.files:
+            return jsonify({"error": "No se encontró archivo de audio"}), 400
+
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({"error": "No se seleccionó archivo"}), 400
+
+        logger.info(f"Procesando archivo de audio (modo simple): {audio_file.filename}")
+
+        # Guardar temporalmente el archivo de audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_input:
+            audio_file.save(temp_input.name)
+
+            # 1. Transcribir audio a texto usando Whisper
+            logger.info("Transcribiendo audio...")
+            with open(temp_input.name, 'rb') as audio_data:
+                transcription = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_data,
+                    language="es"  # Especificar español
+                )
+
+            user_message = transcription.text
+            logger.info(f"Texto transcrito: {user_message}")
+
+            # Limpiar archivo temporal
+            os.unlink(temp_input.name)
+
+        # 2. Agregar mensaje del usuario al historial
+        conversation_history.append({"role": "user", "content": user_message})
+
+        # 3. Generar respuesta usando ChatGPT
+        logger.info("Generando respuesta...")
+        response = client.chat.completions.create(
+            model=os.getenv("MODEL_FOR_AUDIO"),
+            modalities=["text", "audio"],
+            audio={"voice": "nova", "format": "wav"},
+            messages=conversation_history,
+        )
+
+        # Obtener el texto de la respuesta
+        assistant_message = response.choices[0].message.content or "Respuesta de audio generada"
+        
+        # Agregar respuesta al historial
+        conversation_history.append({"role": "assistant", "content": assistant_message})
+
+        # Guardar el audio temporalmente
+        wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
+            tmpfile.write(wav_bytes)
+            tmpfile_path = tmpfile.name
+
+        # Codificar el audio en base64 para incluirlo en el JSON
+        audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
+
+        console.print(f"[bold green]✅ Respuesta generada exitosamente[/bold green] 🟢")
+
+        return jsonify({
+            "user_message": user_message,
+            "assistant_message": assistant_message,
+            "audio_base64": audio_base64,
+            "conversation_length": len(conversation_history) - 1,  # Excluir mensaje del sistema
+            "status": "success"
+        })
+
     except Exception as e:
-        logger.error(f"Error sirviendo audio: {str(e)}")
-        return jsonify({"error": "Error sirviendo archivo de audio"}), 500
+        logger.error(f"Error en conversación simple: {str(e)}")
+        return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
+
 
 @app.route('/conversation/history', methods=['GET'])
 def get_conversation_history():
@@ -137,6 +187,7 @@ def get_conversation_history():
         "total_messages": len(history)
     })
 
+
 @app.route('/conversation/clear', methods=['POST'])
 def clear_conversation():
     """Limpiar el historial de conversación"""
@@ -147,30 +198,32 @@ def clear_conversation():
     logger.info("Historial de conversación limpiado")
     return jsonify({"message": "Historial limpiado exitosamente"})
 
+
 @app.route('/conversation/export', methods=['GET'])
 def export_conversation():
     """Exportar conversación como archivo de texto"""
     try:
         conversation_text = ""
-        for i, message in enumerate(conversation_history[1:], 1):  # Excluir mensaje del sistema
+        # Excluir mensaje del sistema
+        for i, message in enumerate(conversation_history[1:], 1):
             role = "Usuario" if message["role"] == "user" else "Asistente"
             conversation_text += f"{i}. {role}: {message['content']}\n\n"
-        
+
         if not conversation_text:
             conversation_text = "No hay conversación para exportar."
-        
+
         # Crear archivo temporal
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as temp_file:
             temp_file.write(conversation_text)
             temp_file_path = temp_file.name
-        
+
         return send_file(
-            temp_file_path, 
-            as_attachment=True, 
+            temp_file_path,
+            as_attachment=True,
             download_name='conversacion.txt',
             mimetype='text/plain'
         )
-        
+
     except Exception as e:
         logger.error(f"Error exportando conversación: {str(e)}")
         return jsonify({"error": "Error exportando conversación"}), 500
@@ -183,6 +236,8 @@ def index():
     return app.send_static_file('index.html')
 
 # 📦 Endpoint para archivos estáticos (JS, CSS, etc.)
+
+
 @app.route('/<path:filename>')
 def static_files(filename):
     """Sirve archivos estáticos adicionales."""
@@ -194,6 +249,6 @@ if __name__ == '__main__':
     if not os.getenv('OPENAI_API_KEY'):
         logger.error("OPENAI_API_KEY no está configurada")
         exit(1)
-    
+
     logger.info("Iniciando servidor de conversación por voz...")
     app.run(debug=True, host='0.0.0.0', port=5000)
