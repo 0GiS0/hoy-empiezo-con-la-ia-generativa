@@ -84,6 +84,10 @@ def conversation():
             messages=conversation_history,
         )
 
+        # Obtener el texto de la respuesta y agregarlo al historial
+        assistant_message = response.choices[0].message.content or "Respuesta de audio generada"
+        conversation_history.append({"role": "assistant", "content": assistant_message})
+
         wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
             tmpfile.write(wav_bytes)
@@ -99,134 +103,7 @@ def conversation():
         return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
 
 
-@app.route('/conversation/simple', methods=['POST'])
-def conversation_simple():
-    """
-    Endpoint simplificado que devuelve JSON con la transcripción y la respuesta.
-    Útil para demostraciones donde queremos ver el texto además del audio.
-    """
-    try:
-        # Verificar que se recibió un archivo de audio
-        if 'audio' not in request.files:
-            return jsonify({"error": "No se encontró archivo de audio"}), 400
 
-        audio_file = request.files['audio']
-        if audio_file.filename == '':
-            return jsonify({"error": "No se seleccionó archivo"}), 400
-
-        logger.info(f"Procesando archivo de audio (modo simple): {audio_file.filename}")
-
-        # Guardar temporalmente el archivo de audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_input:
-            audio_file.save(temp_input.name)
-
-            # 1. Transcribir audio a texto usando Whisper
-            logger.info("Transcribiendo audio...")
-            with open(temp_input.name, 'rb') as audio_data:
-                transcription = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_data,
-                    language="es"  # Especificar español
-                )
-
-            user_message = transcription.text
-            logger.info(f"Texto transcrito: {user_message}")
-
-            # Limpiar archivo temporal
-            os.unlink(temp_input.name)
-
-        # 2. Agregar mensaje del usuario al historial
-        conversation_history.append({"role": "user", "content": user_message})
-
-        # 3. Generar respuesta usando ChatGPT
-        logger.info("Generando respuesta...")
-        response = client.chat.completions.create(
-            model=os.getenv("MODEL_FOR_AUDIO"),
-            modalities=["text", "audio"],
-            audio={"voice": "nova", "format": "wav"},
-            messages=conversation_history,
-        )
-
-        # Obtener el texto de la respuesta
-        assistant_message = response.choices[0].message.content or "Respuesta de audio generada"
-        
-        # Agregar respuesta al historial
-        conversation_history.append({"role": "assistant", "content": assistant_message})
-
-        # Guardar el audio temporalmente
-        wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-            tmpfile.write(wav_bytes)
-            tmpfile_path = tmpfile.name
-
-        # Codificar el audio en base64 para incluirlo en el JSON
-        audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
-
-        console.print(f"[bold green]✅ Respuesta generada exitosamente[/bold green] 🟢")
-
-        return jsonify({
-            "user_message": user_message,
-            "assistant_message": assistant_message,
-            "audio_base64": audio_base64,
-            "conversation_length": len(conversation_history) - 1,  # Excluir mensaje del sistema
-            "status": "success"
-        })
-
-    except Exception as e:
-        logger.error(f"Error en conversación simple: {str(e)}")
-        return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
-
-
-@app.route('/conversation/history', methods=['GET'])
-def get_conversation_history():
-    """Obtener el historial de conversación"""
-    # Excluir el mensaje del sistema
-    history = conversation_history[1:] if len(conversation_history) > 1 else []
-    return jsonify({
-        "history": history,
-        "total_messages": len(history)
-    })
-
-
-@app.route('/conversation/clear', methods=['POST'])
-def clear_conversation():
-    """Limpiar el historial de conversación"""
-    global conversation_history
-    conversation_history = [
-        {"role": "system", "content": "Eres un asistente útil y amigable. Responde de manera concisa y conversacional."}
-    ]
-    logger.info("Historial de conversación limpiado")
-    return jsonify({"message": "Historial limpiado exitosamente"})
-
-
-@app.route('/conversation/export', methods=['GET'])
-def export_conversation():
-    """Exportar conversación como archivo de texto"""
-    try:
-        conversation_text = ""
-        # Excluir mensaje del sistema
-        for i, message in enumerate(conversation_history[1:], 1):
-            role = "Usuario" if message["role"] == "user" else "Asistente"
-            conversation_text += f"{i}. {role}: {message['content']}\n\n"
-
-        if not conversation_text:
-            conversation_text = "No hay conversación para exportar."
-
-        # Crear archivo temporal
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as temp_file:
-            temp_file.write(conversation_text)
-            temp_file_path = temp_file.name
-
-        return send_file(
-            temp_file_path,
-            as_attachment=True,
-            download_name='conversacion.txt',
-            mimetype='text/plain'
-        )
-
-    except Exception as e:
-        logger.error(f"Error exportando conversación: {str(e)}")
-        return jsonify({"error": "Error exportando conversación"}), 500
 
 
 # 🏠 Endpoint para la página de inicio

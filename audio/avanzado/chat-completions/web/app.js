@@ -248,6 +248,27 @@ class SimpleVoiceChat {
             return;
         }
 
+        // Detener reproducción de audio si está activa
+        if (this.currentAudio && !this.currentAudio.paused) {
+            console.log('🔇 Deteniendo reproducción de audio para permitir grabación...');
+            this.currentAudio.pause();
+            this.currentAudio = null;
+            
+            // Actualizar UI de mensajes que puedan estar reproduciéndose
+            const playingMessages = document.querySelectorAll('.message.audio-playing');
+            playingMessages.forEach(message => {
+                message.classList.remove('audio-playing');
+                const messageContent = message.querySelector('.message-content');
+                if (messageContent && messageContent.textContent.includes('Reproduciendo')) {
+                    messageContent.textContent = 'Reproducción interrumpida para nueva grabación';
+                }
+                const playButton = message.querySelector('.play-button');
+                if (playButton) {
+                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+        }
+
         try {
             console.log('🎤 Iniciando grabación...');
 
