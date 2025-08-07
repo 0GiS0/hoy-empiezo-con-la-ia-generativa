@@ -33,6 +33,7 @@ conversation_history = [
 @app.route('/health', methods=['GET'])
 def health():
     """Endpoint para verificar el estado del servicio"""
+    console.print("[bold green]🏥 Health check solicitado[/bold green]")
     return jsonify({"status": "ok", "message": "Servicio de conversación por voz funcionando"})
 
 
@@ -43,22 +44,28 @@ def conversation():
     Recibe un archivo de audio, lo transcribe, genera una respuesta y la convierte a audio.
     """
     try:
+        console.print("\n[bold blue]" + "="*50 + "[/bold blue]")
+        console.print("[bold yellow]🎤 NUEVA CONVERSACIÓN INICIADA[/bold yellow]")
+        console.print("[bold blue]" + "="*50 + "[/bold blue]")
+        
         # Verificar que se recibió un archivo de audio
         if 'audio' not in request.files:
+            console.print("[bold red]❌ No se encontró archivo de audio en la request[/bold red]")
             return jsonify({"error": "No se encontró archivo de audio"}), 400
 
         audio_file = request.files['audio']
         if audio_file.filename == '':
+            console.print("[bold red]❌ Archivo de audio vacío[/bold red]")
             return jsonify({"error": "No se seleccionó archivo"}), 400
 
-        logger.info(f"Procesando archivo de audio: {audio_file.filename}")
+        console.print(f"[bold blue]🎵 Procesando archivo de audio:[/bold blue] [cyan]{audio_file.filename}[/cyan]")
 
         # Guardar temporalmente el archivo de audio
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_input:
             audio_file.save(temp_input.name)
 
             # 1. Transcribir audio a texto usando Whisper
-            logger.info("Transcribiendo audio...")
+            console.print("[bold yellow]🎤 Transcribiendo audio con Whisper...[/bold yellow]")
             with open(temp_input.name, 'rb') as audio_data:
                 transcription = client.audio.transcriptions.create(
                     model="whisper-1",
@@ -67,7 +74,7 @@ def conversation():
                 )
 
             user_message = transcription.text
-            logger.info(f"Texto transcrito: {user_message}")
+            console.print(f"[bold green]✅ Texto transcrito:[/bold green] [white]'{user_message}'[/white]")
 
             # Limpiar archivo temporal
             os.unlink(temp_input.name)
@@ -76,7 +83,7 @@ def conversation():
         conversation_history.append({"role": "user", "content": user_message})
 
         # 3. Generar respuesta usando ChatGPT
-        logger.info("Generando respuesta...")
+        console.print("[bold magenta]🤖 Generando respuesta con ChatGPT...[/bold magenta]")
         response = client.chat.completions.create(
             model=os.getenv("MODEL_FOR_AUDIO"),
             modalities=["text", "audio"],
@@ -87,18 +94,22 @@ def conversation():
         # Obtener el texto de la respuesta y agregarlo al historial
         assistant_message = response.choices[0].message.content or "Respuesta de audio generada"
         conversation_history.append({"role": "assistant", "content": assistant_message})
+        
+        console.print(f"[bold cyan]💬 Respuesta generada:[/bold cyan] [white]'{assistant_message}'[/white]")
 
         wav_bytes = base64.b64decode(response.choices[0].message.audio.data)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
             tmpfile.write(wav_bytes)
             tmpfile_path = tmpfile.name
 
-        console.print(
-            f"[bold green]✅ Audio generado exitosamente[/bold green] 🟢")
+        console.print(f"[bold green]✅ Audio generado exitosamente[/bold green] [green]({len(wav_bytes)} bytes)[/green] 🎵")
+        console.print(f"[bold blue]📊 Historial de conversación:[/bold blue] [cyan]{len(conversation_history)-1} mensajes[/cyan]") # -1 para excluir sistema
+        console.print("[bold blue]" + "="*50 + "[/bold blue]\n")
 
         return send_file(tmpfile_path, mimetype="audio/wav")
 
     except Exception as e:
+        console.print(f"[bold red]❌ Error en conversación:[/bold red] [red]{str(e)}[/red]")
         logger.error(f"Error en conversación: {str(e)}")
         return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
 
@@ -124,8 +135,24 @@ def static_files(filename):
 if __name__ == '__main__':
     # Verificar que la API key está configurada
     if not os.getenv('OPENAI_API_KEY'):
+        console.print("[bold red]❌ OPENAI_API_KEY no está configurada[/bold red]")
         logger.error("OPENAI_API_KEY no está configurada")
         exit(1)
 
+    # Mostrar información del sistema
+    console.print("[bold blue]" + "="*60 + "[/bold blue]")
+    console.print("[bold cyan]🎤 SERVIDOR DE CONVERSACIÓN POR VOZ[/bold cyan]")
+    console.print("[bold blue]" + "="*60 + "[/bold blue]")
+    console.print(f"[green]✅ OpenAI API Key configurada[/green]")
+    console.print(f"[green]✅ Modelo para audio:[/green] [cyan]{os.getenv('MODEL_FOR_AUDIO', 'gpt-4o-audio-preview')}[/cyan]")
+    console.print(f"[green]✅ Historial inicializado con mensaje del sistema[/green]")
+    console.print("[bold blue]" + "="*60 + "[/bold blue]")
+    console.print("[bold cyan]📡 Servidor disponible en:[/bold cyan] [link]http://0.0.0.0:5000[/link]")
+    console.print("[bold yellow]💡 Endpoints disponibles:[/bold yellow]")
+    console.print("   [cyan]GET  /health[/cyan]      - Estado del servicio")
+    console.print("   [cyan]POST /conversation[/cyan] - Conversación por voz")
+    console.print("   [cyan]GET  /[/cyan]            - Interfaz web")
+    console.print("[bold blue]" + "="*60 + "[/bold blue]")
+    
     logger.info("Iniciando servidor de conversación por voz...")
     app.run(debug=True, host='0.0.0.0', port=5000)
