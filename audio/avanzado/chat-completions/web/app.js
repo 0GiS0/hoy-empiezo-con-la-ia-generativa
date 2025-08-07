@@ -274,15 +274,25 @@ class SimpleVoiceChat {
         if (role === 'user') {
             messageElement.innerHTML = `
                 <div class="user-message">
-                    <div class="message-content">${content}</div>
-                    ${audioButton}
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="font-size: 32px; margin-top: 4px;">👤</div>
+                        <div style="flex: 1;">
+                            <div class="message-content">${content}</div>
+                            ${audioButton}
+                        </div>
+                    </div>
                 </div>
             `;
         } else {
             messageElement.innerHTML = `
                 <div class="assistant-message">
-                    <div class="message-content">${content}</div>
-                    ${audioButton}
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="font-size: 32px; margin-top: 4px;">🤖</div>
+                        <div style="flex: 1;">
+                            <div class="message-content">${content}</div>
+                            ${audioButton}
+                        </div>
+                    </div>
                 </div>
             `;
         }
