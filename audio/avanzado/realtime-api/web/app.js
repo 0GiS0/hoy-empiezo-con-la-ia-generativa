@@ -19,8 +19,30 @@ function escapeHTML(str) {
 
 /**
  * 🎯 Clase principal que maneja la comunicación con OpenAI Realtime API
- * Esta clase utiliza WebRTC para establecer una conexión bidireccional en tiempo real
- * permitiendo envío de audio del micrófono y recepción de respuestas de voz del modelo
+ * Esta clase utiliza WebRTC para establecer una conexión bidireccional en tiempo             case 'response.text.delta':
+                // Texto streaming - agregar al chat
+                if (event.delta) {
+                    // ⏱️ Marcar inicio de texto si es el primer delta
+                    if (!this.responseTimers.textStart) {
+                        this.responseTimers.textStart = Date.now();
+                    }
+                    this.handleTextDelta(event.delta);
+                }
+                break;
+                
+            case 'response.text.done':
+                this.responseTimers.textEnd = Date.now(); // ⏱️ Marcar fin de texto
+                this.log('📝 Texto completo recibido', 'info');
+                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos
+                this.hideTypingIndicator();
+                break;
+                
+            case 'response.done':
+                this.responseTimers.responseEnd = Date.now(); // ⏱️ Marcar fin de respuesta
+                this.log('✅ Respuesta completada', 'success');
+                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos finales
+                this.hideTypingIndicator();
+                break;ndo envío de audio del micrófono y recepción de respuestas de voz del modelo
  */
 class OpenAIRealtimeClient {
     constructor() {
@@ -31,6 +53,16 @@ class OpenAIRealtimeClient {
         this.dataChannel = null;        // 📡 Canal de datos WebRTC para eventos JSON
         this.peerConnection = null;     // 🔗 Conexión WebRTC principal
         this.audioElement = null;       // 🔊 Elemento HTML para reproducir audio de OpenAI
+        
+        // ⏱️ Sistema de medición de latencia
+        this.responseTimers = {
+            speechStart: null,          // 🗣️ Timestamp cuando empieza a hablar
+            speechEnd: null,            // 🤐 Timestamp cuando termina de hablar
+            responseStart: null,        // 🔄 Timestamp cuando empieza la respuesta
+            responseEnd: null,          // ✅ Timestamp cuando termina la respuesta
+            textStart: null,            // 📝 Timestamp cuando empieza respuesta de texto
+            textEnd: null,              // ✅ Timestamp cuando termina respuesta de texto
+        };
         
         // ⚙️ Configuración - URLs y parámetros del cliente
         this.config = {
@@ -62,6 +94,7 @@ class OpenAIRealtimeClient {
             bytesSent: document.getElementById('bytesSent'),            // 📈 Contador de bytes enviados
             packetsSent: document.getElementById('packetsSent'),        // 📦 Contador de paquetes enviados
             latency: document.getElementById('latency'),                // ⏱️ Medidor de latencia
+            responseTime: document.getElementById('responseTime'),  // ⏱️ Tiempo de respuesta
             logContainer: document.getElementById('logContainer'),      // 📋 Contenedor de logs
             sampleRate: document.getElementById('sampleRate'),          // 🎵 Selector de frecuencia de muestreo
             bitrate: document.getElementById('bitrate'),                // 💾 Selector de bitrate
@@ -577,6 +610,7 @@ class OpenAIRealtimeClient {
                 
             case 'input_audio_buffer.speech_started':
                 // 🗣️ Usuario empezó a hablar - indicador visual
+                this.responseTimers.speechStart = Date.now(); // ⏱️ Marcar inicio
                 this.log('🗣️ Inicio de habla detectado', 'info');
                 this.elements.startBtn.classList.add('recording');
                 const startBtnSpan = this.elements.startBtn.querySelector('span');
@@ -585,6 +619,7 @@ class OpenAIRealtimeClient {
                 
             case 'input_audio_buffer.speech_stopped':
                 // 🤐 Usuario dejó de hablar - procesar audio
+                this.responseTimers.speechEnd = Date.now(); // ⏱️ Marcar fin de habla
                 this.log('🤐 Fin de habla detectado', 'info');
                 this.elements.startBtn.classList.remove('recording');
                 const stopBtnSpan = this.elements.startBtn.querySelector('span');
@@ -607,33 +642,48 @@ class OpenAIRealtimeClient {
                 break;
                 
             case 'response.created':
+                this.responseTimers.responseStart = Date.now(); // ⏱️ Marcar inicio de respuesta
                 this.log('🔄 Generando respuesta...', 'info');
                 this.showTypingIndicator();
                 break;
                 
             case 'response.audio.delta':
                 // Audio streaming en tiempo real
+                // ⏱️ Marcar inicio de audio si es el primer delta
+                if (!this.responseTimers.textStart) {
+                    this.responseTimers.textStart = Date.now();
+                }
                 this.log('🎵 Audio delta recibido', 'debug');
                 break;
                 
             case 'response.audio.done':
+                this.responseTimers.textEnd = Date.now(); // ⏱️ Marcar fin de audio
                 this.log('🎵 Audio completo recibido', 'info');
+                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos para audio
                 break;
                 
             case 'response.text.delta':
                 // Texto streaming - agregar al chat
                 if (event.delta) {
+                    // ⏱️ Marcar inicio de texto si es el primer delta
+                    if (!this.responseTimers.textStart) {
+                        this.responseTimers.textStart = Date.now();
+                    }
                     this.handleTextDelta(event.delta);
                 }
                 break;
                 
             case 'response.text.done':
-                this.log('� Texto completo recibido', 'info');
+                this.responseTimers.textEnd = Date.now(); // ⏱️ Marcar fin de texto
+                this.log('📝 Texto completo recibido', 'info');
+                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos
                 this.hideTypingIndicator();
                 break;
                 
             case 'response.done':
+                this.responseTimers.responseEnd = Date.now(); // ⏱️ Marcar fin de respuesta
                 this.log('✅ Respuesta completada', 'success');
+                this.calculateAndShowResponseTime(); // 📊 Calcular tiempos finales
                 this.hideTypingIndicator();
                 break;
                 
@@ -700,6 +750,10 @@ class OpenAIRealtimeClient {
     sendTextMessage(message) {
         if (!message.trim()) return; // 🚫 No enviar mensajes vacíos
         
+        // ⏱️ Marcar inicio de interacción para texto
+        this.responseTimers.speechStart = Date.now();
+        this.responseTimers.speechEnd = Date.now();
+        
         // 💬 Mostrar mensaje del usuario inmediatamente en el chat
         this.addMessage(message, true);
         
@@ -725,6 +779,101 @@ class OpenAIRealtimeClient {
         this.showTypingIndicator();
         
         this.log(`💬 Mensaje enviado: "${message}"`, 'info');
+    }
+
+    /**
+     * ⏱️ Calcula y muestra los tiempos de respuesta en la interfaz
+     */
+    calculateAndShowResponseTime() {
+        if (!this.responseTimers.speechEnd || !this.responseTimers.responseStart) return;
+        
+        const times = {};
+        
+        // 🔄 Tiempo hasta que empieza a generar respuesta
+        if (this.responseTimers.speechEnd && this.responseTimers.responseStart) {
+            times.processingTime = this.responseTimers.responseStart - this.responseTimers.speechEnd;
+        }
+        
+        // 📝 Tiempo hasta primer texto (TTFT - Time To First Token)
+        if (this.responseTimers.speechEnd && this.responseTimers.textStart) {
+            times.timeToFirstToken = this.responseTimers.textStart - this.responseTimers.speechEnd;
+        }
+        
+        // ✅ Tiempo total de respuesta
+        if (this.responseTimers.speechEnd && this.responseTimers.responseEnd) {
+            times.totalResponseTime = this.responseTimers.responseEnd - this.responseTimers.speechEnd;
+        }
+        
+        // 🎯 Actualizar interfaz con los tiempos calculados
+        this.updateResponseTimeDisplay(times);
+        
+        // 📊 Log detallado de rendimiento
+        if (times.totalResponseTime) {
+            this.log(`⏱️ Tiempo total de respuesta: ${times.totalResponseTime}ms`, 'info');
+        }
+        if (times.timeToFirstToken) {
+            this.log(`🚀 Tiempo al primer token: ${times.timeToFirstToken}ms`, 'info');
+        }
+        
+        // 🧹 Resetear timers para próxima interacción
+        this.resetResponseTimers();
+    }
+
+    /**
+     * 🔄 Resetea los timers de respuesta para nueva medición
+     */
+    resetResponseTimers() {
+        this.responseTimers = {
+            speechStart: null,
+            speechEnd: null,
+            responseStart: null,
+            responseEnd: null,
+            textStart: null,
+            textEnd: null,
+        };
+    }
+
+    /**
+     * 📊 Actualiza la visualización de tiempos de respuesta en la interfaz
+     */
+    updateResponseTimeDisplay(times) {
+        if (!this.elements.responseTime) return;
+        
+        let displayText = '';
+        
+        if (times.totalResponseTime) {
+            displayText = `${times.totalResponseTime}ms`;
+            
+            // 🎨 Código de colores basado en rendimiento
+            let colorClass = '';
+            if (times.totalResponseTime < 1000) {
+                colorClass = 'excellent'; // 🟢 Excelente < 1s
+            } else if (times.totalResponseTime < 2000) {
+                colorClass = 'good';      // 🟡 Bueno < 2s
+            } else if (times.totalResponseTime < 5000) {
+                colorClass = 'fair';      // 🟠 Regular < 5s
+            } else {
+                colorClass = 'poor';      // 🔴 Lento > 5s
+            }
+            
+            this.elements.responseTime.className = `metric-value ${colorClass}`;
+            
+            // 📝 Tooltip con detalles adicionales
+            let tooltip = `Tiempo total: ${times.totalResponseTime}ms`;
+            if (times.timeToFirstToken) {
+                tooltip += `\nPrimer token: ${times.timeToFirstToken}ms`;
+            }
+            if (times.processingTime) {
+                tooltip += `\nProcesamiento: ${times.processingTime}ms`;
+            }
+            
+            this.elements.responseTime.title = tooltip;
+        } else {
+            displayText = '--';
+            this.elements.responseTime.className = 'metric-value';
+        }
+        
+        this.elements.responseTime.textContent = displayText;
     }
     
     /**

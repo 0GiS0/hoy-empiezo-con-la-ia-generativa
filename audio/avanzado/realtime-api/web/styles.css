@@ -54,6 +54,16 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
 }
 
 .header h1 {
@@ -80,6 +90,60 @@ body {
 
 .status-dot.connected {
     background-color: var(--primary-color);
+}
+
+/* Response time display */
+.response-time-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    background-color: var(--background);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 60px;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: calc(var(--radius) / 2);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+/* Códigos de color para rendimiento */
+.metric-value.excellent {
+    background-color: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+}
+
+.metric-value.good {
+    background-color: #fef3c7;
+    border-color: #d97706;
+    color: #92400e;
+}
+
+.metric-value.fair {
+    background-color: #fed7aa;
+    border-color: #ea580c;
+    color: #9a3412;
+}
+
+.metric-value.poor {
+    background-color: #fecaca;
+    border-color: #dc2626;
+    color: #991b1b;
 }
 
 /* Main content */

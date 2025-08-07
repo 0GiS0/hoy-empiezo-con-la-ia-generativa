@@ -43,8 +43,18 @@ if not OPENAI_API_KEY:
 OPENAI_REALTIME_URL = "https://api.openai.com/v1/realtime/sessions"
 
 # 📁 Configuración de archivos estáticos
-# El directorio web está un nivel arriba del directorio api
-WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'web')
+# El directorio web está al mismo nivel que el directorio api
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # /path/to/api/
+PROJECT_DIR = os.path.dirname(SCRIPT_DIR)                # /path/to/realtime-api/
+WEB_DIR = os.path.join(PROJECT_DIR, 'web')               # /path/to/realtime-api/web/
+
+# Debug: Verificar que el directorio web existe
+if not os.path.exists(WEB_DIR):
+    logger.error(f"❌ Directorio web no encontrado en: {WEB_DIR}")
+    logger.error(f"📁 Directorio actual del script: {SCRIPT_DIR}")
+    logger.error(f"📁 Directorio del proyecto: {PROJECT_DIR}")
+else:
+    logger.info(f"✅ Directorio web encontrado en: {WEB_DIR}")
 
 # =========================
 # 🛣️ RUTAS DE LA API
@@ -53,24 +63,52 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'web')
 @app.route('/')
 def index():
     """🏠 Página principal - servir index.html del directorio web."""
+    index_path = os.path.join(WEB_DIR, 'index.html')
+    logger.info(f"🏠 Intentando servir index.html desde: {index_path}")
+    
     try:
-        return send_file(os.path.join(WEB_DIR, 'index.html'))
-    except FileNotFoundError:
+        if not os.path.exists(index_path):
+            logger.error(f"❌ index.html no encontrado en: {index_path}")
+            return jsonify({
+                'error': 'Frontend no encontrado',
+                'message': f'index.html no existe en {index_path}',
+                'web_dir': WEB_DIR,
+                'files_found': os.listdir(WEB_DIR) if os.path.exists(WEB_DIR) else []
+            }), 404
+            
+        return send_file(index_path)
+    except Exception as e:
+        logger.error(f"❌ Error sirviendo index.html: {e}")
         return jsonify({
-            'error': 'Frontend no encontrado',
-            'message': 'Asegúrate de que el directorio web existe'
-        }), 404
+            'error': 'Error sirviendo frontend',
+            'message': str(e),
+            'web_dir': WEB_DIR
+        }), 500
 
 @app.route('/<path:filename>')
 def serve_static(filename):
     """📁 Servir archivos estáticos del directorio web."""
+    file_path = os.path.join(WEB_DIR, filename)
+    logger.info(f"📁 Intentando servir archivo: {file_path}")
+    
     try:
+        if not os.path.exists(file_path):
+            logger.error(f"❌ Archivo no encontrado: {file_path}")
+            return jsonify({
+                'error': 'Archivo no encontrado',
+                'message': f'El archivo {filename} no existe en {WEB_DIR}',
+                'requested_file': filename,
+                'files_available': os.listdir(WEB_DIR) if os.path.exists(WEB_DIR) else []
+            }), 404
+            
         return send_from_directory(WEB_DIR, filename)
-    except FileNotFoundError:
+    except Exception as e:
+        logger.error(f"❌ Error sirviendo archivo {filename}: {e}")
         return jsonify({
-            'error': 'Archivo no encontrado',
-            'message': f'El archivo {filename} no existe'
-        }), 404
+            'error': 'Error sirviendo archivo',
+            'message': str(e),
+            'requested_file': filename
+        }), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
