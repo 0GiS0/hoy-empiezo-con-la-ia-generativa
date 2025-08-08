@@ -7,12 +7,10 @@
 # 📦 IMPORTS Y DEPENDENCIAS
 # =========================
 import os
-import json
 import logging
 from datetime import datetime
-from typing import Dict, Any
 import requests
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -110,14 +108,6 @@ def serve_static(filename):
             'requested_file': filename
         }), 500
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """🏥 Endpoint de salud para verificar que el servidor está funcionando."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'service': 'OpenAI Realtime Token Service'
-    })
 
 @app.route('/api/token', methods=['GET', 'POST'])
 def get_ephemeral_key():
@@ -204,23 +194,6 @@ def get_session_config():
     }
     return jsonify(config)
 
-# =========================
-# 🚨 MANEJO DE ERRORES
-# =========================
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        'error': 'Endpoint not found',
-        'message': 'La ruta solicitada no existe'
-    }), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({
-        'error': 'Internal server error',
-        'message': 'Error interno del servidor'
-    }), 500
 
 # =========================
 # 🏁 PUNTO DE ENTRADA MAIN
