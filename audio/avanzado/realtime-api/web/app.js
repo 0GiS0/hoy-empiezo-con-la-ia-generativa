@@ -16,6 +16,8 @@
     let receivingText = false;
     let receivingAudio = false;
     let sendingAudio = false;
+    // ⏱️ Medición de latencia por turno (desde fin de habla hasta audio completo)
+    let responseTimerStart = null;
 
     // UI
     const statusDot = document.getElementById('statusDot');
@@ -190,6 +192,8 @@
                 receivingText = false;
                 receivingAudio = false;
                 sendingAudio = true;
+                    // reset temporizador de turno
+                    responseTimerStart = null;
                     // Badges
                     micBadge.textContent = '🎙️ Escuchando';
                     micBadge.classList.remove('hidden');
@@ -200,6 +204,8 @@
                 break;
             case 'input_audio_buffer.speech_stopped':
                     micBadge.textContent = '⏳ Procesando';
+                // Marca de inicio para medir tiempo hasta la respuesta completa del modelo
+                responseTimerStart = (typeof performance !== 'undefined' ? performance.now() : Date.now());
                 addSystem('🛑 Fin del audio');
                 break;
             case 'input_audio_buffer.committed':
@@ -240,7 +246,17 @@
                     // Si no hay más streams entrantes, ocultar badge de recepción
                     receivingBadge.classList.add('hidden');
                     micBadge.classList.add('hidden');
-                addSystem('✅ Audio completo recibido');
+                // Calcula y muestra el tiempo transcurrido si es posible
+                if (responseTimerStart) {
+                    const end = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+                    const secs = (end - responseTimerStart) / 1000;
+                    const pretty = secs < 10 ? `${secs.toFixed(1)} s` : `${Math.round(secs)} s`;
+                    addSystem(`✅ Audio completo recibido (${pretty})`);
+                } else {
+                    addSystem('✅ Audio completo recibido');
+                }
+                // reset temporizador
+                responseTimerStart = null;
                 break;
             case 'response.text.done':
                 // Fin del texto actual (no necesitamos acción extra en modo simple)
