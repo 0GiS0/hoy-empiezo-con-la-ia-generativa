@@ -106,9 +106,6 @@ def conversation():
         return jsonify({"error": f"Error procesando conversación: {str(e)}"}), 500
 
 
-
-
-
 # 🏠 Endpoint para la página de inicio
 @app.route('/')
 def index():
@@ -116,8 +113,6 @@ def index():
     return app.send_static_file('index.html')
 
 # 📦 Endpoint para archivos estáticos (JS, CSS, etc.)
-
-
 @app.route('/<path:filename>')
 def static_files(filename):
     """Sirve archivos estáticos adicionales."""
@@ -141,7 +136,6 @@ if __name__ == '__main__':
     console.print("[bold blue]" + "="*60 + "[/bold blue]")
     console.print("[bold cyan]📡 Servidor disponible en:[/bold cyan] [link]http://0.0.0.0:5000[/link]")
     console.print("[bold yellow]💡 Endpoints disponibles:[/bold yellow]")
-    console.print("   [cyan]GET  /health[/cyan]      - Estado del servicio")
     console.print("   [cyan]POST /conversation[/cyan] - Conversación por voz")
     console.print("   [cyan]GET  /[/cyan]            - Interfaz web")
     console.print("[bold blue]" + "="*60 + "[/bold blue]")
