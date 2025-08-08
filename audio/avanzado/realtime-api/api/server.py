@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """
 🔑 Servidor para generar ephemeral keys de OpenAI Realtime API
+
+¿Qué hace este servidor?
+- Expone un endpoint seguro que solicita a OpenAI una "ephemeral key" ⏳.
+- Esa clave temporal permite que el navegador se conecte a la Realtime API
+    sin exponer tu OPENAI_API_KEY en el front. 🛡️
+
+Puntos clave del flujo:
+1) El cliente llama a POST /api/token.
+2) Este servidor pide a OpenAI una sesión Realtime con el modelo y voz deseados.
+3) Devuelve al cliente la respuesta de OpenAI (con la clave temporal y configuración).
 """
 
 # =========================
@@ -14,7 +24,7 @@ from flask import Flask, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde .env
+# 🔐 Cargar variables de entorno desde .env (OPENAI_API_KEY, HOST, PORT, etc.)
 load_dotenv()
 
 # =========================
@@ -30,9 +40,9 @@ logger = logging.getLogger(__name__)
 # 🌐 APLICACIÓN FLASK
 # =========================
 app = Flask(__name__)
-CORS(app)  # Permitir CORS para requests desde el frontend
+CORS(app)  # 🌐 Permitir CORS para requests desde el frontend (demos locales)
 
-# 🔑 Configuración de OpenAI
+# 🔑 Configuración de OpenAI (API Key del servidor)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     logger.error("❌ OPENAI_API_KEY no encontrada en las variables de entorno")
@@ -40,8 +50,8 @@ if not OPENAI_API_KEY:
 
 OPENAI_REALTIME_URL = "https://api.openai.com/v1/realtime/sessions"
 
-# 📁 Configuración de archivos estáticos
-# El directorio web está al mismo nivel que el directorio api
+# 📁 Configuración de archivos estáticos: servimos la web que vive en ../web
+# Útil para demos: evita configurar un servidor aparte para el frontend.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # /path/to/api/
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)                # /path/to/realtime-api/
 WEB_DIR = os.path.join(PROJECT_DIR, 'web')               # /path/to/realtime-api/web/
@@ -60,7 +70,7 @@ else:
 
 @app.route('/')
 def index():
-    """🏠 Página principal - servir index.html del directorio web."""
+    """🏠 Página principal: sirve index.html del directorio web."""
     index_path = os.path.join(WEB_DIR, 'index.html')
     logger.info(f"🏠 Intentando servir index.html desde: {index_path}")
     
@@ -85,7 +95,7 @@ def index():
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    """📁 Servir archivos estáticos del directorio web."""
+    """📁 Servir archivos estáticos (JS, CSS, assets) del directorio web."""
     file_path = os.path.join(WEB_DIR, filename)
     logger.info(f"📁 Intentando servir archivo: {file_path}")
     
@@ -116,24 +126,28 @@ def get_ephemeral_key():
     
     Esta key permite al cliente conectarse directamente a OpenAI sin exponer
     la API key del servidor.
+
+    Notas:
+    - La session se crea con un modelo Realtime y parámetros (voz, instrucciones).
+    - La respuesta incluye la clave temporal y su expiración.
     """
     try:
         logger.info("🔑 Solicitando ephemeral key a OpenAI...")
         
-        # Configuración de la sesión
+    # ⚙️ Configuración de la sesión Realtime (modelo, voz, instrucciones)
         session_config = {
             "model": "gpt-4o-realtime-preview-2024-12-17",
             "voice": "verse",
             "instructions": "Eres un asistente útil. Responde de manera conversacional y natural."
         }
         
-        # Headers para la request a OpenAI
+    # 📬 Headers para la request a OpenAI
         headers = {
             "Authorization": f"Bearer {OPENAI_API_KEY}",
             "Content-Type": "application/json"
         }
         
-        # Realizar la request a OpenAI
+    # 🔗 Hacer la request a OpenAI para obtener la sesión
         response = requests.post(
             OPENAI_REALTIME_URL,
             headers=headers,
@@ -145,7 +159,7 @@ def get_ephemeral_key():
             data = response.json()
             logger.info("✅ Ephemeral key generada exitosamente")
             
-            # Agregar información adicional para el cliente
+            # 🧩 Añadimos metadatos útiles para el cliente (debug/observabilidad)
             result = {
                 **data,
                 'server_timestamp': datetime.now().isoformat(),
@@ -209,7 +223,7 @@ def main():
         logger.info("   POST /api/token      - Generar ephemeral key")
         logger.info("   GET  /api/session/config - Configuración disponible")
         
-        # Configuración del servidor
+        # 🧰 Configuración del servidor (HOST/PORT/DEBUG desde env con defaults)
         host = os.getenv('HOST', '0.0.0.0')
         port = int(os.getenv('PORT', 8000))
         debug = os.getenv('DEBUG', 'False').lower() == 'true'
