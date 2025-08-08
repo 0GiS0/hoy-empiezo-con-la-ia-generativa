@@ -1,124 +1,46 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realtime API Demo</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎙️ Realtime API · Voz en Vivo 🚀✨</title>
+
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <div class="header-content">
-                <h1>Realtime API Demo</h1>
-                <div class="connection-status">
-                    <div class="status-dot" id="connectionStatus"></div>
-                    <span id="statusText">Desconectado</span>
-                </div>
-                <div class="response-time-display">
-                    <span class="metric-label">⏱️ Tiempo de respuesta:</span>
-                    <span id="responseTime" class="metric-value">--</span>
-                </div>
-            </div>
-        </header>
+  <main class="container">
+    <header class="top">
+      <h1>🎙️ Realtime API · Voz en Vivo 🚀✨</h1>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Desconectado</span>
+  <span id="micBadge" class="badge hidden" aria-live="polite"></span>
+      </div>
+    </header>
 
-        <main class="main">
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="welcome-message">
-                        <div class="welcome-icon">🎤</div>
-                        <h2>¡Hola! Soy tu asistente de voz</h2>
-                        <p>Haz clic en el micrófono para comenzar a hablar o escribe un mensaje</p>
-                    </div>
-                </div>
-                
-                <div class="chat-input">
-                    <div class="input-container">
-                        <input 
-                            type="text" 
-                            id="textInput" 
-                            placeholder="Escribe tu mensaje..." 
-                            disabled
-                        />
-                        <button id="sendTextBtn" class="send-btn" type="button" disabled>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="m22 2-7 20-4-9-9-4z"/>
-                                <path d="m22 2-10 10"/>
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <div class="voice-controls">
-                        <button id="startBtn" class="voice-btn" type="button">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                <line x1="12" x2="12" y1="19" y2="22"/>
-                                <line x1="8" x2="16" y1="22" y2="22"/>
-                            </svg>
-                            <span>Hablar</span>
-                        </button>
-                        
-                        <button id="stopBtn" class="voice-btn stop-btn" type="button" disabled>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <rect width="6" height="6" x="9" y="9"/>
-                            </svg>
-                            <span>Detener</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
+    <section class="controls">
+      <button id="connectBtn" class="btn primary">Conectar</button>
+      <button id="disconnectBtn" class="btn" disabled>Desconectar</button>
+    </section>
 
-        <!-- Panel de logs (inicialmente oculto) -->
-        <div id="logPanel" class="log-panel hidden">
-            <div class="log-panel-header">
-                <h3>📝 System Logs</h3>
-                <button id="clearLogsBtn" class="clear-logs-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                    </svg>
-                    Limpiar
-                </button>
-            </div>
-            <div class="log-container" id="logContainer">
-                <!-- Los logs se insertan aquí dinámicamente -->
-            </div>
+    <section class="chat">
+      <div id="messages" class="messages">
+        <div class="welcome">
+          <div class="emoji">🎤</div>
+          <h2>Habla conmigo</h2>
+          <p>Pulsa Conectar y concede permiso al micrófono.</p>
         </div>
+      </div>
 
-        <!-- Botón flotante para toggle de logs -->
-        <button id="logToggleBtn" class="log-toggle-btn" title="Mostrar/Ocultar logs">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14,2 14,8 20,8"/>
-                <line x1="16" x2="8" y1="13" y2="13"/>
-                <line x1="16" x2="8" y1="17" y2="17"/>
-                <polyline points="10,9 9,9 8,9"/>
-            </svg>
-        </button>
+      <div id="flow" class="flow">
+        <span id="sendingBadge" class="pill hidden">📤 Enviando<span class="dots"><span></span><span></span><span></span></span></span>
+        <span id="receivingBadge" class="pill hidden">📥 Recibiendo<span class="dots"><span></span><span></span><span></span></span></span>
+      </div>
 
-        <!-- Elementos ocultos necesarios para el JavaScript -->
-        <div style="display: none;">
-            <div id="connectionState">-</div>
-            <div id="bytesSent">0</div>
-            <div id="packetsSent">0</div>
-            <div id="latency">-</div>
-            <div id="volumeFill"></div>
-            <div id="volumeText">0%</div>
-            <select id="sampleRate">
-                <option value="24000" selected>24 kHz</option>
-            </select>
-            <select id="bitrate">
-                <option value="128000" selected>128 kbps</option>
-            </select>
-            <div id="logContainer"></div>
-        </div>
-    </div>
+    </section>
+  </main>
 
-    <script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

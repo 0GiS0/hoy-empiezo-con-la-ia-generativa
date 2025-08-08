@@ -52,19 +52,34 @@ python server.py
 
 ```bash
 cd web
-# Opción 1: Usando Python
-python -m http.server 3000
+# Opción 1: Servido por el propio servidor Python (modo simple)
+# Abre en el navegador: http://localhost:8000/simple.html
 
-# Opción 2: Usando Node.js
+# Opción 2: Servir la carpeta web aparte (UI avanzada existente)
+# Usando Python
+python -m http.server 3000
+# Usando Node.js
 npx serve -p 3000
 ```
 
 ### 3. Usar la Aplicación
 
-1. Abrir `http://localhost:3000` en el navegador
-2. Hacer clic en "Iniciar Sesión"
-3. Permitir acceso al micrófono
-4. Comenzar a hablar con el asistente
+1. Modo simple (didáctico y minimal): abre `http://localhost:8000/simple.html`
+      - Pulsa "Conectar" y acepta el permiso del micrófono
+      - Habla y verás la transcripción + respuesta con voz y texto
+      - También puedes escribir texto y pulsar Enviar
+2. Modo avanzado (UI completa): abre `http://localhost:3000` o `http://localhost:8000/`
+      - Ofrece métricas, logs detallados y más controles
+
+## 🧪 Modo simple (qué incluye)
+
+- Conectar/Desconectar una sesión con Realtime API
+- Envío de audio del micrófono (WebRTC) y reproducción de la respuesta
+- Transcripción automática (Whisper) y visualización del texto del asistente
+- Entrada de texto opcional con generación de respuesta
+- Código en ~200 líneas, centrado en lo esencial
+
+Abre `web/simple.html` directamente desde el servidor Python: `http://localhost:8000/simple.html`.
 
 ## 🔧 Funcionalidades
 
