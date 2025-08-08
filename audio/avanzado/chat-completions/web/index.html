@@ -1,51 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat por Voz - Demo Simple</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎙️ Chat Completions · Voz Simple</title>
 
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-microphone-lines"></i> Chat por Voz</h1>
-            <p>Demostración simple con OpenAI Chat Completions API</p>
+    <main class="container">
+        <header class="top">
+            <h1>🎙️ Chat Completions · Voz Simple</h1>
+            <div class="status">
+                <span id="statusDot" class="dot"></span>
+                <span id="statusText">Listo</span>
+                <span id="micBadge" class="badge hidden" aria-live="polite"></span>
+            </div>
         </header>
 
-        <main>         
+        <section class="controls">
+            <button id="recordBtn" class="btn primary">Grabar</button>
+        </section>
 
-            <!-- Panel de control -->
-            <div class="control-panel">
-                <button id="recordBtn" class="record-btn" aria-label="Iniciar grabación">
-                    <i class="fas fa-microphone"></i>
-                </button>
-
-                <div class="instructions" id="instructions">
-                    Mantén presionado el botón para grabar (o usa la barra espaciadora)
+        <section class="chat">
+            <div id="messages" class="messages">
+                <div class="welcome">
+                    <div class="emoji">🎤</div>
+                    <h2>Habla conmigo</h2>
+                    <p>Pulsa Grabar, habla y suelta para enviar tu mensaje.</p>
                 </div>
             </div>
 
-            <!-- Estado de procesamiento -->
-            <div id="processingStatus" class="processing-status hidden">
-                <div class="spinner"></div>
-                <span>Procesando audio y generando respuesta...</span>
+            <div id="flow" class="flow">
+                <span id="sendingBadge" class="pill hidden">📤 Enviando<span class="dots"><span></span><span></span><span></span></span></span>
+                <span id="receivingBadge" class="pill hidden">📥 Recibiendo<span class="dots"><span></span><span></span><span></span></span></span>
             </div>
+        </section>
+    </main>
 
-            <!-- Historial de conversación -->
-            <div class="conversation-container">
-                <div id="conversationHistory" class="conversation-history">
-                    
-                </div>
-            </div>           
-        </main>
-    </div>
-
-    <!-- Scripts -->
     <script src="app.js"></script>
 </body>
-
 </html>
