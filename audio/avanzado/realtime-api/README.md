@@ -1,6 +1,6 @@
-# 🎤 Cliente OpenAI Realtime API
+# 🎤 Demo OpenAI Realtime API (WebRTC)
 
-Este proyecto implementa un cliente para la [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime) usando WebRTC, basado en el ejemplo oficial de OpenAI.
+Cliente web + servidor Python que genera ephemeral keys para conectar el navegador directamente a la [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime) usando WebRTC.
 
 ## 🏗️ Arquitectura
 
@@ -28,14 +28,14 @@ Este proyecto implementa un cliente para la [OpenAI Realtime API](https://platfo
 - Python 3.8+
 - API Key de OpenAI
 
-### 1. Configurar el Servidor Python
+### 1) Configurar el Servidor Python
 
 ```bash
 cd api
 pip install -r requirements.txt
 ```
 
-Crear archivo `.env`:
+Crear archivo `.env` (o copia `.env.example`):
 ```bash
 OPENAI_API_KEY=tu-api-key-aquí
 HOST=0.0.0.0
@@ -48,38 +48,31 @@ Iniciar el servidor:
 python server.py
 ```
 
-### 2. Servir el Cliente Web
+### 2) Servir el Cliente Web
 
 ```bash
 cd web
-# Opción 1: Servido por el propio servidor Python (modo simple)
-# Abre en el navegador: http://localhost:8000/simple.html
+# Opción A: servido por el propio servidor Python (recomendado para la demo)
+# Abre en el navegador: http://localhost:8000/
 
-# Opción 2: Servir la carpeta web aparte (UI avanzada existente)
-# Usando Python
-python -m http.server 3000
-# Usando Node.js
-npx serve -p 3000
+# Opción B: servir la carpeta web aparte
+python -m http.server 3000   # Python
+npx serve -p 3000            # Node.js
 ```
 
 ### 3. Usar la Aplicación
 
-1. Modo simple (didáctico y minimal): abre `http://localhost:8000/simple.html`
-      - Pulsa "Conectar" y acepta el permiso del micrófono
-      - Habla y verás la transcripción + respuesta con voz y texto
-      - También puedes escribir texto y pulsar Enviar
-2. Modo avanzado (UI completa): abre `http://localhost:3000` o `http://localhost:8000/`
-      - Ofrece métricas, logs detallados y más controles
+1) Abre `http://localhost:8000/` (servido por Flask) o `http://localhost:3000` si lo sirves aparte.
+2) Pulsa "Conectar" y acepta el permiso del micrófono.
+3) Habla: verás transcripción + respuesta con voz y texto. También puedes escribir texto y pulsar Enviar.
 
-## 🧪 Modo simple (qué incluye)
+## 🧪 Qué incluye esta demo
 
 - Conectar/Desconectar una sesión con Realtime API
 - Envío de audio del micrófono (WebRTC) y reproducción de la respuesta
-- Transcripción automática (Whisper) y visualización del texto del asistente
+- Transcripción automática y visualización del texto del asistente
 - Entrada de texto opcional con generación de respuesta
-- Código en ~200 líneas, centrado en lo esencial
-
-Abre `web/simple.html` directamente desde el servidor Python: `http://localhost:8000/simple.html`.
+- UI limpia con logs y estado de conexión
 
 ## 🔧 Funcionalidades
 
@@ -101,7 +94,12 @@ Abre `web/simple.html` directamente desde el servidor Python: `http://localhost:
 - ✅ Controles de configuración
 - ✅ Indicadores visuales de estado
 
-## 📡 Eventos de la API
+## 📡 Endpoints del servidor y eventos
+
+### Endpoints del servidor (Flask)
+- `GET /` → sirve la UI (`web/index.html`)
+- `GET /api/session/config` → devuelve configuración por defecto (modelo/voz)
+- `POST /api/token` → solicita una ephemeral key a OpenAI y la devuelve al cliente
 
 El cliente maneja automáticamente los siguientes eventos de OpenAI:
 
@@ -161,6 +159,8 @@ El servidor Python registra:
 - Solicitudes de ephemeral keys
 - Errores de OpenAI API
 - Estado de salud del servicio
+
+Además, al iniciar verás en consola la URL del servidor y endpoints disponibles.
 
 ## 📚 Referencias
 
