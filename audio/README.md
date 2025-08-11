@@ -1,227 +1,175 @@
 # 🔊 Capítulo 7: Audio y la IA Generativa 🎵🤖
 
-¡Bienvenido al mundo del audio con IA Generativa! 🎙️ En este capítulo exploraremos las diferentes formas de trabajar con audio utilizando inteligencia artificial, desde la transcripción de voz hasta conversaciones en tiempo real.
+¡Hola developer 👋🏻! En este directorio encontrarás las demos que te mostré en mis vídeos sobre audio e IA Generativa.
 
-## 📚 ¿Qué encontrarás en este capítulo?
-
-En este directorio encontrarás demos prácticas que te enseñarán a:
-
-- 🎯 **Transcribir audio a texto** con alta precisión
-- 🗣️ **Convertir texto a voz** con voces naturales
-- 💬 **Crear conversaciones interactivas** con IA
-- ⚡ **Implementar comunicación en tiempo real** 
-- 🌐 **Integrar funcionalidades de audio en aplicaciones web**
-
-## 🗂️ Estructura del directorio
+## 📁 Estructura real del directorio
 
 ```
 audio/
-├── 📄 README.md                    # Esta guía
-├── 📋 requirements.txt             # Dependencias principales
-├── 🎤 speech-to-text/              # Transcripción de audio a texto
-├── 🗣️ text-to-speech/              # Conversión de texto a voz
-├── 📝 transcription/               # Herramientas de transcripción avanzada
-├── 💬 conversation/                # Conversaciones con IA
-├── 🌐 chat-completions-api/        # API de chat con audio
-└── ⚡ realtime-api/                # Comunicación en tiempo real
+├─ README.md
+├─ basico/
+│  ├─ speech-to-text/           # Transcribe MP4 → SRT/JSON (Whisper)
+│  ├─ transcription/            # Traduce/posprocesa subtítulos SRT
+│  └─ chat-completions-api/     # Texto → audio (TTS) vía API + UI
+└─ avanzado/
+	 ├─ chat-completions/         # Conversación por voz (transcribe → responde en audio)
+	 └─ realtime-api/             # Realtime API (ephemeral key + Web UI)
 ```
 
-## 🚀 Demos disponibles
+## 🚀 Demos y cómo ejecutarlas
 
-### 1. 🎤 Speech-to-Text (Transcripción de Audio)
+## Básico
 
-**Ubicación:** `speech-to-text/`
+Las demos del directorio `audio/basico` se centran en tareas de audio comunes, como la transcripción y la síntesis de voz. Puedes verlas en acción en mi vídeo 
 
-**¿Qué hace?** 
-Esta demo te permite transcribir archivos de audio y video a texto utilizando el modelo Whisper de OpenAI. Es especialmente útil para:
-- Transcribir videos de YouTube, conferencias o reuniones
-- Crear subtítulos automáticos
-- Procesar archivos de audio largos dividiéndolos en chunks
+[![🎧 IA para Audio desde Cero: Transcribe, Traduce y Genera Voz 🗣️✨ | Cap.7](https://img.youtube.com/vi/PdSytr086i4/hqdefault.jpg)](https://youtu.be/PdSytr086i4 "Abrir en YouTube")
 
-**Características:**
-- ✅ Soporte para archivos MP4
-- ✅ Extracción automática de audio desde video
-- ✅ División inteligente de archivos grandes (+25MB)
-- ✅ Múltiples formatos de salida (SRT, JSON)
-- ✅ Interfaz con indicadores de progreso
+### 1) 🎤 Speech-to-Text (MP4 → SRT/JSON)
+Ubicación: `audio/basico/speech-to-text`
 
-Sigue por [👉🏻 aquí](speech-to-text/README.md) para saber cómo usarlo.
+Qué hace:
+- Busca un `.mp4` en `media/`, extrae audio, divide si es grande (> ~25MB), transcribe con Whisper y guarda `transcripcion.srt` (o JSON).
 
-### 2. 📝 Transcription (Transcripción Avanzada)
+Requisitos de sistema (FFmpeg):
+```zsh
+brew install ffmpeg   # macOS
+```
 
-**Ubicación:** `transcription/`
-
-**¿Qué hace?**
-Herramientas avanzadas para procesar transcripciones, incluyendo traducción automática a diferentes idiomas.
-
-**Características:**
-- ✅ Traducción inteligente de transcripciones
-- ✅ División en chunks para textos largos
-- ✅ Soporte para múltiples idiomas
-- ✅ Conteo de tokens automático
-
-**Cómo usarlo:**
-```bash
-cd transcription
+Instalación y uso:
+```zsh
+cd audio/basico/speech-to-text
+cp .env-sample .env   # Configura ENDPOINT_URL y API_KEY
+pip install -r requirements.txt
 python app.py
 ```
 
-### 3. 🌐 Chat Completions API (Chat con Audio)
+Salida:
+- `media/transcripcion.srt` (o `.json` si cambias FORMAT en el script).
 
-**Ubicación:** `chat-completions-api/`
+---
 
-**¿Qué hace?**
-Una aplicación web completa que combina chat de texto con funcionalidades de audio, permitiendo interacciones multimodales.
+### 2) 📝 Transcription (traducción/posprocesado de SRT)
+Ubicación: `audio/basico/transcription`
 
-**Características:**
-- ✅ Interfaz web moderna
-- ✅ Chat de texto con IA
-- ✅ Integración con audio
-- ✅ API REST para integraciones
-- ✅ Visualizador de audio
+Qué hace:
+- Lee `speech-to-text/media/transcripcion.srt`, divide por tokens y traduce (por defecto a inglés) usando Chat Completions.
 
-**Cómo usarlo:**
-```bash
-cd chat-completions-api/api
-pip install -r ../../requirements.txt
+Instalación y uso:
+```zsh
+cd audio/basico/transcription
+cp .env-sample .env   # Configura ENDPOINT_URL y API_KEY
+pip install openai tiktoken python-dotenv rich
 python app.py
 ```
 
-Luego abre `web/index.html` en tu navegador o sirve la carpeta web con un servidor local.
+Notas:
+- Asegúrate de haber generado primero `transcripcion.srt` en la demo de Speech-to-Text.
 
-**Archivos principales:**
-- `api/app.py` - Servidor backend con Flask
-- `web/index.html` - Interfaz web
-- `web/main.js` - Lógica del frontend
-- `web/visualizer.js` - Visualizaciones de audio
+---
 
-### 4. ⚡ Realtime API (Comunicación en Tiempo Real)
+### 3) � Chat Completions API (Texto → Audio, demo TTS con UI)
+Ubicación: `audio/basico/chat-completions-api`
 
-**Ubicación:** `realtime-api/`
+Qué hace:
+- Convierte texto a audio WAV con voces TTS de OpenAI. Incluye UI web para introducir texto y elegir voz.
 
-**¿Qué hace?**
-Demo de comunicación en tiempo real con IA, ideal para crear asistentes de voz o aplicaciones conversacionales.
-
-**Características:**
-- ✅ Comunicación WebSocket en tiempo real
-- ✅ Respuestas instantáneas
-- ✅ Soporte HTTPS para producción
-- ✅ Interfaz web responsiva
-
-**Cómo usarlo:**
-```bash
-cd realtime-api/web
-# Para desarrollo local
-python -m http.server 8000
-
-# Para HTTPS (recomendado)
-chmod +x serve-https.sh
-./serve-https.sh
-```
-
-**Archivos principales:**
-- `web/app.js` - Lógica de WebSocket y tiempo real
-- `web/index.html` - Interfaz de usuario
-- `web/serve-https.sh` - Servidor HTTPS para desarrollo
-
-### 5. 🗣️ Text-to-Speech (Texto a Voz)
-
-**Ubicación:** `text-to-speech/`
-
-**Estado:** 🚧 En desarrollo
-
-**¿Qué hará?**
-Demos para convertir texto a voz natural utilizando los modelos TTS de OpenAI.
-
-### 6. 💬 Conversation (Conversaciones con IA)
-
-**Ubicación:** `conversation/`
-
-**Estado:** 🚧 En desarrollo
-
-**¿Qué hará?**
-Ejemplos de conversaciones naturales con IA, incluyendo manejo de contexto y memoria conversacional.
-
-## ⚙️ Configuración inicial
-
-### 1. Variables de entorno
-
-Todas las demos requieren configurar variables de entorno. Crea un archivo `.env` en cada directorio que lo necesite:
-
-```env
-# Para usar con OpenAI
-ENDPOINT_URL=https://api.openai.com/v1
-API_KEY=tu_api_key_de_openai
-
-# Para usar con GitHub Models (desarrollo)
-ENDPOINT_URL=https://models.inference.ai.azure.com
-API_KEY=tu_github_token
-
-# Para usar con Azure OpenAI
-ENDPOINT_URL=https://tu-resource.openai.azure.com
-API_KEY=tu_azure_api_key
-```
-
-### 2. Instalación de dependencias
-
-```bash
-# Dependencias principales
+Instalación y uso:
+```zsh
+cd audio/basico/chat-completions-api/api
+cp .env-sample .env   # Usa ENDPOINT_URL y API_KEY (OpenAI/GitHub Models/Azure)
 pip install -r requirements.txt
+python app.py
+```
 
-# O dependencias específicas por demo
-cd speech-to-text
+Acceso:
+- UI y API servidas por Flask: http://localhost:5001
+- Endpoint: `POST /generate-audio` (JSON: `{ "message", "voice" }`).
+
+---
+
+### 4) 🗣️ Chat Completions (Conversación por voz)
+Ubicación: `audio/avanzado/chat-completions`
+
+Qué hace:
+- Front graba tu voz → backend transcribe con Whisper → Chat genera respuesta y la devuelve en audio WAV (voz “nova”).
+
+Instalación y uso:
+```zsh
+cd audio/avanzado/chat-completions/api
+cp .env.example .env   # Requiere OPENAI_API_KEY; opcionales MODEL_FOR_AUDIO, TRANSCRIBE_MODEL
 pip install -r requirements.txt
+python app.py
 ```
 
-### 3. Dependencias del sistema
+Acceso:
+- UI y API: http://localhost:5000
+- Endpoint principal: `POST /conversation` (multipart con campo `audio`).
 
-Para las demos de audio, necesitarás:
+---
 
-**macOS:**
-```bash
-brew install ffmpeg
+### 5) ⚡ Realtime API (WebRTC con ephemeral keys)
+Ubicación: `audio/avanzado/realtime-api`
+
+Qué hace:
+- Servidor Flask que genera ephemeral keys; el cliente web se conecta directamente a OpenAI Realtime API para conversación de baja latencia.
+
+Instalación y uso:
+```zsh
+cd audio/avanzado/realtime-api/api
+cp .env.example .env   # Requiere OPENAI_API_KEY; opcionales HOST, PORT, DEBUG
+pip install -r requirements.txt
+python server.py
 ```
 
-**Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install ffmpeg
-```
+Acceso:
+- UI y API: http://localhost:8000
+- Endpoints útiles: `POST /api/token`, `GET /api/session/config`.
 
-**Windows:**
-Descarga FFmpeg desde [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+## 🔐 Variables de entorno por demo
 
-## 🎯 Casos de uso prácticos
+- Clientes configurables por endpoint (OpenAI / GitHub Models / Azure):
+	- `ENDPOINT_URL` y `API_KEY`
+	- Ejemplos:
+		```env
+		# OpenAI
+		ENDPOINT_URL=https://api.openai.com/v1
+		API_KEY=tu_api_key_openai
 
-### 📹 Transcripción de videos educativos
-Usa `speech-to-text/` para crear subtítulos automáticos de tus videos o conferencias.
+		# GitHub Models (desarrollo)
+		ENDPOINT_URL=https://models.inference.ai.azure.com
+		API_KEY=tu_github_token
+		```
 
-### 🌍 Traducción de contenido
-Combina `speech-to-text/` y `transcription/` para transcribir y traducir contenido a múltiples idiomas.
+- Conversación por voz (avanzado/chat-completions):
+	- `OPENAI_API_KEY` (obligatoria)
+	- `MODEL_FOR_AUDIO` (ej. gpt-4o-audio-preview) y `TRANSCRIBE_MODEL` (por defecto `whisper-1`).
 
-### 🤖 Asistente de voz
-Utiliza `realtime-api/` para crear tu propio asistente de voz interactivo.
+- Realtime API:
+	- `OPENAI_API_KEY` (obligatoria)
+	- `HOST`, `PORT`, `DEBUG` (opcionales; por defecto 0.0.0.0:8000 y debug=false).
 
-### 📱 Aplicación web multimodal
-Integra `chat-completions-api/` en tu aplicación para combinar texto y audio.
+Sugerencia: copia los `.env-sample`/`.env.example` de cada carpeta a `.env` y completa tus claves.
 
-## 🔧 Tecnologías utilizadas
+## 🧰 Dependencias del sistema
 
-- **OpenAI Whisper** - Transcripción de audio de última generación
-- **OpenAI TTS** - Síntesis de voz natural
-- **OpenAI GPT** - Procesamiento de lenguaje natural
-- **Flask** - Framework web para APIs
-- **WebSockets** - Comunicación en tiempo real
-- **FFmpeg** - Procesamiento de multimedia
-- **Pydub** - Manipulación de archivos de audio
-- **Rich** - Interfaces de consola elegantes
+- FFmpeg (necesario para Speech-to-Text):
+	- macOS: `brew install ffmpeg`
+	- Ubuntu/Debian: `sudo apt update && sudo apt install ffmpeg`
+	- Windows: https://ffmpeg.org/download.html
 
-## 📝 Notas importantes
+## 🧪 Puertos y endpoints
 
-### 🔐 Seguridad
-- Nunca subas tus archivos `.env` al repositorio
-- Usa tokens con permisos mínimos necesarios
-- Para producción, implementa autenticación adecuada
+- Texto→Audio (básico): http://localhost:5001 → `POST /generate-audio`
+- Conversación por voz (avanzado): http://localhost:5000 → `POST /conversation`
+- Realtime API: http://localhost:8000 → `POST /api/token`, `GET /api/session/config`
+
+## � Notas y troubleshooting
+
+- No subas tus `.env` al repo.
+- Algunos modelos de audio pueden requerir acceso (p. ej., `gpt-4o-audio-preview`).
+- Si recibes “OPENAI_API_KEY no configurada”, revisa el `.env` correcto según la demo.
+- “No se encontró archivo de audio” al llamar `/conversation`: envía el campo `audio` en multipart/form-data.
+- CORS: las APIs sirven su propia UI. Si sirves la web en otro puerto, ajusta orígenes permitidos.
 
 ### 💰 Costos
 - Los modelos de transcripción y TTS tienen costos por uso
