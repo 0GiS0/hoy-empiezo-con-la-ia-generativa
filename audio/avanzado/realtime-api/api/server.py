@@ -189,26 +189,6 @@ def get_ephemeral_key():
             'details': str(e)
         }), 500
 
-@app.route('/api/session/config', methods=['GET'])
-def get_session_config():
-    """⚙️ Devuelve la configuración disponible para las sesiones."""
-    config = {
-        'available_models': [
-            'gpt-4o-realtime-preview-2024-12-17'
-        ],
-        'available_voices': [
-            'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'verse'
-        ],
-        'default_config': {
-            'model': 'gpt-4o-realtime-preview-2024-12-17',
-            'voice': 'verse',
-            'temperature': 0.8,
-            'max_response_output_tokens': 4096
-        }
-    }
-    return jsonify(config)
-
-
 # =========================
 # 🏁 PUNTO DE ENTRADA MAIN
 # =========================
@@ -221,7 +201,6 @@ def main():
         logger.info("   GET  /               - Interfaz web")
         logger.info("   GET  /api/health     - Verificar estado del servidor")
         logger.info("   POST /api/token      - Generar ephemeral key")
-        logger.info("   GET  /api/session/config - Configuración disponible")
         
         # 🧰 Configuración del servidor (HOST/PORT/DEBUG desde env con defaults)
         host = os.getenv('HOST', '0.0.0.0')

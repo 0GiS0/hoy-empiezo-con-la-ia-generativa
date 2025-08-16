@@ -4,9 +4,9 @@
 
 (function () {
     const state = {
-        pc: null,
-        dc: null,
-        audioEl: null,
+        pc: null, // RTCPeerConnection
+        dc: null, // DataChannel
+        audioEl: null, // Elemento de audio para reproducir respuestas
         connected: false,
         ephemeralKey: null,
         model: 'gpt-4o-realtime-preview-2024-12-17'
