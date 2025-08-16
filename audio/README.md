@@ -22,7 +22,7 @@ audio/
 
 Las demos del directorio `audio/basico` se centran en tareas de audio comunes, como la transcripción y la síntesis de voz. Puedes verlas en acción en mi vídeo 
 
-[![🎧 IA para Audio desde Cero: Transcribe, Traduce y Genera Voz 🗣️✨ | Cap.7](https://img.youtube.com/vi/PdSytr086i4/hqdefault.jpg)](https://youtu.be/PdSytr086i4 "Abrir en YouTube")
+[![🎧 IA para Audio desde Cero: Transcribe, Traduce y Genera Voz 🗣️✨ | Cap.7](https://img.youtube.com/vi/PdSytr086i4/maxresdefault.jpg)](https://youtu.be/PdSytr086i4 "Abrir en YouTube")
 
 ### 1) 🎤 Speech-to-Text (MP4 → SRT/JSON)
 Ubicación: `audio/basico/speech-to-text`
