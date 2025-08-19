@@ -1,5 +1,4 @@
-// 🎤 Realtime API (modo simple)
-// Objetivo: el mínimo código posible para entender la demo, con comentarios didácticos.
+// 🎤 Ejemplo con Realtime API
 // Flujo: 🎙️ micrófono -> 📡 WebRTC -> 🤖 OpenAI Realtime -> 🔊 audio + 💬 texto
 
 (function () {
@@ -15,7 +14,7 @@
     // 🔖 Flags simples para mostrar estados de envío/recepción sin duplicar mensajes
     let receivingText = false;
     let receivingAudio = false;
-    let sendingAudio = false;
+
     // ⏱️ Medición de latencia por turno (desde fin de habla hasta audio completo)
     let responseTimerStart = null;
 
@@ -24,11 +23,10 @@
     const statusText = document.getElementById('statusText');
     const connectBtn = document.getElementById('connectBtn');
     const disconnectBtn = document.getElementById('disconnectBtn');
-    // UI de texto eliminada: audio-only
     const messages = document.getElementById('messages');
-        const micBadge = document.getElementById('micBadge');
-        const sendingBadge = document.getElementById('sendingBadge');
-        const receivingBadge = document.getElementById('receivingBadge');
+    const micBadge = document.getElementById('micBadge');
+    const sendingBadge = document.getElementById('sendingBadge');
+    const receivingBadge = document.getElementById('receivingBadge');
 
     // 🔄 Actualiza la interfaz según el estado de conexión
     function setConnected(on) {
@@ -37,16 +35,16 @@
         statusText.textContent = on ? 'Conectado' : 'Desconectado';
         connectBtn.disabled = on;
         disconnectBtn.disabled = !on;
-    // sin campos de texto en modo audio-only
-            if(!on){
-                // Reset visual badges al desconectar
-                micBadge.classList.add('hidden');
-                sendingBadge.classList.add('hidden');
-                receivingBadge.classList.add('hidden');
-            }
+
+        if (!on) {
+            // Reset visual badges al desconectar
+            micBadge.classList.add('hidden');
+            sendingBadge.classList.add('hidden');
+            receivingBadge.classList.add('hidden');
+        }
     }
 
-    // 💬 Pinta un mensaje sencillo en el chat (quién: 'user' | 'assistant')
+    // 💬 Pinta un mensaje en el chat (quién: 'user' | 'assistant')
     function addMsg(text, who) {
         const row = document.createElement('div');
         row.className = who; // 'user' | 'assistant'
@@ -58,7 +56,7 @@
         messages.scrollTop = messages.scrollHeight;
     }
 
-    // 🧭 Mensajes de estado del sistema (centrados y discretos)
+    // 🧭 Mensajes de estado del sistema 
     function addSystem(text) {
         const row = document.createElement('div');
         row.className = 'system';
@@ -72,12 +70,17 @@
 
     // 🔐 Pide al servidor Python una "ephemeral key" para autenticarnos frente a OpenAI
     // Ventaja: nunca exponemos nuestra API key en el navegador (seguridad) 🔒
+    // Devuelve además la configuración
     async function getEphemeralKey() {
         // servidor Python corre en el mismo puerto/host; token en /api/token
         const base = `${location.protocol}//${location.host}`;
         const res = await fetch(`${base}/api/token`, { method: 'POST' });
         if (!res.ok) throw new Error(`Token HTTP ${res.status}`);
         const data = await res.json();
+
+        // Datos recibidos
+        console.log('Datos recibidos al pedir el token:', data);
+
         const key = data?.client_secret?.value;
         if (!key) throw new Error('Token no recibido');
         return key;
@@ -118,18 +121,8 @@
             state.dc.onopen = () => {
                 setConnected(true);
                 addSystem('📡 Canal de datos abierto');
-                // Configuración mínima: voz e instrucciones + transcripción
-                sendEvent({
-                    type: 'session.update',
-                    session: {
-                        instructions: 'Eres un asistente útil y conciso en español.',
-                        voice: 'verse',
-                        input_audio_format: 'pcm16',
-                        output_audio_format: 'pcm16',
-                        input_audio_transcription: { model: 'whisper-1' }
-                    }
-                });
             };
+
             // Todos los mensajes del modelo llegan por aquí como eventos JSON
             state.dc.onmessage = (ev) => handleServerEvent(JSON.parse(ev.data));
 
@@ -137,15 +130,19 @@
             const offer = await state.pc.createOffer();
             await state.pc.setLocalDescription(offer);
             addSystem('📨 Enviando oferta SDP a OpenAI');
+
             const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(state.model)}`;
+
             const resp = await fetch(url, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${state.ephemeralKey}`, 'Content-Type': 'application/sdp' },
                 body: offer.sdp
             });
+
             if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`);
             const answerSdp = await resp.text();
             await state.pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+
             addSystem('✅ Conectado con OpenAI (answer SDP recibida)');
 
         } catch (err) {
@@ -173,12 +170,6 @@
         }
     }
 
-    // 📨 Envía un evento JSON al modelo por el dataChannel
-    function sendEvent(obj) {
-        if (!state.dc || state.dc.readyState !== 'open') return;
-        state.dc.send(JSON.stringify(obj));
-    }
-
     // 📥 Procesa los eventos que envía OpenAI
     function handleServerEvent(ev) {
         switch (ev.type) {
@@ -191,27 +182,24 @@
                 currentAssistantRow = null; // empezar nueva burbuja de respuesta
                 receivingText = false;
                 receivingAudio = false;
-                sendingAudio = true;
-                    // reset temporizador de turno
-                    responseTimerStart = null;
-                    // Badges
-                    micBadge.textContent = '🎙️ Escuchando';
-                    micBadge.classList.remove('hidden');
-                    sendingBadge.classList.remove('hidden');
-                    receivingBadge.classList.add('hidden');
+                // reset temporizador de turno
+                responseTimerStart = null;
+                // Badges
+                micBadge.textContent = '🎙️ Escuchando';
+                micBadge.classList.remove('hidden');
+                sendingBadge.classList.remove('hidden');
+                receivingBadge.classList.add('hidden');
                 addSystem('🎙️ Hablando…');
                 addSystem('📤 Enviando audio a OpenAI…');
                 break;
             case 'input_audio_buffer.speech_stopped':
-                    micBadge.textContent = '⏳ Procesando';
+                micBadge.textContent = '⏳ Procesando';
                 // Marca de inicio para medir tiempo hasta la respuesta completa del modelo
                 responseTimerStart = (typeof performance !== 'undefined' ? performance.now() : Date.now());
                 addSystem('🛑 Fin del audio');
                 break;
             case 'input_audio_buffer.committed':
-                // OpenAI confirma que recibió el buffer de audio
-                sendingAudio = false;
-                    sendingBadge.classList.add('hidden');
+                sendingBadge.classList.add('hidden');
                 addSystem('📤 Audio enviado a OpenAI');
                 break;
             case 'input_audio_buffer.transcription_completed':
@@ -222,30 +210,10 @@
                     addSystem('🤖 Generando respuesta...');
                 }
                 break;
-            case 'response.text.delta':
-                // Texto del asistente en streaming: vamos agregando trocitos 💬⏳
-                if (ev.delta) {
-                    if (!receivingText) {
-                        receivingText = true;
-                            // Mostrar badge de recepción
-                            receivingBadge.classList.remove('hidden');
-                        addSystem('📥 Recibiendo texto de OpenAI…');
-                    }
-                    appendAssistantDelta(ev.delta);
-                }
-                break;
-            case 'response.audio.delta':
-                // Audio del asistente en streaming (aunque no lo transcribimos aquí)
-                if (!receivingAudio) {
-                    receivingAudio = true;
-                        receivingBadge.classList.remove('hidden');
-                    addSystem('📥 Recibiendo audio de OpenAI…');
-                }
-                break;
             case 'response.audio.done':
-                    // Si no hay más streams entrantes, ocultar badge de recepción
-                    receivingBadge.classList.add('hidden');
-                    micBadge.classList.add('hidden');
+                // Si no hay más streams entrantes, ocultar badge de recepción
+                receivingBadge.classList.add('hidden');
+                micBadge.classList.add('hidden');
                 // Calcula y muestra el tiempo transcurrido si es posible
                 if (responseTimerStart) {
                     const end = (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -257,15 +225,16 @@
                 }
                 // reset temporizador
                 responseTimerStart = null;
-                break;
-            case 'response.text.done':
-                // Fin del texto actual (no necesitamos acción extra en modo simple)
-                    receivingBadge.classList.add('hidden');
-                    micBadge.classList.add('hidden');
-                addSystem('✅ Respuesta recibida');
-                break;
+                break;            
+            case 'response.audio_transcript.delta':
+                // Añadimos en una bubble la respuesta en texto, pero acumulando los deltas
+                if (ev.delta) {
+                    appendAssistantDelta(ev.delta);
+                }
+
             default:
                 // Para mantenerlo simple, ignoramos otros eventos aquí
+                console.log('Evento desconocido recibido:', ev);
                 break;
         }
     }
