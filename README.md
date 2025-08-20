@@ -1,4 +1,4 @@
-# 🚀 Demos de la serie: IA Generativa para developers 👩🏼‍💻👨‍💻🚀
+# Demos de la serie: IA Generativa para developers 👩🏼‍💻👨‍💻🚀
 
 <div align="center">
 
