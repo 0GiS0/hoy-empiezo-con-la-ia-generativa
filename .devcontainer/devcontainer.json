@@ -23,7 +23,8 @@
 				"ms-toolsai.prompty",
 				"ritwickdey.LiveServer",
 				"shd101wyy.markdown-preview-enhanced",
-				"yzhang.markdown-all-in-one"
+				"yzhang.markdown-all-in-one",
+				"dotenv.dotenv-vscode"
 			]
 		}
 	},
