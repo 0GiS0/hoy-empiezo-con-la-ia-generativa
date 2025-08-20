@@ -1,8 +1,31 @@
-# 🚀 Demos de la serie: IA Generativa para Devs
+# 🚀 Demos de la serie: IA Generativa para developers 👩🏼‍💻👨‍💻🚀
 
-¡Hola developer 👋🏻! Este repositorio recoge las demos de mi serie en YouTube: [🧠 Serie de IA Generativa para developers 👨‍💻🚀](https://www.youtube.com/playlist?list=PLO9JpmNAsqM7bU_qZ9dTf0DO8WmqPt-yO). En cada carpeta encontrarás el código mostrado en los vídeos, actualizado y con pequeñas mejoras cuando detecto errores o aparecen cambios en SDKs/APIs.
+<div align="center">
 
-Aquí tienes un acceso rápido, y en orden, a los capítulos de la serie (por ahora 🤓):
+[![YouTube Channel Subscribers](https://img.shields.io/youtube/channel/subscribers/UC140iBrEZbOtvxWsJ-Tb0lQ?style=for-the-badge&logo=youtube&logoColor=white&color=red)](https://www.youtube.com/c/GiselaTorres?sub_confirmation=1)
+[![GitHub followers](https://img.shields.io/github/followers/0GiS0?style=for-the-badge&logo=github&logoColor=white)](https://github.com/0GiS0)
+[![LinkedIn Follow](https://img.shields.io/badge/LinkedIn-Sígueme-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/giselatorresbuitrago/)
+[![X Follow](https://img.shields.io/badge/X-Sígueme-black?style=for-the-badge&logo=x&logoColor=white)](https://twitter.com/0GiS0)
+
+</div>
+
+---
+
+¡Hola developer 👋🏻! 
+
+¿Te interesa la **IA Generativa** pero no sabes por dónde empezar? ¡Estás en el lugar correcto! 🎯
+
+Este repositorio es el **acompañante perfecto** de mi serie en YouTube: [🧠 Serie de IA Generativa para developers 👨‍💻🚀](https://www.youtube.com/playlist?list=PLO9JpmNAsqM7bU_qZ9dTf0DO8WmqPt-yO), donde aprenderás desde cero hasta crear aplicaciones increíbles con IA.
+
+En cada carpeta encontrarás:
+- ✅ **Código funcional** y actualizado
+- 📚 **Explicaciones detalladas** 
+- 🛠️ **Mejoras y correcciones** post-vídeo
+- 🚀 **Patrones reutilizables** para tus proyectos
+
+> **💡 ¡IMPORTANTE!** Si este contenido te resulta útil, **¡suscríbete al canal!** Es la mejor forma de apoyar el proyecto y no perderte ningún capítulo nuevo. ¡Cada suscripción me motiva a crear más contenido de calidad! 🔥
+
+## 📺 Serie Completa: De Cero a Experto en IA Generativa
 
 <div align="center">
 
@@ -86,16 +109,111 @@ Aquí tienes un acceso rápido, y en orden, a los capítulos de la serie (por ah
             <br/>
             <a href="https://youtu.be/B78mcUiPzbk">Ver vídeo</a> · <a href="audio/avanzado/README.md">Código</a>
         </td>
-    </tr>
+</div>
+
+---
+
+<div align="center">
+
+## 🎉 ¿Te está gustando la serie? ¡Apóyame!
+
+<table>
+<tr>
+<td align="center">
+<a href="https://www.youtube.com/c/0gis0?sub_confirmation=1">
+<img src="https://img.shields.io/badge/YouTube-Suscríbete-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Suscríbete a mi canal"/>
+</a>
+<br/>
+<strong>🔔 ¡Activa la campanita!</strong>
+<br/>
+Para no perderte ningún capítulo nuevo
+</td>
+<td align="center">
+<a href="https://github.com/0GiS0">
+<img src="https://img.shields.io/badge/GitHub-Sígueme-black?style=for-the-badge&logo=github&logoColor=white" alt="Sígueme en GitHub"/>
+</a>
+<br/>
+<strong>⭐ Da una estrella al repo</strong>
+<br/>
+Si el contenido te resulta útil
+</td>
+<td align="center">
+<a href="https://www.linkedin.com/in/0gis0/">
+<img src="https://img.shields.io/badge/LinkedIn-Conecta-blue?style=for-the-badge&logo=linkedin&logoColor=white" alt="Conecta en LinkedIn"/>
+</a>
+<br/>
+<strong>🤝 Conectemos</strong>
+<br/>
+Para charlar sobre IA y tech
+</td>
+</tr>
+<tr>
+<td align="center">
+<a href="https://twitter.com/0GiS0">
+<img src="https://img.shields.io/badge/X-Sígueme-black?style=for-the-badge&logo=x&logoColor=white" alt="Sígueme en X"/>
+</a>
+<br/>
+<strong>🐦 Updates rápidos</strong>
+<br/>
+Tips, noticias y avances
+</td>
+<td align="center">
+<a href="https://www.youtube.com/playlist?list=PLO9JpmNAsqM7bU_qZ9dTf0DO8WmqPt-yO">
+<img src="https://img.shields.io/badge/Playlist-Ver%20Serie-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Ver playlist completa"/>
+</a>
+<br/>
+<strong>📋 Serie completa</strong>
+<br/>
+Todos los capítulos en orden
+</td>
+<td align="center">
+<a href="https://github.com/0GiS0/hoy-empiezo-con-la-ia-generativa">
+<img src="https://img.shields.io/github/stars/0GiS0/hoy-empiezo-con-la-ia-generativa?style=for-the-badge&logo=github&logoColor=white&color=yellow" alt="Estrellas del repositorio"/>
+</a>
+<br/>
+<strong>🌟 Comparte este repo</strong>
+<br/>
+Ayuda a otros developers
+</td>
+</tr>
 </table>
 
 </div>
 
-## Si te gusta mi contenido ¡compártelo!
+---
 
-¡Ayúdame a llegar a más personas compartiendo este contenido en tus redes sociales! 🚀
+## 💬 ¿Tienes dudas o sugerencias?
 
+- 💭 **Comentarios en YouTube**: La mejor forma de hacer preguntas específicas sobre cada capítulo
+- 🐛 **Issues en GitHub**: Para reportar bugs o proponer mejoras al código
+- 💼 **LinkedIn/Twitter**: Para conversaciones más amplias sobre IA y desarrollo
 
-y no olvides suscribirte al canal para más contenido sobre IA y desarrollo.
+## 🚀 ¿Qué viene después?
+
+Esta serie está en **constante evolución**. Próximos temas que estoy preparando:
+
+- 🤖 **Agentes de IA** y orquestación
+- 🔐 **IA responsable** y seguridad
+- ⚡ **Optimización de rendimiento** 
+- 🏗️ **Arquitecturas avanzadas** para apps de IA
+- 🌐 **IA en la nube** vs local
+
+**¡Suscríbete para no perderte nada!** 🔔
+
+---
+
+<div align="center">
+
+### 🎯 ¿Te ha resultado útil este contenido?
+
+**¡La mejor forma de agradecerlo es con una suscripción!** 
+
+Cada nuevo suscriptor me motiva a seguir creando contenido de calidad y mantener estos repositorios actualizados. 
+
+[![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/0gis0?sub_confirmation=1)
+
+*¡Nos vemos en el próximo capítulo!* 👋🏻
+
+</div>
 
 ¡Gracias! 
