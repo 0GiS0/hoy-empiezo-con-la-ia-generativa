@@ -1,13 +1,6 @@
-# 🔊 Capítulo 7: Audio y la IA Generativa 🎵🤖
+# 🔊 Audio y la IA Generativa 🎵🤖
 
-¡Hola developer 👋🏻! Este es un índice ligero de las demos de audio. Aquí tienes las dos rutas principales y los vídeos asociados. Los detalles de instalación y uso están dentro de cada subdirectorio.
-
-## 📁 Directorios
-
-- Básico: demos de transcripción (STT), posprocesado/traducción y TTS.
-	- Carpeta: `audio/basico/` → consulta su README para pasos y requisitos.
-- Avanzado: conversación por voz end-to-end y Realtime API.
-	- Carpeta: `audio/avanzado/` → consulta su README para pasos y requisitos.
+¡Hola developer 👋🏻! Para empezar a trabajar con audio y la IA generativa, he dividido el contenido en dos vídeos: uno básico donde podrás ver cómo transcribir audio y otro avanzado donde exploraremos la conversación por voz.
 
 ## 🎬 Vídeos
 

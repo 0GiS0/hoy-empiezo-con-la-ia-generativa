@@ -1,5 +1,5 @@
 markitdown[all]==0.1.1
-openai==1.99.7
+openai==1.100.0
 python-dotenv==1.1.1
 tiktoken==0.11.0
 qdrant_client==1.14.2
