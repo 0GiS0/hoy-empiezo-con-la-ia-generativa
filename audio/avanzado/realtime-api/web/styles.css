@@ -1,0 +1,231 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+}
+
+:root {
+    --bg: #f6f7fb;
+    --fg: #111827;
+    --muted: #6b7280;
+    --card: #fff;
+    --border: #e5e7eb;
+    --primary: #10a37f;
+    --danger: #ef4444;
+    --radius: 12px;
+    --shadow: 0 8px 24px rgba(0, 0, 0, .08)
+}
+
+body {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px
+}
+
+.container {
+    width: 100%;
+    max-width: 820px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border)
+}
+
+.top h1 {
+    font-size: 18px
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted)
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger);
+    display: inline-block
+}
+
+.dot.on {
+    background: var(--primary)
+}
+
+.badge {
+    margin-left: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: #f9fafb;
+    color: var(--muted);
+}
+
+.hidden { display: none !important; }
+
+.controls {
+    display: flex;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border)
+}
+
+.btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--fg);
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer
+}
+
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed
+}
+
+.btn.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff
+}
+
+.chat {
+    display: flex;
+    flex-direction: column;
+    height: 60vh
+}
+
+.messages {
+    flex: 1;
+    overflow: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+}
+
+.welcome {
+    margin: auto;
+    text-align: center;
+    color: var(--muted)
+}
+
+.welcome .emoji {
+    font-size: 40px;
+    margin-bottom: 8px
+}
+
+.bubble {
+    max-width: 75%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4
+}
+
+.user {
+    align-self: flex-end
+}
+
+.user .bubble {
+    background: var(--primary);
+    color: #fff;
+    border-bottom-right-radius: 6px
+}
+
+.assistant {
+    align-self: flex-start
+}
+
+.assistant .bubble {
+    background: #eef2f7;
+    color: #111827;
+    border-bottom-left-radius: 6px
+}
+
+.system {
+    align-self: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.system .bubble {
+    background: #f3f4f6;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    font-size: 12px;
+    text-align: center;
+    width: 260px;        /* Columna centrada y consistente */
+    max-width: 90%;
+    margin: 6px auto;    /* Centrado con separación vertical */
+    border-radius: 12px;
+}
+
+@media (max-width:480px) {
+    .system .bubble { width: 220px; }
+}
+
+.flow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0 8px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: #f9fafb;
+    padding: 6px 10px;
+    border-radius: 999px;
+}
+
+.dots span {
+    opacity: 0.2;
+    animation: dotBlink 1.2s infinite;
+}
+.dots span:nth-child(1) { animation-delay: 0s; }
+.dots span:nth-child(2) { animation-delay: 0.2s; margin-left: 2px; }
+.dots span:nth-child(3) { animation-delay: 0.4s; margin-left: 2px; }
+
+@keyframes dotBlink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+}
+
+/* (audio-only) reglas de formulario de texto eliminadas */
+
+@media (max-width:720px) {
+    .chat {
+        height: 70vh
+    }
+
+    .bubble {
+        max-width: 85%
+    }
+}
