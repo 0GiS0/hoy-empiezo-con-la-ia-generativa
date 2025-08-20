@@ -10,7 +10,8 @@
 - [💬 Capítulo 4: Crea un chat con IA Generativa 🤖💬 ](chat/README.md)
 - [🔍 Capítulo 5: IA Generativa con RAG 🔍📥 ](rag/README.md)
 - [🖼️ Capítulo 6: Imágenes y la IA Generativa](images/README.md)
-- [🔊 Capítulo 7: Audio y la IA Generativa 🎵🤖](audio/README.md)
+- [🔊 Capítulo 7: Audio y la IA Generativa (Parte 1) 🎵🤖](audio/README.md)
+- [🔊 Capítulo 8: Audio y la IA Generativa (Parte 2 · Vídeo 2) 🎵🤖](audio/avanzado/README.md)
 
 
 ## 💡 Capítulo 1: Todo lo que necesitas para empezar a desarrollar apps con IA Generativa GRATIS  🧠✨
