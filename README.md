@@ -188,15 +188,6 @@ Ayuda a otros developers
 - 🐛 **Issues en GitHub**: Para reportar bugs o proponer mejoras al código
 - 💼 **LinkedIn/Twitter**: Para conversaciones más amplias sobre IA y desarrollo
 
-## 🚀 ¿Qué viene después?
-
-Esta serie está en **constante evolución**. Próximos temas que estoy preparando:
-
-- 🤖 **Agentes de IA** y orquestación
-- 🔐 **IA responsable** y seguridad
-- ⚡ **Optimización de rendimiento** 
-- 🏗️ **Arquitecturas avanzadas** para apps de IA
-- 🌐 **IA en la nube** vs local
 
 **¡Suscríbete para no perderte nada!** 🔔
 
@@ -210,7 +201,7 @@ Esta serie está en **constante evolución**. Próximos temas que estoy preparan
 
 Cada nuevo suscriptor me motiva a seguir creando contenido de calidad y mantener estos repositorios actualizados. 
 
-[![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/0gis0?sub_confirmation=1)
+[![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/GiselaTorres?sub_confirmation=1)
 
 *¡Nos vemos en el próximo capítulo!* 👋🏻
 
