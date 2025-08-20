@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎤 Generador de RAP AI - Beats & Flows</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Panel Izquierdo: Formulario -->
+    <div class="form-panel">
+      <div class="header">
+        <div class="logo">🎤</div>
+        <div class="title">GENERADOR DE RAP AI</div>
+        <p class="subtitle">Suelta Tus Beats, Crea Tu Flow 🧢</p>
+      </div>
+
+      <div class="form-content">
+        <form id="audioForm">
+          <div class="form-group">
+            <label for="message">🔥 ESCRIBE TUS BEATS 🔥</label>
+            <textarea id="message"
+              placeholder="Ey, estoy soltando fuego con IA en la pista, creando ritmos que nunca faltarán..."
+              required>🎧 ¡Hola developer! 👋🏻 En este vídeo de mi serie sobre IA Generativa para desarrolladores, vamos a jugar con el audio como nunca antes 🎙️🤖 No solo te enseñaré a generar voces, sino también a transcribirlas, explorando diferentes APIs que te abrirán un mundo de posibilidades 🚀💡 ¡Prepárate para descubrir todo lo que puedes hacer con sonido e inteligencia artificial! 🎼🧠.</textarea>
+          </div>
+
+          <div class="form-group voice-selection-group">
+            <label>🎭 ELIGE TU ESTILO DE MC 🎭</label>
+            <div class="voice-grid">
+              <div class="voice-option">
+                <input type="radio" id="alloy" name="voice" value="alloy">
+                <label for="alloy">ALLOY<br><small>Neutral</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="ash" name="voice" value="ash">
+                <label for="ash">ASH<br><small>Grave</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="ballad" name="voice" value="ballad">
+                <label for="ballad">BALLAD<br><small>Melódica</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="coral" name="voice" value="coral">
+                <label for="coral">CORAL<br><small>Suave</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="echo" name="voice" value="echo" checked>
+                <label for="echo">ECHO<br><small>Profunda</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="fable" name="voice" value="fable">
+                <label for="fable">FABLE<br><small>Joven</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="onyx" name="voice" value="onyx">
+                <label for="onyx">ONYX<br><small>Dura</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="nova" name="voice" value="nova">
+                <label for="nova">NOVA<br><small>Suave</small></label>
+              </div>
+              <div class="voice-option">
+                <input type="radio" id="shimmer" name="voice" value="shimmer">
+                <label for="shimmer">SHIMMER<br><small>Fresca</small></label>
+              </div>
+               <div class="voice-option">
+                <input type="radio" id="sage" name="voice" value="sage">
+                <label for="sage">SAGE<br><small>Sabia</small></label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-generate" id="generateBtn">
+            🎬 ¡SUELTA EL RITMO! 🎵
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Reproductor -->
+    <div class="player-panel">
+      <div class="player-content">
+        <div class="status" id="status">
+          <div class="placeholder">
+            <div class="placeholder-icon">🎵</div>
+            <div>LISTO PARA SOLTAR FUEGO</div>
+          </div>
+        </div>
+
+        <div class="audio-container" id="audioContainer" style="display: none;">
+          <canvas id="visualizer"></canvas>
+          <audio id="audioPlayer" controls></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
