@@ -1,8 +1,7 @@
 # Módulos que necesito importar
 import os
 from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage, SystemMessage
+from openai import OpenAI
 from rich import print
 
 # Cargar las variables de entorno que necesito para esta demo
@@ -12,18 +11,16 @@ load_dotenv()
 print("[bold cyan]Configuración de la API de OpenAI[/bold cyan]")
 print(f"[magenta]URL:[/magenta] {os.getenv('GITHUB_MODELS_URL')}")
 print(f"[magenta]Modelo:[/magenta] {os.getenv('GITHUB_MODEL_ID')}")
+print(f"[magenta]Temperatura:[/magenta] {os.getenv('TEMPERATURE', '0.7')}")
 print(f"[magenta]Título de YouTube:[/magenta] {os.getenv('YOUTUBE_TITLE')}")
 
-# Modelo chat con Langchain
-chat_model = init_chat_model(
-    model=os.getenv("GITHUB_MODEL_ID"),
-    model_provider="openai",
-    api_key=os.getenv("GITHUB_TOKEN"),
+# Crear cliente de OpenAI
+# En este ejemplo uso GitHub Models porque es rápido y gratis
+client = OpenAI(
     base_url=os.getenv("GITHUB_MODELS_URL"),
+    api_key=os.getenv("GITHUB_TOKEN"),
 )
 
-
-# Mensaje del sistema, para que sepa qué es lo que esperamos
 system_message = """
 Eres un copywriter experto en títulos de YouTube orientados a SEO y CTR: creativo, claro y honesto.
 Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas que inviten al clic sin prometer en exceso.
@@ -41,16 +38,16 @@ Instrucciones del output:
 Entrega únicamente los 5 títulos, nada más.
 """
 
-# Mensajes a enviar
-messages = [
-    SystemMessage(content=system_message),
-    HumanMessage(content=os.getenv("YOUTUBE_TITLE"))
-]
-
-
-# Invocar al modelo con los mensajes a enviar
-response = chat_model.invoke(messages)
+# Llamar a la API de OpenAI para generar texto
+response = client.chat.completions.create(
+    messages=[
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": os.getenv("YOUTUBE_TITLE")}
+    ],
+    model=os.getenv("GITHUB_MODEL_ID"),
+    temperature=float(os.getenv("TEMPERATURE", "0.7")),
+)
 
 # Imprimir la respuesta
 print("\n[bold green]Respuesta de la API de OpenAI[/bold green]")
-print(response.content)
+print(response.choices[0].message.content)

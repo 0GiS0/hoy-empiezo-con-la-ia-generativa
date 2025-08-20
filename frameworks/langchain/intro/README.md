@@ -1,58 +1,73 @@
-# LangChain - Introducción
+# Introducción a LangChain (con vs. sin LangChain) ⚖️
 
-Demo básica de LangChain mostrando conceptos fundamentales.
+<div align="center">
 
-## Características
+<!-- Placeholder de carátula y link al vídeo (reemplaza VIDEO_ID y TÍTULO cuando esté listo) -->
+<a href="https://youtu.be/VIDEO_ID_PENDIENTE">
+	<img src="https://img.youtube.com/vi/VIDEO_ID_PENDIENTE/maxresdefault.jpg" alt="Cap. X - TÍTULO PENDIENTE" width="100%" />
+</a>
+<br/>
+<strong>TÍTULO DEL VÍDEO PENDIENTE</strong>
+<br/>
+<a href="https://youtu.be/VIDEO_ID_PENDIENTE">Ver vídeo</a>
 
-- ✅ Configuración básica de LangChain
-- ✅ LLMs y Chat Models
-- ✅ Prompt Templates
-- ✅ Simple Chains
-- ✅ Streaming responses
-- ✅ Múltiples proveedores (OpenAI, GitHub Models, Ollama)
+</div>
 
-## Endpoints
+---
 
-### POST /generate
-Genera texto usando LangChain chains.
+Este ejemplo muestra el mismo caso de uso implementado de dos formas:
 
-**Request:**
-```json
-{
-  "prompt": "Explica qué es la inteligencia artificial",
-  "source": "github|openai|ollama",
-  "temperature": 0.7
-}
-```
+- sin LangChain: `intro/01-sin-langchain/app.py` usando el SDK de OpenAI directamente (base_url a GitHub Models)
+- con LangChain: `intro/02-con-langchain/app.py` usando cadenas y un parser estructurado
 
-**Response:** SSE stream con el texto generado
+Objetivo: comparar claridad, control del output y ergonomía.
 
-### POST /chat
-Chat conversacional con memoria.
+## Qué incluye ✨
 
-**Request:**
-```json
-{
-  "message": "Hola, ¿cómo estás?",
-  "source": "github|openai|ollama",
-  "session_id": "unique-session-id"
-}
-```
+- ✅ Configuración por entorno (GitHub Models compatible con OpenAI SDK)
+- ✅ En la versión con LangChain: ChatPromptTemplate → Modelo → PydanticOutputParser
+- ✅ Validación estricta del output: exactamente 5 títulos con metadatos (longitud y emojis)
 
-**Response:** SSE stream con la respuesta
+## Requisitos 🔧
 
-## Uso
+- Python 3.10+
+- Variables de entorno (ver `.env-sample` en cada carpeta)
 
-1. Instalar dependencias:
+## Instalación 📦
+
+Desde cada carpeta (`01-sin-langchain` o `02-con-langchain`):
+
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Configurar variables de entorno (ver config.py)
+## Configuración ⚙️
 
-3. Ejecutar la API:
+1) Copia el ejemplo de entorno y edítalo:
+
+```bash
+cp .env-sample .env
+```
+
+2) Asegúrate de definir:
+
+- `GITHUB_MODELS_URL` (p. ej., `https://models.inference.ai.azure.com`)
+- `GITHUB_TOKEN` (token con acceso a GitHub Models)
+- `GITHUB_MODEL_ID` (p. ej., `openai/gpt-4.1`)
+- `YOUTUBE_TITLE` (título base a mejorar)
+- `TEMPERATURE` (opcional, por defecto 0.7)
+
+## Uso ▶️
+
+Ejecuta el script de tu elección:
+
 ```bash
 python app.py
 ```
 
-4. Abrir la UI en `web/index.html`
+## Diferencias clave 🔍
+
+- **Sin LangChain**: recibes texto libre y dependes del prompt para el formato.
+- **Con LangChain**: `PydanticOutputParser` obliga a un JSON válido con 5 elementos y valida longitud y emojis, devolviendo una estructura tipada. Si el modelo no cumple, lanza error.
+
+Esto hace visible el valor de LangChain en control del output y composabilidad (prompt → modelo → parser).
