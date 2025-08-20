@@ -86,9 +86,7 @@ Aquí tienes un acceso rápido, y en orden, a los capítulos de la serie (por ah
             <br/>
             <a href="https://youtu.be/B78mcUiPzbk">Ver vídeo</a> · <a href="audio/avanzado/README.md">Código</a>
         </td>
-        
     </tr>
-  
 </table>
 
 </div>
