@@ -172,3 +172,27 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# ==========================================
+# Project specific ignores
+# ==========================================
+
+# Audio files and transcription outputs
+audio/basico/speech-to-text/media/*.mp4
+audio/basico/speech-to-text/media/*.mp3
+audio/basico/speech-to-text/media/*.srt
+audio/basico/speech-to-text/media/*.txt
+audio/basico/speech-to-text/media/*.json
+
+# RAG downloaded content
+rag/youtube_guides/
+
+# SSL certificates
+*.pem
+
+# All environment configuration files (redundant but explicit)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
