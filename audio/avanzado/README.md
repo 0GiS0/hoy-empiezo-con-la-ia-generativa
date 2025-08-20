@@ -1,8 +1,14 @@
+# 🎧 Audio · Avanzado (Parte 2)
+
+## 🎬 Vídeo de la Parte 2 (Cap.8)
+
+[![Audio con IA – Parte 2 (Avanzado) | Cap.8](https://img.youtube.com/vi/B78mcUiPzbk/maxresdefault.jpg)](https://youtu.be/B78mcUiPzbk "Abrir en YouTube")
+
 ## Conversación por voz con IA (avanzado)
 
 Este escenario muestra dos formas de mantener una conversación por voz con un modelo: usando una API «clásica» de Chat Completions con audio y usando la Realtime API con WebRTC para streaming bidireccional.
 
-### Estructura de este capítulo
+## 📁 Carpetas
 
 - `chat-completions/`
   - `api/`: Flask que expone `POST /conversation` y sirve la UI
@@ -17,27 +23,28 @@ Consulta los README específicos en cada subcarpeta para instrucciones detallada
 
 ## Enfoque 1: Chat Completions (voz en «turnos»)
 
-Cómo funciona (flujo):
+Cómo funciona (flujo actual):
 - El navegador graba audio con `MediaRecorder` (pulsar para hablar).
-- Envía el audio a `POST /conversation` en el backend Flask.
+- Envía el audio a `POST /conversation` en el backend Flask como `multipart/form-data` (campo `audio`).
 - Backend:
-  - Transcribe con Whisper (`audio.transcriptions.create(model="whisper-1")`).
-  - Actualiza el historial de conversación en memoria.
-  - Llama a `chat.completions.create` con `modalities=["text","audio"]` y genera TTS (voz `nova`, `wav`) usando el modelo configurado en `MODEL_FOR_AUDIO` (p.ej. `gpt-4o-audio-preview`).
-  - Devuelve `audio/wav` al cliente.
+  - Detecta el formato real (sniff de cabecera). Si no es `wav/mp3` (p. ej. `webm`, `m4a`), lo convierte a WAV con `pydub`/FFmpeg.
+  - Codifica el audio en base64 y lo envía como `input_audio` dentro del mensaje del usuario a `chat.completions.create` con `modalities=["text","audio"]` y `audio={voice:"nova", format:"wav"}` usando el modelo indicado en `MODEL_FOR_AUDIO`.
+  - No se invoca Whisper explícitamente: el propio modelo procesa el audio de entrada y genera texto+audio en una sola llamada.
+  - Devuelve un `audio/wav` al cliente.
 - La UI reproduce la respuesta.
 
 Ventajas:
 - Simplicidad operacional: HTTP request/response; no requiere WebRTC.
+- Una sola llamada al modelo (sin doble paso STT+TTS), menor complejidad y coste más simple de razonar.
 - Fácil de depurar (logs y trazas en el servidor) y de proteger (la API key nunca sale del backend).
 - Semántica de turnos clara: útil para «push-to-talk» y flujos sin interrupciones.
 - Funciona en redes donde WebRTC está restringido.
 
 Inconvenientes:
-- Mayor latencia percibida: se espera a la transcripción completa + generación + TTS antes de oír la respuesta (en esta demo no hay audio parcial).
+- Mayor latencia percibida frente a Realtime: no hay streaming parcial (se espera a la respuesta completa).
 - Carga del servidor: procesa audio, mantiene estado y escala con la concurrencia.
-- Coste adicional por doble paso (STT Whisper + generación con TTS integrado).
-- Sin barge‑in/interrupt (no se puede interrumpir al asistente hablando de inmediato).
+- Sin barge‑in/interrupt (no se puede interrumpir al asistente mientras responde).
+- El modelo debe soportar `input_audio` y salida de audio.
 
 Cuándo elegirlo:
 - Demos rápidas, entornos controlados o cuando no puedes usar WebRTC.
@@ -73,8 +80,9 @@ Cuándo elegirlo:
 
 ## Comparativa rápida
 
-- Latencia: Realtime API ≪ Chat Completions (en esta demo, sin streaming de audio en CC).
-- Complejidad: Chat Completions es más simple; Realtime requiere WebRTC y manejo de eventos.
+- Latencia: Realtime API ≪ Chat Completions (sin streaming de audio en CC).
+- Complejidad: Chat Completions es más simple (una llamada); Realtime requiere WebRTC y manejo de eventos.
+- Coste: Chat Completions ahora es una sola llamada (STT+razonamiento+TTS integrados); Realtime depende de duración y eventos.
 - Escalado: Realtime descarga trabajo del backend; Chat Completions concentra cómputo en tu API.
 - Capacidades: Realtime habilita barge‑in, VAD y deltas; Chat Completions es por turnos.
 - Red/Entorno: Chat Completions funciona donde WebRTC está bloqueado; Realtime necesita permisos y puertos.
@@ -84,7 +92,8 @@ Cuándo elegirlo:
 ## Ejecución rápida (resumen)
 
 - Chat Completions
-  - Variables: `OPENAI_API_KEY`, `MODEL_FOR_AUDIO` (opcional)
+  - Variables: `OPENAI_API_KEY`, `MODEL_FOR_AUDIO` (p. ej. `gpt-4o-audio-preview`)
+  - Formatos de entrada: `wav` y `mp3` nativos; `webm/m4a` se convierten a WAV automáticamente (requiere FFmpeg en el sistema)
   - Arranque: `python app.py` dentro de `chat-completions/api/`
   - UI: abrir `http://localhost:5000`
 
