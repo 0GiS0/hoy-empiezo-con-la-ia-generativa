@@ -22,8 +22,6 @@ client = OpenAI(
 )
 
 # Función que evalúa un listado de Sugerencias y se queda con la mejor de las recibidas
-
-
 def best_suggestion(suggestions: List[Suggestion]) -> Suggestion:
 
     SYSTEM_PROMPT = (
@@ -43,17 +41,17 @@ def best_suggestion(suggestions: List[Suggestion]) -> Suggestion:
 
     suggestion = response.choices[0].message.content
 
-    response = client.chat.completions.parse(
-        model=os.getenv("MODEL_NAME"),
-        messages=[
-            {"role": "user", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": json.dumps(
-                [s.dict() for s in suggestions])}
-        ],
-        response_format=Suggestion
+    # response = client.chat.completions.parse(
+    #     model=os.getenv("MODEL_NAME"),
+    #     messages=[
+    #         {"role": "user", "content": SYSTEM_PROMPT},
+    #         {"role": "user", "content": json.dumps(
+    #             [s.dict() for s in suggestions])}
+    #     ],
+    #     response_format=Suggestion
 
-    )
+    # )
 
-    suggestion = response.choices[0].message.parsed
+    # suggestion = response.choices[0].message.parsed
 
     return suggestion
