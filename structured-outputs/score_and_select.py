@@ -5,9 +5,7 @@ from typing import List
 from dotenv import load_dotenv
 from openai import OpenAI
 from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from schema import Suggestions, Suggestion
+from schema import Suggestion
 
 # Para mensajes más bonitos por el terminal
 console = Console()
@@ -46,7 +44,7 @@ def best_suggestion(suggestions: List[Suggestion]) -> Suggestion:
     #     messages=[
     #         {"role": "user", "content": SYSTEM_PROMPT},
     #         {"role": "user", "content": json.dumps(
-    #             [s.dict() for s in suggestions])}
+    #             [s.model_dump() for s in suggestions])}
     #     ],
     #     response_format=Suggestion
 
