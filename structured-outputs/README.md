@@ -1,18 +1,20 @@
-# Structured outputs: títulos de YouTube
+# Cap. 9 — Structured outputs: títulos de YouTube
+
+> Video: Próximamente · Código en esta carpeta
 
 Este mini-demo muestra por qué los “outputs estructurados” son útiles: en lugar de extraer JSON de texto libre, pedimos al modelo que devuelva exactamente un objeto que encaja con un esquema Pydantic. Así evitamos parsers frágiles, claves que cambian y valores fuera de rango.
 
 Caso de uso: generar varias propuestas de título para un vídeo de YouTube y luego puntuarlas para escoger la mejor. Ambos pasos usan el mismo esquema compartido.
 
-Ahora también incluye un ejemplo paralelo “sin outputs estructurados” (solo prompt) para comparar resultados y robustez.
+Incluimos dos enfoques para comparar robustez y DX:
+- 00: sin outputs estructurados (prompt → parseo manual → validación con Pydantic)
+- 01: con outputs estructurados (el SDK valida contra el esquema Pydantic)
 
 ## Qué incluye
 - Esquemas compartidos en `schema.py` (Pydantic) para títulos y evaluaciones.
-- `00-generate_titles.py`: demo corto con dos modos para el mismo objetivo:
-  - `--mode structured`: usa structured outputs con validación Pydantic.
-  - `--mode prompt`: no usa structured outputs; forzamos JSON con instrucciones en el system prompt y luego parseamos/validamos a mano.
-- `01-generate_titles.py`: versión previa básica (structured outputs).
-- `score_and_select.py`: puntúa cada propuesta con criterios consistentes y selecciona la mejor, también con salida tipada.
+- `00-generate_titles.py`: genera sugerencias sin structured outputs. Pide al modelo un JSON vía prompt, extrae el bloque con regex y lo valida contra `Suggestions`.
+- `01-generate_titles.py`: usa structured outputs (parse) para que el SDK devuelva `Suggestions` ya tipado y validado.
+- `score_and_select.py`: puntúa/selecciona la mejor propuesta dado un listado de `Suggestion`.
 
 ## Requisitos
 Instala las dependencias de este demo (usa tu venv si aplicas):
@@ -29,26 +31,38 @@ Variables de entorno compatibles con el resto del repo (un solo SDK cambiando `b
 - GitHub Models
   - `ENDPOINT_URL=https://models.inference.ai.azure.com`
   - `API_KEY=$GITHUB_TOKEN` o `GITHUB_MODELS_API_KEY`
-- Ollama (no soporta structured outputs del Responses API a día de hoy)
-  - No recomendado para este demo.
+- Ollama: este ejemplo usa Chat Completions con `parse`, que puede no estar disponible en todos los backends. No recomendado para este demo.
 
 Modelo por defecto: `gpt-4o-mini` (puedes cambiar con `STRUCTURED_OUTPUTS_MODEL`).
 
-## Uso rápido
-Generar títulos (en español) para un tema (lee `YOUTUBE_TITLE` del `.env`):
+## Paso a paso
+
+1) Sin outputs estructurados (prompt → parseo → validación)
+- Script: `00-generate_titles.py`
+- Qué hace: envía un prompt que “fuerza” JSON, imprime el texto del modelo, extrae el bloque `{ ... }` con regex y valida con `Suggestions.model_validate_json(...)`.
+- Ejecuta:
 
 ```bash
 python structured-outputs/00-generate_titles.py
 ```
 
-- Guarda un JSON tipado bajo `structured-outputs/output/`.
-- Si pasas `--score`, invoca el segundo script y muestra el ganador con su desglose.
+- Salida esperada en consola: el texto crudo del modelo, el “JSON extraído” y el objeto validado `Suggestions`.
+- Riesgos: si el modelo añade texto extra o incumple el formato, el parseo/validación puede fallar.
 
-También puedes puntuar un archivo generado anteriormente:
+2) Con outputs estructurados (validación automática con Pydantic)
+- Script: `01-generate_titles.py`
+- Qué hace: usa `client.chat.completions.parse(..., response_format=Suggestions)` para recibir un objeto ya tipado; imprime y usa las sugerencias para elegir la mejor con `best_suggestion`.
+- Ejecuta:
 
 ```bash
-python structured-outputs/score_and_select.py --input structured-outputs/output/titles_productividad-con-ia.json --language es --audience "creadores en YouTube"
+python structured-outputs/01-generate_titles.py
 ```
+
+- Salida esperada en consola: respuesta parseada (`parsed.suggestions`) y “la mejor sugerencia”.
+
+3) Seleccionar la mejor sugerencia desde un listado
+- Función: `score_and_select.best_suggestion(suggestions)`
+- Se usa dentro de `01-generate_titles.py` (y puede usarse aparte si lo necesitas).
 
 ## Por qué importa
 - Contratos claros: el modelo debe ceñirse al esquema (tipos, rangos, nombres de campo).
@@ -56,22 +70,10 @@ python structured-outputs/score_and_select.py --input structured-outputs/output/
 - Reutilización: el mismo esquema sirve para múltiples pasos (generar → evaluar).
 - Robustez: si el modelo viola el esquema, el SDK levanta error y puedes reintentar.
 
-## Cómo sería el system prompt sin outputs estructurados
-En el modo “prompt”, no usamos `response_format=Suggestions`. En su lugar, pedimos JSON explícito y estricto en el prompt del sistema. El script ejecuta primero structured outputs y después prompt-only para que compares.
-
-Eres un copywriter experto en títulos de YouTube orientados a SEO y CTR: creativo, claro y honesto.
-Devuelve EXCLUSIVAMENTE un objeto JSON válido y nada más (sin texto adicional, sin explicaciones, sin markdown) con esta forma estricta:
-{
-  "suggestions": [
-    { "title": "string (<= 70 chars)", "emojis": ["string", "string"], "length": 42 },
-    { /* total 5 items exactos */ }
-  ]
-}
-Reglas: exactamente 5 elementos; emojis 0-2; length coincide con el título; evita promesas excesivas.
-
-Este enfoque puede fallar si el modelo añade texto extra o viola el esquema; el script intenta extraer el bloque JSON y validarlo con Pydantic para que veas la diferencia frente a structured outputs.
+## Cómo sería el system prompt sin outputs estructurados (referencia)
+En el enfoque 00 no usamos `response_format=Suggestions`. En su lugar, pedimos JSON explícito y estricto en el prompt del sistema, el modelo responde con texto y extraemos el bloque JSON. Este método es frágil: cualquier texto extra o clave fuera de esquema rompe el parseo/validación.
 
 ## Notas
-- Usa modelos que soporten el Responses API + structured outputs (p. ej., `gpt-4o-mini`).
+- Usa modelos que soporten Chat Completions con `parse` (p. ej., `gpt-4o-mini`).
 - El demo no sube `.env` al repositorio; sigue los patrones existentes del repo.
 

@@ -36,23 +36,24 @@ def best_suggestion(suggestions: List[Suggestion]) -> Suggestion:
         messages=[
             {"role": "user", "content": SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(
-                [s.dict() for s in suggestions])}
+                [s.model_dump() for s in suggestions])}
         ]
     )
 
-    # console.print(response)
-
-    # response = client.chat.completions.parse(
-    #     model=os.getenv("MODEL_NAME"),
-    #     messages=[
-    #         {"role": "user", "content": SYSTEM_PROMPT},
-    #         {"role": "user", "content": json.dumps(
-    #             [s.dict() for s in suggestions])}
-    #     ],
-    #     response_format=Suggestion
-
-    # )
 
     suggestion = response.choices[0].message.content
+
+    response = client.chat.completions.parse(
+        model=os.getenv("MODEL_NAME"),
+        messages=[
+            {"role": "user", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(
+                [s.dict() for s in suggestions])}
+        ],
+        response_format=Suggestion
+
+    )
+
+    suggestion = response.choices[0].message.parsed
 
     return suggestion

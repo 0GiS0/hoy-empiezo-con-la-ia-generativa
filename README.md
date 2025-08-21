@@ -109,6 +109,15 @@ En cada carpeta encontrarás:
             <br/>
             <a href="https://youtu.be/B78mcUiPzbk">Ver vídeo</a> · <a href="audio/avanzado/README.md">Código</a>
         </td>
+        <td align="center" width="33%">
+            <a href="structured-outputs/README.md">
+                <img src="https://placehold.co/1280x720/0A84FF/FFFFFF?text=Structured+Outputs+%7C+Cap.+9" alt="Outputs estructurados | Cap. 9" width="100%" />
+            <br/>
+            <strong>Outputs estructurados 📦✅ | Cap.9</strong>
+            </a>
+            <br/>
+            <a href="structured-outputs/README.md">Código</a>
+        </td>
 </div>
 
 ---
