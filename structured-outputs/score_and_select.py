@@ -27,29 +27,29 @@ def best_suggestion(suggestions: List[Suggestion]) -> Suggestion:
         "Debes quedarte con aquella que tenga el mejor balance entre creatividad y relevancia."
     )
 
-    response = client.chat.completions.create(
-        model=os.getenv("MODEL_NAME"),
-        messages=[
-            {"role": "user", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": json.dumps(
-                [s.model_dump() for s in suggestions])}
-        ]
-    )
-
-
-    suggestion = response.choices[0].message.content
-
-    # response = client.chat.completions.parse(
+    # response = client.chat.completions.create(
     #     model=os.getenv("MODEL_NAME"),
     #     messages=[
     #         {"role": "user", "content": SYSTEM_PROMPT},
     #         {"role": "user", "content": json.dumps(
     #             [s.model_dump() for s in suggestions])}
-    #     ],
-    #     response_format=Suggestion
-
+    #     ]
     # )
 
-    # suggestion = response.choices[0].message.parsed
+
+    # suggestion = response.choices[0].message.content
+
+    response = client.chat.completions.parse(
+        model=os.getenv("MODEL_NAME"),
+        messages=[
+            {"role": "user", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(
+                [s.model_dump() for s in suggestions])}
+        ],
+        response_format=Suggestion
+
+    )
+
+    suggestion = response.choices[0].message.parsed
 
     return suggestion
