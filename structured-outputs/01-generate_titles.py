@@ -93,6 +93,7 @@ console.print(Panel(table, border_style="green"))
 # console.print(
 #     Panel(
 #         f"Título: {the_good_one.title}, Emojis: {the_good_one.emojis}, Longitud: {the_good_one.length}",
+#         # str(the_good_one),
 #         title="🏆 La mejor sugerencia",
 #         border_style="bold green",
 #     )
