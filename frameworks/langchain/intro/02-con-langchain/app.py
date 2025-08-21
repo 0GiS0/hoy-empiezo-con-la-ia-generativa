@@ -4,6 +4,8 @@ Mantiene el mismo caso de uso, esquema Pydantic compartido y validaciones.
 
 # Módulos que necesito importar
 from rich import print
+from rich.json import JSON
+from rich.console import Console
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.chat_models import init_chat_model
@@ -11,7 +13,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import sys
 import os
-import unicodedata
+import json
 
 # Configurar PYTHONPATH para imports absolutos (enfoque productivo)
 repo_root = Path(__file__).resolve().parents[4]
@@ -19,7 +21,7 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 # Import absoluto del esquema compartido
-from frameworks.langchain.intro.common import Suggestions
+from frameworks.langchain.intro.common import Suggestions, build_validation_table
 
 
 # Cargar las variables de entorno que necesito para esta demo
@@ -69,7 +71,7 @@ prompt = ChatPromptTemplate.from_messages(
 
 # Pinta que tiene el esquema de Suggestions
 print("\n[bold cyan]Esquema de salida esperado[/bold cyan]")
-print(Suggestions.model_json_schema())
+print(JSON.from_data(Suggestions.model_json_schema(), indent=2))
 
 # Cadena: prompt -> modelo (para obtener raw) y luego parser
 llm_chain = prompt | chat_model
@@ -84,41 +86,19 @@ print(ai_message.content)
 # Parsear a nuestro esquema Pydantic
 result: Suggestions = PydanticOutputParser(pydantic_object=Suggestions).parse(ai_message.content)
 
-# Imprimir la respuesta parseada
-print("\n[bold green]Respuesta parseada[/bold green]")
-print(result)
+# Imprimir la respuesta parseada como JSON legible
+print("\n[bold green]Respuesta parseada (JSON)[/bold green]")
+try:
+    parsed_json = result.model_dump()  # Pydantic v2
+except Exception:
+    parsed_json = json.loads(result.json())
+print(JSON.from_data(parsed_json, indent=2))
 
 
-# Validación similar al ejemplo sin LangChain
-def get_visible_length(text: str) -> int:
-    """Cuenta solo caracteres visibles, excluyendo caracteres de control y formato Unicode"""
-    visible_chars = 0
-    for char in text:
-        if unicodedata.category(char) not in ("Cf", "Cc", "Mn"):
-            visible_chars += 1
-    return visible_chars
-
-
-for suggestion in result.suggestions:
-    actual_length = len(suggestion.title)
-    visible_length = get_visible_length(suggestion.title)
-    reported_length = suggestion.length
-
-    print(f"\n[bold cyan]Análisis de '{suggestion.title}':[/bold cyan]")
-    print(f"  • Longitud total (len()): {actual_length}")
-    print(f"  • Longitud visible: {visible_length}")
-    print(f"  • Longitud reportada por modelo: {reported_length}")
-
-    if reported_length != visible_length:
-        print(
-            f"[bold red]Error de validación:[/bold red] La longitud visible ({visible_length}) no coincide con la reportada ({reported_length})"
-        )
-        if actual_length != visible_length:
-            non_visible = [
-                f"\\u{ord(c):04x}" for c in suggestion.title if unicodedata.category(c) in ("Cf", "Cc", "Mn")
-            ]
-            print(f"  • Caracteres no visibles encontrados: {non_visible}")
-    else:
-        print(
-            f"[bold green]Validación exitosa:[/bold green] La longitud visible ({visible_length}) coincide con la reportada ({reported_length})"
-        )
+console = Console()
+table, mismatches = build_validation_table(result.suggestions)
+print("\n[bold cyan]Resumen de sugerencias[/bold cyan]")
+console.print(table)
+if mismatches:
+    print("[yellow]\nAviso:[/yellow] Se detectaron discrepancias entre longitud visible y reportada. ")
+    print("Puede deberse a caracteres no visibles (marcas Unicode). Revisa la tabla y el JSON parseado.")
