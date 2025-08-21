@@ -2,6 +2,8 @@ from typing import List, Tuple
 from rich.table import Table
 from .models import Suggestion
 
+MAX_VISIBLE_LENGTH = 70
+
 
 def _get_visible_length(text: str) -> int:
     """Cuenta solo caracteres visibles, excluyendo caracteres de control y formato Unicode."""
@@ -28,7 +30,7 @@ def build_validation_table(suggestions: List[Suggestion]) -> Tuple[Table, List[S
     for idx, s in enumerate(suggestions, start=1):
         visible_len = _get_visible_length(s.title)
         matches_reported = visible_len == s.length
-        within_limit = visible_len < 70  # regla solicitada: menor que 70
+        within_limit = visible_len < MAX_VISIBLE_LENGTH  # regla solicitada: menor que 70
 
         ok_all = matches_reported and within_limit
         if not ok_all:
