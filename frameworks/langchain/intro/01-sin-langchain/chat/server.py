@@ -25,9 +25,6 @@ API_KEY = os.getenv("GITHUB_TOKEN")
 MODEL_ID = os.getenv("GITHUB_MODEL_ID")
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))
 
-if not (BASE_URL and API_KEY and MODEL_ID):
-    console.print("[red]Faltan variables de entorno requeridas (GITHUB_MODELS_URL, GITHUB_TOKEN, GITHUB_MODEL_ID).[/red]")
-
 client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
 SYSTEM_PROMPT = (

@@ -2,12 +2,10 @@ import os
 
 from flask import Flask, request, jsonify
 from rich.console import Console
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.runnables import RunnableConfig
 from langchain.chat_models import init_chat_model
-from langgraph.checkpoint.sqlite import SqliteSaver
-import sqlite3
-from langgraph.graph import START, MessagesState, StateGraph
+
+
+from langchain_community.chat_message_histories import SQLChatMessageHistory
 
 from dotenv import load_dotenv
 
@@ -24,32 +22,9 @@ chat_model = init_chat_model(
     base_url=os.getenv("GITHUB_MODELS_URL"),
 )
 
-
-def call_model(state: MessagesState, config: RunnableConfig) -> dict:
-    # Recomendado: exigir un thread_id/session_id para persistencia
-    if "configurable" not in config or "thread_id" not in config["configurable"]:
-        raise ValueError("Falta 'configurable.thread_id' en el config")
-    # El state ya contiene mensajes acumulados por el checkpointer
-    ai: AIMessage = chat_model.invoke(state["messages"])
-    # Devolvemos la nueva lista de mensajes (append del AIMessage)
-    return {"messages": state["messages"] + [ai]}
-
-
-# Grafo de estado de la conversación (persistiremos mensajes en SQLite)
-builder = StateGraph(state_schema=MessagesState)
-builder.add_node("model", call_model)
-builder.add_edge(START, "model")
-
-# Inicializamos el checkpointer SQLite correctamente (manteniendo el contexto abierto)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-DB_FILE = os.path.join(DATA_DIR, "checkpoints.sqlite")
-
-conn = sqlite3.connect(DB_FILE, check_same_thread=False)
-checkpointer = SqliteSaver(conn)
-
-graph = builder.compile(checkpointer=checkpointer)
+SYSTEM_PROMPT = (
+    "Eres un asistente amistoso. Contesta de forma breve y clara. Si te preguntan por el nombre del usuario y aún no lo has visto, dilo honestamente."
+)
 
 #######################
 ######  Endpoints #####
@@ -87,18 +62,31 @@ def chat_invoke():
     if not thread_id or not user_text:
         return jsonify({"error": "thread_id y message son requeridos"}), 400
 
-    config = {"configurable": {"thread_id": thread_id}}
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+    os.makedirs(DATA_DIR, exist_ok=True)
+    DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")
+
+    # Recuperar el historial de mensajes
+    message_history = SQLChatMessageHistory(
+        session_id=thread_id, connection_string=f'sqlite:///{DB_FILE}'
+    )
+
+    console.log(f"Historial previo: {message_history.messages}")
+
     # Construye el input del grafo: añadimos el mensaje humano de este turno
-    input_state = {"messages": [HumanMessage(content=user_text)]}
+    message_history.add_user_message(user_text)
 
     # Ejecuta y obtiene el último estado con la respuesta del modelo
     # .invoke devuelve el valor final (con el estado actualizado y ya persistido)
-    result = graph.invoke(input_state, config=config)
-    # La última posición de messages es la respuesta del modelo en este turno
-    last_msg = result["messages"][-1]
+    ai_response = chat_model.invoke(message_history.messages)
+
+    message_history.add_ai_message(ai_response.content)   
+   
     return jsonify({
         "thread_id": thread_id,
-        "reply": last_msg.content
+        "reply": ai_response.content
     })
 
 

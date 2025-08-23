@@ -1,8 +1,10 @@
 flask
 rich
 langchain
-langgraph
+# langgraph
 langchain-openai
-langchain-core
-langgraph-checkpoint-sqlite
+# langchain-core
+# langgraph-checkpoint-sqlite
 dotenv
+# openai
+langchain_community
