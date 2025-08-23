@@ -33,10 +33,12 @@
 	// 	"cpus": 4
 	// },
 	"forwardPorts": [
-		6333		
+		6333
 	],
 	"containerEnv": {
-		"OLLAMA_HOST": "http://host.docker.internal:11434"
+		"OLLAMA_HOST": "http://host.docker.internal:11434",
+		"LANGSMITH_TRACING": "true",
+		"LANGSMITH_API_KEY": "tu_api_key",
 	},
 	"postStartCommand": "pip install --upgrade pip"
 }
