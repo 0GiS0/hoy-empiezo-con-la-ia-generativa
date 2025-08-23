@@ -10,13 +10,6 @@
 	<div class="app">
 		<header>
 			<h1>🤖 Chat LLM <span class="tag">LangChain</span></h1>
-			<div class="source-select">
-				<label for="source">Fuente:</label>
-				<select id="source">
-					<option value="github" selected>GitHub Models</option>
-					<option value="ollama">Ollama</option>
-				</select>
-			</div>
 		</header>
 
 		<main id="messages" aria-live="polite" aria-label="Historial de chat"></main>
@@ -24,12 +17,8 @@
 		<div id="status" class="status" hidden></div>
 
 		<form id="chat-form" autocomplete="off">
-			<div class="toolbar">
-				<button type="button" id="emoji-toggle" title="Emojis" aria-expanded="false">😊</button>
-				<div id="emoji-panel" class="emoji-panel" hidden role="listbox" aria-label="Selecciona un emoji"></div>
-			</div>
 			<textarea id="input" rows="1" placeholder="Escribe tu mensaje..." required></textarea>
-			<button id="send" type="submit" class="send">Enviar ➤</button>
+			<button id="send" type="submit" class="send">Enviar</button>
 		</form>
 	</div>
 
