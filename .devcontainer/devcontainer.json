@@ -24,7 +24,8 @@
 				"ritwickdey.LiveServer",
 				"shd101wyy.markdown-preview-enhanced",
 				"yzhang.markdown-all-in-one",
-				"dotenv.dotenv-vscode"
+				"dotenv.dotenv-vscode",
+				"qwtel.sqlite-viewer"
 			]
 		}
 	},
@@ -37,8 +38,8 @@
 	],
 	"containerEnv": {
 		"OLLAMA_HOST": "http://host.docker.internal:11434",
-		"LANGSMITH_TRACING": "true",
-		"LANGSMITH_API_KEY": "tu_api_key",
+		"LANGSMITH_TRACING": "false",
+		"LANGSMITH_API_KEY": "tu_api_key"
 	},
 	"postStartCommand": "pip install --upgrade pip"
 }

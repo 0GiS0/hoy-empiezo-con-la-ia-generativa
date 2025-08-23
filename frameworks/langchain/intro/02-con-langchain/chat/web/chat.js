@@ -1,4 +1,5 @@
-const API_URL = 'http://127.0.0.1:5500/chat'; // Ajustar si es distinto
+// Endpoint actualizado (modo invoke no streaming)
+const API_URL = 'http://127.0.0.1:5500/chat';
 
 const messagesEl = document.getElementById('messages');
 const form = document.getElementById('chat-form');
@@ -62,12 +63,12 @@ function appendMessage(role, content, streaming=false){
 async function sendMessage(message){
   history.push({ role: 'user', content: message });
   appendMessage('user', message);
-  const assistantBubble = appendMessage('assistant', '', true);
+  const assistantBubble = appendMessage('assistant', '…');
   statusEl.hidden = false;
   statusEl.textContent = 'Generando respuesta…';
 
-  // Construye payload compatible con backend existente
-  const payload = { messages: history, source: sourceSelect.value };
+  const threadId = 'demo-thread'; // se puede hacer dinámico
+  const payload = { thread_id: threadId, message };
 
   try {
     const resp = await fetch(API_URL, {
@@ -75,31 +76,14 @@ async function sendMessage(message){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    if(!resp.ok){
-      throw new Error('HTTP ' + resp.status);
-    }
-
-    // Stream texto (SSE-like plain text events) leyendo incrementalmente
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let assistantText = '';
-    while(true){
-      const { done, value } = await reader.read();
-      if(done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      assistantText += chunk;
-      assistantBubble.textContent = assistantText;
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    history.push({ role: 'assistant', content: assistantBubble.textContent });
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    assistantBubble.textContent = data.reply;
+    history.push({ role: 'assistant', content: data.reply });
   } catch(err){
     assistantBubble.textContent = '[Error] ' + err.message;
   } finally {
     statusEl.hidden = true;
-    const streamingNode = messagesEl.querySelector('.msg.streaming');
-    if(streamingNode) streamingNode.classList.remove('streaming');
   }
 }
 
