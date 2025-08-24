@@ -48,12 +48,7 @@ def static_files(filename):
 @app.route("/chat", methods=["POST"])
 def chat_invoke():
     """
-    Body JSON:
-    {
-      "thread_id": "usuario_123",      # requerido para persistir
-      "message": "Hola, ¿qué tal?"
-    }
-    Devuelve la respuesta completa (no streaming).
+    Endpoint para invocar el modelo de chat. Este además recupera de base de datos el histórico por si el usuario ha tenido conversaciones previas.
     """
     data = request.get_json(force=True)
     thread_id = data.get("thread_id")
