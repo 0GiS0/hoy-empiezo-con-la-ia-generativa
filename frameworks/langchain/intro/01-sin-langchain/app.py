@@ -16,12 +16,11 @@ console = Console()
 # Cargar las variables de entorno que necesito para esta demo
 load_dotenv()
 
-# Pintar la configuración (sin la clave)
-print("[bold cyan]Configuración de la API de OpenAI[/bold cyan]")
-print(f"[magenta]URL:[/magenta] {os.getenv('GITHUB_MODELS_URL')}")
-print(f"[magenta]Modelo:[/magenta] {os.getenv('GITHUB_MODEL_ID')}")
-print(f"[magenta]Temperatura:[/magenta] {os.getenv('TEMPERATURE', '0.7')}")
-print(f"[magenta]Título de YouTube:[/magenta] {os.getenv('YOUTUBE_TITLE')}")
+print("🚀 [bold cyan]Configuración de la API[/bold cyan]")
+print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('GITHUB_MODELS_URL')}[/]")
+print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('GITHUB_MODEL_ID')}[/]")
+print(f"🎛️ [magenta]Temperatura:[/magenta] [white]{os.getenv('TEMPERATURE', '0.7')}[/]")
+print(f"🎬 [magenta]Título original YouTube:[/magenta] [yellow]{os.getenv('YOUTUBE_TITLE')}[/]")
 
 # Crear cliente de OpenAI (En este ejemplo uso GitHub Models porque es rápido y gratis)
 client = OpenAI(
@@ -38,6 +37,7 @@ Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas 
 """
 
 # Llamar a la API de OpenAI para generar texto
+print("\n⏳ [cyan]Llamando al modelo para generar sugerencias…[/cyan]")
 try:
     response = client.chat.completions.parse(
         messages=[
@@ -48,13 +48,22 @@ try:
         temperature=float(os.getenv("TEMPERATURE", "0.7")),
         response_format=Suggestions
     )
+    print("✅ [green]Respuesta recibida[/green]")
 except Exception as e:
-    print(f"[bold red]Error:[/bold red] {e}")
+    print(f"🔥 [bold red]Error al llamar al modelo:[/bold red] {e}")
     exit(1)
 
 # Recuperar las sugerencias
 suggestions = response.choices[0].message.parsed
 
 # Imprimir la respuesta cruda del modelo
-print("\n[bold green]Respuesta del modelo (cruda)[/bold green]")
-print(suggestions)
+print("\n🧪 [bold green]Respuesta generada[/bold green]")
+print("[cyan]Lista de sugerencias:[/cyan]")
+for idx, s in enumerate(suggestions.suggestions, start=1):
+    color = "green" if s.length <= 55 else ("yellow" if s.length <= 65 else "red")
+    print(
+        f" {idx}. [bold yellow]{s.title}[/bold yellow]\n"
+        f"    🔡 Longitud: [bold {color}]{s.length}[/] chars  | 😀 Emojis: [dim]{' '.join(s.emojis)}[/]"
+    )
+
+print("\n🏁 [bold cyan]Fin de la demo[/bold cyan]")

@@ -1,11 +1,11 @@
 # Módulos que necesito importar
 from ..common.models import Suggestions
 from rich import print
-from rich.json import JSON
 from rich.console import Console
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
 
@@ -16,11 +16,13 @@ console = Console()
 load_dotenv()
 
 # Pintar la configuración (sin la clave)
-print("[bold cyan]Configuración de la API de OpenAI[/bold cyan]")
-print(f"[magenta]URL:[/magenta] {os.getenv('GITHUB_MODELS_URL')}")
-print(f"[magenta]Modelo:[/magenta] {os.getenv('GITHUB_MODEL_ID')}")
-print(f"[magenta]Temperatura:[/magenta] {os.getenv('TEMPERATURE', '0.7')}")
-print(f"[magenta]Título de YouTube:[/magenta] {os.getenv('YOUTUBE_TITLE')}")
+print("🚀 [bold cyan]Configuración de la API[/bold cyan]")
+print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('GITHUB_MODELS_URL')}[/]")
+print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('GITHUB_MODEL_ID')}[/]")
+print(
+    f"🎛️ [magenta]Temperatura:[/magenta] [white]{os.getenv('TEMPERATURE', '0.7')}[/]")
+print(
+    f"🎬 [magenta]Título original YouTube:[/magenta] [yellow]{os.getenv('YOUTUBE_TITLE')}[/]")
 
 # Modelo chat con Langchain
 model = init_chat_model(
@@ -48,16 +50,38 @@ Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas 
 """
 )
 
-# Preparar mensajes a enviar al modelo
-messages = [
-    SystemMessage(system_message),
-    HumanMessage("Título original: {title}")
-]
+template = ChatPromptTemplate([
+    ("system", system_message),
+    ("user", "{title}")
+])
 
-# Ejecutar la cadena con la variable de entrada
-suggestions = model_with_structured_output.invoke(
-    messages, {"title": os.getenv("YOUTUBE_TITLE")})
+prompt_value = template.invoke(
+    {
+        "title": os.getenv("YOUTUBE_TITLE")
+    }
+)
 
-# Imprimir la respuesta cruda del modelo
-print("\n[bold green]Respuesta del modelo (cruda)[/bold green]")
-print(suggestions)
+console.print(f"\n📝 [bold cyan]Prompt generado:[/bold cyan]\n{prompt_value}")
+
+print("\n⏳ [cyan]Llamando al modelo con LangChain 🔗🦜[/cyan]")
+try:
+    # Ejecutar la cadena con la variable de entrada
+    suggestions = model_with_structured_output.invoke(prompt_value)
+
+    print("✅ [green]Respuesta recibida[/green]")
+except Exception as e:
+    print(f"🔥 [bold red]Error al invocar el modelo:[/bold red] {e}")
+    raise
+
+# Mostrar sugerencias formateadas
+print("\n🧪 [bold green]Respuesta generada[/bold green]")
+print("[cyan]Lista de sugerencias:[/cyan]")
+for idx, s in enumerate(suggestions.suggestions, start=1):
+    color = "green" if s.length <= 55 else (
+        "yellow" if s.length <= 65 else "red")
+    print(
+        f" {idx}. [bold yellow]{s.title}[/bold yellow]\n"
+        f"    🔡 Longitud: [bold {color}]{s.length}[/] chars  | 😀 Emojis: [dim]{' '.join(s.emojis)}[/]"
+    )
+
+print("\n🏁 [bold cyan]Fin de la demo[/bold cyan]")
