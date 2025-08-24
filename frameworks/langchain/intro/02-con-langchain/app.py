@@ -30,7 +30,7 @@ model = init_chat_model(
     model_provider="openai",
     api_key=os.getenv("GITHUB_TOKEN"),
     base_url=os.getenv("GITHUB_MODELS_URL"),
-    # temperature=float(os.getenv("TEMPERATURE", "0.7")),
+    temperature=float(os.getenv("TEMPERATURE", "0.7")),
 )
 
 
