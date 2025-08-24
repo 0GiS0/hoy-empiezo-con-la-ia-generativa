@@ -15,18 +15,24 @@
 
 ---
 
-Este ejemplo muestra el mismo caso de uso implementado de dos formas:
+¡Hola developer 👋🏻!
 
-- sin LangChain: `intro/01-sin-langchain/app.py` usando el SDK de OpenAI directamente (base_url a GitHub Models)
-- con LangChain: `intro/02-con-langchain/app.py` usando cadenas y un parser estructurado
+Este bloque de la serie compara el **mismo caso de uso** (generar 5 títulos optimizados de YouTube con estructura Pydantic) implementado de dos formas:
 
-Objetivo: comparar claridad, control del output y ergonomía.
+| Versión | Ruta | Enfoque | Cuándo usar |
+|---------|------|---------|-------------|
+| 🚫 Sin LangChain | `intro/01-sin-langchain/app.py` | SDK directo (`chat.completions.parse`) + `response_format=Suggestions` | Scripts simples, bajo nivel, entender la API raw |
+| ✅ Con LangChain | `intro/02-con-langchain/app.py` | `ChatPromptTemplate` + `with_structured_output()` + `PydanticOutputParser` | Escalar a cadenas, añadir pasos, reutilizar componentes |
+
+Objetivo: observar diferencias en ergonomía, extensibilidad y control del output sin perder claridad.
 
 ## Qué incluye ✨
 
-- ✅ Configuración por entorno (GitHub Models compatible con OpenAI SDK)
-- ✅ En la versión con LangChain: ChatPromptTemplate → Modelo → PydanticOutputParser
-- ✅ Validación estricta del output: exactamente 5 títulos con metadatos (longitud y emojis)
+- ✅ Configuración por entorno (GitHub Models vía OpenAI SDK compatible)
+- ✅ Esquema Pydantic compartido (`Suggestions`) para ambas versiones
+- ✅ Validación estricta: 5 títulos + longitud + emojis
+- ✅ Logging colorido con `rich` (emojis, métricas de longitud) en ambas variantes
+- ✅ En la versión LangChain: pipeline declarativa Prompt → Modelo → Parser
 
 ## Requisitos 🔧
 
@@ -59,15 +65,34 @@ cp .env-sample .env
 
 ## Uso ▶️
 
-Ejecuta el script de tu elección:
+Ejecuta cada variante desde la raíz (por imports relativos):
 
 ```bash
-python app.py
+python -m frameworks.langchain.intro.01-sin-langchain.app
+python -m frameworks.langchain.intro.02-con-langchain.app
 ```
 
 ## Diferencias clave 🔍
 
-- **Sin LangChain**: recibes texto libre y dependes del prompt para el formato.
-- **Con LangChain**: `PydanticOutputParser` obliga a un JSON válido con 5 elementos y valida longitud y emojis, devolviendo una estructura tipada. Si el modelo no cumple, lanza error.
+| Tema | Sin LangChain | Con LangChain | Beneficio práctico |
+|------|---------------|---------------|--------------------|
+| Prompt | Lista manual de dicts | `ChatPromptTemplate` | Reutilización y parametrización limpia |
+| Estructura salida | `response_format` directo | `with_structured_output()` | Uniformidad entre proveedores futuros |
+| Parser / Validación | Implícita (confías en el modelo) | Pydantic + error temprano | Menos post‑procesado manual |
+| Escalado a más pasos | Copiar/pegar bloques | Composición funcional | Añadir retrieval / tools sin reescribir |
+| Legibilidad | Muy explícito | Ligeramente más declarativo | Mejor para crecer |
+| Cambiar modelo | Editas llamada cruda | Cambias init del chat model | Config centralizada |
 
-Esto hace visible el valor de LangChain en control del output y composabilidad (prompt → modelo → parser).
+## ¿Y el chat? 💬
+En `01-sin-langchain/chat/` tienes un ejemplo más “real” (historial en SQLite, reconstrucción de contexto, formateo manual). Su futura versión con LangChain simplifica:
+
+- Gestión de historial / memory abstraída
+- Integración de herramientas o retrieval
+- Reintentos + validación estructurada reutilizable
+
+## Próximos pasos 🚀
+1. Ejecuta ambas versiones y compara el código.
+2. Modifica el esquema Pydantic (añade, por ejemplo, `categoria`) y observa el impacto.
+3. Extiende la versión con LangChain añadiendo un paso de “resumen previo” antes de generar títulos.
+
+¿Listo para hacer la versión con retrieval o herramientas? ¡Sigue explorando! 🤖
