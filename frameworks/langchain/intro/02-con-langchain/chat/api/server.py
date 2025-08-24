@@ -73,8 +73,7 @@ def chat_invoke():
     # Construye el input del grafo: añadimos el mensaje humano de este turno
     message_history.add_user_message(user_text)
 
-    # Ejecuta y obtiene el último estado con la respuesta del modelo
-    # .invoke devuelve el valor final (con el estado actualizado y ya persistido)
+    # Ejecuta y obtiene el último estado con la respuesta del modelo    
     ai_response = chat_model.invoke(message_history.messages)
 
     message_history.add_ai_message(ai_response.content)   
