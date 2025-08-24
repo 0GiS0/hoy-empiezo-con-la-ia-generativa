@@ -1,39 +1,55 @@
-# Frameworks de IA
+# Frameworks de IA 🚀
 
-Esta sección contiene demos y ejemplos usando diferentes frameworks de IA para desarrollo de aplicaciones.
+¡Hola developer 👋🏻!  Esta sección agrupa demos que muestran **cómo orquestar LLMs** usando distintos frameworks / librerías. 
 
-## Frameworks incluidos
+## Estado actual
 
-### 🦜 LangChain
-Framework completo para el desarrollo de aplicaciones con LLMs que incluye:
-- **Intro**: Conceptos básicos y primeros pasos
-- **Chains**: Cadenas de procesamiento
-- **Agents**: Agentes inteligentes
-- **RAG**: Retrieval Augmented Generation
-- **Chat**: Aplicaciones conversacionales
+### 🦜 LangChain (incluido ya)
 
-## Estructura común
+Primer framework añadido. En `frameworks/langchain/intro/` tienes dos variantes:
 
-Cada demo sigue la estructura estándar del repositorio:
+- `01-sin-langchain/`: uso directo del SDK (baseline)
+- `02-con-langchain/`: misma tarea con abstracciones (prompt template + structured output)
+
+
+Objetivos cubiertos hasta ahora:
+- ✅ Comparar raw SDK vs cadena declarativa
+
+## Próximos frameworks planificados 🧭
+| Framework | Enfoque principal | Cuándo destaca |
+|-----------|------------------|----------------|
+| Semantic Kernel (SK) | Orquestación y “skills” (plugins), planificación, fuerte integración .NET / C# | Apps enterprise .NET, planners automáticos, composición de funciones semánticas + nativas |
+
+
+## Diferencias clave: LangChain vs Semantic Kernel 🔍
+
+| Dimensión | LangChain | Semantic Kernel |
+|----------|-----------|-----------------|
+| Lenguajes maduros | Python, JS/TS | C# (.NET), Python, Java (en progreso) |
+| Modelo mental | Chains / Graphs / Tools / Agents | Skills (semantic + native) + Planners |
+| Structured output | Parsers + Pydantic (`with_structured_output`) | Functions con parámetros + JSON parsing manual o plugins |
+| Planificación | Tools y experimental planners (LangGraph, ReAct, etc.) | Planners integrados (Goal → plan → ejecución) fuerte enfoque |
+| Integraciones | Amplísima (vectores, DBs, retrievers) | Buenas integraciones Azure / .NET ecosistema |
+| Curva de aprendizaje | Rápida para cadenas simples | Familiar a devs .NET, conceptos de “skills” nuevos para otros |
+| Caso rápido prototipo | Muy ágil (prompt + chain) | Algo más setup si no estás en .NET |
+| Enterprise .NET | Indirecto (bindings) | Nativo (telemetría y patrones .NET) |
+
+Resumen: **LangChain** es muy versátil para prototipado y expansión multi‑proveedor; **Semantic Kernel** brilla cuando quieres planificación automática y estás en ecosistema .NET / Azure.
+
+## Estructura común de demos 📁
+
+Cada framework seguirá (o adaptará mínimamente) la convención global del repo:
 ```
 framework-name/
-├── README.md
-├── topic/
-│   ├── api/          # Flask API
-│   │   ├── app.py
-│   │   ├── config.py
-│   │   └── requirements.txt
-│   └── web/          # Frontend vanilla
-│       ├── index.html
-│       ├── styles.css
-│       └── ui.js
+├── intro/                # Ejemplos básicos / comparación
+├── feature-x/            # Demos temáticas (RAG, agents, tools...)
+│   ├── api/              # Flask (o FastAPI si se justifica) backend
+│   └── web/              # Frontend estático (HTML/CSS/JS)
+└── common/               # Reutilizables (modelos Pydantic, utilidades) si aplica
 ```
 
-## Configuración
-
-LangChain utiliza las mismas variables de entorno que el resto del repositorio:
-- `GITHUB_MODELS_API_KEY` / `GITHUB_TOKEN`
-- `OPENAI_API_KEY`
-- `OLLAMA_URL`
-
-Consulta el README principal para más detalles sobre configuración.
+## Variables de entorno 🔐
+Se reutilizan las mismas claves que el resto del repositorio (no duplicar nombres):
+- `GITHUB_TOKEN` / `GITHUB_MODELS_API_KEY`
+- `GITHUB_MODELS_URL`
+- `GITHUB_MODEL_ID`
