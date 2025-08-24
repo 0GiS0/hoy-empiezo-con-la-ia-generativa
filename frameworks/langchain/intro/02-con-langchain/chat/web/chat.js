@@ -7,9 +7,9 @@ const form = document.getElementById('chat-form');
 const input = document.getElementById('input');
 const statusEl = document.getElementById('status');
 
-// Generar / recuperar un threadId persistente para simular usuarios distintos
-function getThreadId(){
-  const KEY = 'chat_thread_id';
+// Generar / recuperar un sessionId persistente para simular usuarios distintos
+function getSessionId(){
+  const KEY = 'chat_session_id';
   let id = localStorage.getItem(KEY);
   if(!id){
     // ID sencillo: fecha base36 + 8 chars aleatorios
@@ -19,7 +19,7 @@ function getThreadId(){
   }
   return id;
 }
-const THREAD_ID = getThreadId();
+const SESSION_ID = getSessionId();
 
 function appendMessage(role, content){
   const tpl = document.getElementById('message-template');
@@ -42,7 +42,7 @@ async function sendMessage(message){
     const resp = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ thread_id: THREAD_ID, message })
+      body: JSON.stringify({ session_id: SESSION_ID, message })
     });
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();

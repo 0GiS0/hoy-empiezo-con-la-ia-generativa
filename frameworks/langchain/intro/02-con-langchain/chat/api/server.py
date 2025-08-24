@@ -51,11 +51,11 @@ def chat_invoke():
     Endpoint para invocar el modelo de chat. Este además recupera de base de datos el histórico por si el usuario ha tenido conversaciones previas.
     """
     data = request.get_json(force=True)
-    thread_id = data.get("thread_id")
+    session_id = data.get("session_id")
     user_text = data.get("message", "")
 
-    if not thread_id or not user_text:
-        return jsonify({"error": "thread_id y message son requeridos"}), 400
+    if not session_id or not user_text:
+        return jsonify({"error": "session_id y message son requeridos"}), 400
 
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +65,7 @@ def chat_invoke():
 
     # Recuperar el historial de mensajes
     message_history = SQLChatMessageHistory(
-        session_id=thread_id, connection_string=f'sqlite:///{DB_FILE}'
+        session_id=session_id, connection_string=f'sqlite:///{DB_FILE}'
     )
 
     console.log(f"Historial previo: {message_history.messages}")
@@ -79,7 +79,7 @@ def chat_invoke():
     message_history.add_ai_message(ai_response.content)   
    
     return jsonify({
-        "thread_id": thread_id,
+        "session_id": session_id,
         "reply": ai_response.content
     })
 
