@@ -1,27 +1,13 @@
-"""Versión con LangChain del ejemplo de 01-sin-langchain/app.py.
-Mantiene el mismo caso de uso, esquema Pydantic compartido y validaciones.
-"""
-
 # Módulos que necesito importar
-from frameworks.langchain.intro.common import Suggestions, build_validation_table
+from ..common.models import Suggestions
 from rich import print
 from rich.json import JSON
 from rich.console import Console
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
-from pathlib import Path
-import sys
 import os
-
-# Configurar PYTHONPATH para imports absolutos (enfoque productivo)
-repo_root = Path(__file__).resolve().parents[4]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
-
-# Import absoluto del esquema compartido
-
 
 # Instancia de Console, para pintar el output bonito
 console = Console()
@@ -62,43 +48,16 @@ Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas 
 """
 )
 
-
 # Preparar mensajes a enviar al modelo
 messages = [
     SystemMessage(system_message),
     HumanMessage("Título original: {title}")
 ]
 
-
-# Prompt con instrucciones de formato estrictas
-# prompt = ChatPromptTemplate.from_messages(
-#     [
-#         ("system", system_message),
-#         (
-#             "system",
-#             "Sigue estrictamente este formato de salida JSON válido:\n{format_instructions}",
-#         ),
-#         ("human", "Título original: {title}"),
-#     ]
-# ).partial(
-#     format_instructions=parser.get_format_instructions()
-# )
-
-# Pinta que tiene el esquema de Suggestions
-print("\n[bold cyan]Esquema de salida esperado[/bold cyan]")
-print(JSON.from_data(Suggestions.model_json_schema(), indent=2))
-
-
 # Ejecutar la cadena con la variable de entrada
-ai_message = model_with_structured_output.invoke(
-    {"title": os.getenv("YOUTUBE_TITLE")}
-)
+suggestions = model_with_structured_output.invoke(
+    messages, {"title": os.getenv("YOUTUBE_TITLE")})
 
 # Imprimir la respuesta cruda del modelo
 print("\n[bold green]Respuesta del modelo (cruda)[/bold green]")
-print(ai_message.content)
-
-
-
-
-
+print(suggestions)
