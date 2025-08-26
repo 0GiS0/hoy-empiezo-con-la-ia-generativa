@@ -1,14 +1,17 @@
 # Módulos que necesito importar
 from ...common.models import Suggestions
 
+from rich import print
+from rich.console import Console
+
+# Módulo de SDK de OpenAI
+from openai import OpenAI
+
 import os
-import json
 from urllib import response
 from dotenv import load_dotenv
-from openai import OpenAI
-from rich import print
-from rich.json import JSON
-from rich.console import Console
+
+
 
 # Instanciar una consola de rich
 console = Console()

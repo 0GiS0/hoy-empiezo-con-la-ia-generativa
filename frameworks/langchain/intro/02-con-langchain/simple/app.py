@@ -1,10 +1,14 @@
 # Módulos que necesito importar
 from ...common.models import Suggestions
+
 from rich import print
 from rich.console import Console
+
+# Módulos de langchain
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
+
 from dotenv import load_dotenv
 import os
 
@@ -42,7 +46,7 @@ model_with_structured_output = model.with_structured_output(
 
 
 # Mensaje del sistema, para que sepa qué es lo que esperamos
-system_message = (
+SYSTEM_MESSAGE = (
     """
 Eres un copywriter experto en títulos de YouTube orientados a SEO y CTR: creativo, claro y honesto.
 Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas que inviten al clic sin prometer en exceso.
@@ -50,7 +54,7 @@ Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas 
 )
 
 template = ChatPromptTemplate([
-    ("system", system_message),
+    ("system", SYSTEM_MESSAGE),
     ("user", "{title}")
 ])
 
