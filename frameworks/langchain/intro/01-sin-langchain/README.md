@@ -2,7 +2,7 @@
 
 ¡Hola developer 👋🏻!
 
-En esta intro te muestro cómo, con el **SDK oficial de OpenAI** (en este caso GitHub Models vía API compatible), podemos pedir **5 sugerencias estructuradas** de títulos para un vídeo de YouTube 📺✨. El script principal está en `app.py` y devuelve un objeto validado con Pydantic (`Suggestions`) que incluye para cada propuesta:
+En esta intro te muestro cómo, con el **SDK oficial de OpenAI** (en este caso GitHub Models vía API compatible), podemos pedir **5 sugerencias estructuradas** de títulos para un vídeo de YouTube 📺✨. El script principal está en `simple/app.py` y devuelve un objeto validado con Pydantic (`Suggestions`) que incluye para cada propuesta:
 
 - 🏷️ Título optimizado (con emojis)
 - 🔢 Longitud calculada

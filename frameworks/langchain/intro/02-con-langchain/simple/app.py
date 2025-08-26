@@ -1,5 +1,5 @@
 # Módulos que necesito importar
-from ..common.models import Suggestions
+from ...common.models import Suggestions
 from rich import print
 from rich.console import Console
 from langchain_core.output_parsers import PydanticOutputParser

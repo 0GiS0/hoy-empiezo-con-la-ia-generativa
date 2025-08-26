@@ -39,6 +39,12 @@ Objetivo: observar diferencias en ergonomía, extensibilidad y control del outpu
 - Python 3.10+
 - Variables de entorno (ver `.env-sample` en cada carpeta)
 
+Si no quieres tener que instalar absolutamente nada en tu máquina local puedes usar Dev Containers con la configuración que te he dejado como parte del repo. Si no sabes qué es esto, puedes echar un vistazo a este otro vídeo de mi canal:
+
+<a href="https://youtu.be/DkKs29etRis">
+	<img src="https://img.youtube.com/vi/DkKs29etRis/maxresdefault.jpg" alt="🐳 Dev containers: tu entorno de desarrollo dentro de un contenedor 💻 | Cap. 10" width="100%" />
+</a>
+
 ## Instalación 📦
 
 Desde cada carpeta (`01-sin-langchain` o `02-con-langchain`):
