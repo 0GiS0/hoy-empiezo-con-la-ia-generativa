@@ -26,7 +26,7 @@ print(
 # Modelo chat con Langchain
 model = init_chat_model(
     model=os.getenv("GITHUB_MODEL_ID"),
-    model_provider="openai",
+    model_provider=os.getenv("MODEL_PROVIDER"),
     api_key=os.getenv("GITHUB_TOKEN"),
     base_url=os.getenv("GITHUB_MODELS_URL"),
     temperature=float(os.getenv("TEMPERATURE", "0.7")),
