@@ -4,7 +4,6 @@ from rich import print
 from rich.console import Console
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
