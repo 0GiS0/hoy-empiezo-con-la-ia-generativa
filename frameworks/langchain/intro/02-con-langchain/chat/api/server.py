@@ -1,21 +1,39 @@
 import os
 
 from flask import Flask, request, jsonify
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 
 from dotenv import load_dotenv
 
+# Cargamos las variables de entorno
 load_dotenv()
 
+# Creamos la aplicación para Flask
 app = Flask(__name__, static_folder='../web', static_url_path='')
+
+# Instanciamos un objeto de la consola de rich
 console = Console()
+
+# ==============================================
+# 🗄️  CONFIGURACIÓN DE ALMACENAMIENTO LOCAL (SQLite)
+# ----------------------------------------------
+# Guardamos el historial de cada conversación en
+# una tabla muy simple para poder reconstruir
+# el contexto en cada petición. De esta manera,
+# mostramos cómo sería hacerlo "a mano" sin LangChain.
+# ==============================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Ruta absoluta del directorio actual
+DATA_DIR = os.path.join(BASE_DIR, "data")             # Carpeta donde dejaremos la base
+os.makedirs(DATA_DIR, exist_ok=True)                   # Crear si no existe
+DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")  # Archivo SQLite
 
 # ==========================================
 # 🔧 INICIALIZACIÓN DEL MODELO
@@ -25,10 +43,12 @@ console = Console()
 #   - URL base (GITHUB_MODELS_URL)
 # Esto permite intercambiar proveedores sin tocar el código.
 # ==========================================
-console.print(Panel.fit("🚀 [bold cyan]Inicializando modelo de chat...[/bold cyan]", border_style="cyan"))
+console.print(Panel.fit(
+    "🚀 [bold cyan]Inicializando modelo de chat...[/bold cyan]", border_style="cyan"))
 chat_model = init_chat_model(
     model=os.getenv("GITHUB_MODEL_ID"),
-    model_provider="openai",  # LangChain internamente hace la llamada compatible
+    # LangChain internamente hace la llamada compatible
+    model_provider=os.getenv("GITHUB_MODEL_PROVIDER"),
     api_key=os.getenv("GITHUB_TOKEN"),
     base_url=os.getenv("GITHUB_MODELS_URL"),
 )
@@ -79,12 +99,8 @@ def chat_invoke():
         console.print("❌ Falta session_id o message", style="bold red")
         return jsonify({"error": "session_id y message son requeridos"}), 400
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR = os.path.join(BASE_DIR, "data")
-    os.makedirs(DATA_DIR, exist_ok=True)
-    DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")
-
-    console.print(Panel.fit(f"🗃️ Usando base de datos: [bold]{DB_FILE}[/bold]", border_style="magenta"))
+    console.print(Panel.fit(
+        f"🗃️ Usando base de datos: [bold]{DB_FILE}[/bold]", border_style="magenta"))
 
     # 1️⃣ Recuperar historial existente (o se crea vacío). No añadimos manualmente aún el mensaje del usuario.
     message_history = SQLChatMessageHistory(
@@ -93,7 +109,8 @@ def chat_invoke():
 
     # Tabla resumida del historial actual
     if message_history.messages:
-        table = Table(title="Historial previo", show_lines=True, header_style="bold blue")
+        table = Table(title="Historial previo",
+                      show_lines=True, header_style="bold blue")
         table.add_column("Idx", style="dim")
         table.add_column("Rol")
         table.add_column("Contenido", overflow="fold")
@@ -101,7 +118,8 @@ def chat_invoke():
             table.add_row(str(idx), m.type, (m.content or "").strip())
         console.print(table)
     else:
-        console.print("🆕 No había mensajes previos para esta sesión", style="yellow")
+        console.print(
+            "🆕 No había mensajes previos para esta sesión", style="yellow")
 
     # =============================
     #  Cómo era ANTES (gestión manual)
@@ -123,7 +141,8 @@ def chat_invoke():
     console.print("🧱 Construyendo prompt dinámico...", style="cyan")
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),                 # Contexto y reglas fijas
-        MessagesPlaceholder(variable_name="history"),  # Se sustituye automáticamente
+        # Se sustituye automáticamente
+        MessagesPlaceholder(variable_name="history"),
         ("human", "{input}")                      # Mensaje actual del usuario
     ])
 
@@ -139,8 +158,8 @@ def chat_invoke():
 
     console.print("🧬 Envolviendo con RunnableWithMessageHistory", style="cyan")
     runnable_with_history = RunnableWithMessageHistory(
-        base_runnable, # Runnable base que incluye el prompt y el modelo
-        get_history, # Factoría para cargar/crear historial bajo demanda
+        base_runnable,  # Runnable base que incluye el prompt y el modelo
+        get_history,  # Factoría para cargar/crear historial bajo demanda
         input_messages_key="input",      # clave del input actual
         history_messages_key="history",  # nombre usado en el prompt
     )
@@ -152,7 +171,8 @@ def chat_invoke():
     )
 
     reply_text = result.content  # ChatMessage -> str
-    console.print(Panel.fit(f"✅ Respuesta lista:\n[white]{reply_text}[/white]", border_style="green"))
+    console.print(Panel.fit(
+        f"✅ Respuesta lista:\n[white]{reply_text}[/white]", border_style="green"))
 
     return jsonify({"session_id": session_id, "reply": reply_text})
 

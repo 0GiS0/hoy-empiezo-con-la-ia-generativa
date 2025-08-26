@@ -2,15 +2,20 @@ import os
 import ast
 
 from flask import Flask, request, jsonify
+
 from rich.console import Console
 from rich.panel import Panel
+
 from openai import OpenAI
+
 from dotenv import load_dotenv
+
 import sqlite3
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='../web', static_url_path='')
+
 console = Console()
 
 # ==============================================
