@@ -16,7 +16,7 @@ console = Console()
 load_dotenv()
 
 # Pintar la configuración (sin la clave)
-print("🚀 [bold cyan]Configuración de la API[/bold cyan]")
+print("🚀 [bold cyan]Ejemplo con Langchain 🦜🔗[/bold cyan]")
 print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('GITHUB_MODELS_URL')}[/]")
 print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('GITHUB_MODEL_ID')}[/]")
 print(

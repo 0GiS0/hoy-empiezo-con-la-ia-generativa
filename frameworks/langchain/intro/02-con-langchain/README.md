@@ -30,7 +30,7 @@ Este ejemplo es la contraparte del directorio `../01-sin-langchain` pero usando 
 Ejecuta desde la raíz para que funcionen los imports relativos:
 
 ```bash
-python -m frameworks.langchain.intro.02-con-langchain.app
+python -m frameworks.langchain.intro.02-con-langchain.simple.app
 ```
 
 > Tip: Reutiliza las mismas variables de entorno (`GITHUB_MODELS_URL`, `GITHUB_MODEL_ID`, `GITHUB_TOKEN`, `YOUTUBE_TITLE`, `TEMPERATURE`).

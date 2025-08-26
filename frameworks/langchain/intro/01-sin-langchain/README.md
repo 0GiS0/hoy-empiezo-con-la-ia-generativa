@@ -39,7 +39,7 @@ Al comparar ambos (sin vs con LangChain) notarás cómo LangChain simplifica la 
 Al usar imports relativos, ejecuta desde la raíz del repo:
 
 ```bash
-python -m frameworks.langchain.intro.01-sin-langchain.app
+python -m frameworks.langchain.intro.01-sin-langchain.simple.app
 ```
 
 > Tip: Asegúrate de tener las variables de entorno cargadas (`GITHUB_MODELS_URL`, `GITHUB_MODEL_ID`, `GITHUB_TOKEN`, `YOUTUBE_TITLE`, etc.).
