@@ -1,8 +1,9 @@
 # Cap. 9 — Structured outputs: títulos de YouTube
 
-> Video: Próximamente · Código en esta carpeta
+[![⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9](https://img.youtube.com/vi/wJvDknbJR-o/maxresdefault.jpg)](https://youtu.be/wJvDknbJR-o "Abrir en YouTube")
 
-Este mini-demo muestra por qué los “outputs estructurados” son útiles: en lugar de extraer JSON de texto libre, pedimos al modelo que devuelva exactamente un objeto que encaja con un esquema Pydantic. Así evitamos parsers frágiles, claves que cambian y valores fuera de rango.
+
+¡Hola developer 👋🏻! Con estas demos te muestro por qué los “outputs estructurados” son útiles: en lugar de extraer JSON de texto libre, pedimos al modelo que devuelva exactamente un objeto que encaja con un esquema Pydantic. Así evitamos parsers frágiles, claves que cambian y valores fuera de rango.
 
 Caso de uso: generar varias propuestas de título para un vídeo de YouTube y luego puntuarlas para escoger la mejor. Ambos pasos usan el mismo esquema compartido.
 
