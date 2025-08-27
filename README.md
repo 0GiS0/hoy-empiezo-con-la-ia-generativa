@@ -109,6 +109,15 @@ En cada carpeta encontrarás:
             <br/>
             <a href="https://youtu.be/B78mcUiPzbk">Ver vídeo</a> · <a href="audio/avanzado/README.md">Código</a>
         </td>
+        <td align="center" width="33%">
+            <a href="structured-outputs/README.md">
+                <img src="https://img.youtube.com/vi/wJvDknbJR-o/maxresdefault.jpg" alt="⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9" width="100%" />
+            <br/>
+            <strong>⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9</strong>
+            </a>
+            <br/>
+            <a href="structured-outputs/README.md">Código</a>
+        </td>
 </div>
 
 ---
