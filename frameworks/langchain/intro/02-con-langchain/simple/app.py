@@ -2,7 +2,6 @@
 from ...common.models import Suggestions
 
 from rich import print
-from rich.console import Console
 
 # Módulos de langchain
 from langchain.chat_models import init_chat_model
@@ -12,16 +11,13 @@ from langchain_core.output_parsers import PydanticOutputParser
 from dotenv import load_dotenv
 import os
 
-# Instancia de Console, para pintar el output bonito
-console = Console()
-
 # Cargar las variables de entorno que necesito para esta demo
 load_dotenv()
 
 # Pintar la configuración (sin la clave)
 print("🚀 [bold cyan]Ejemplo con Langchain 🦜🔗[/bold cyan]")
-print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('GITHUB_MODELS_URL')}[/]")
-print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('GITHUB_MODEL_ID')}[/]")
+print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('LLM_BASE_URL')}[/]")
+print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('LLM_MODEL_ID')}[/]")
 print(
     f"🎛️ [magenta]Temperatura:[/magenta] [white]{os.getenv('TEMPERATURE', '0.7')}[/]")
 print(
@@ -29,10 +25,10 @@ print(
 
 # Modelo chat con Langchain
 model = init_chat_model(
-    model=os.getenv("GITHUB_MODEL_ID"),
+    model=os.getenv("LLM_MODEL_ID"),
     model_provider=os.getenv("MODEL_PROVIDER"),
-    api_key=os.getenv("GITHUB_TOKEN"),
-    base_url=os.getenv("GITHUB_MODELS_URL"),
+    api_key=os.getenv("LLM_API_KEY"),
+    base_url=os.getenv("LLM_BASE_URL"),
     temperature=float(os.getenv("TEMPERATURE", "0.7")),
 )
 

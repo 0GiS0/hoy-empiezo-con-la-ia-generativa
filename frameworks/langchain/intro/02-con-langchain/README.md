@@ -33,7 +33,8 @@ Ejecuta desde la raíz para que funcionen los imports relativos:
 python -m frameworks.langchain.intro.02-con-langchain.simple.app
 ```
 
-> Tip: Reutiliza las mismas variables de entorno (`GITHUB_MODELS_URL`, `GITHUB_MODEL_ID`, `GITHUB_TOKEN`, `YOUTUBE_TITLE`, `TEMPERATURE`).
+> Tip: Variables de entorno usadas: `LLM_BASE_URL`, `LLM_MODEL_ID`, `LLM_API_KEY`, `MODEL_PROVIDER`, `YOUTUBE_TITLE`, `TEMPERATURE`.
+
 
 ### Siguiente paso
 Compara ahora los subdirectorios `chat/` (sin LC) y su versión equivalente futura con LangChain para ver ventajas en manejo de historial, persistencia y formateo avanzado. 🤖🔄

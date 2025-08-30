@@ -37,20 +37,20 @@ DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")  # Archivo SQLite
 
 # ==========================================
 # 🔧 INICIALIZACIÓN DEL MODELO
-# Aquí instanciamos el modelo de chat usando variables de entorno para:
-#   - ID del modelo (GITHUB_MODEL_ID)
-#   - Token (GITHUB_TOKEN)
-#   - URL base (GITHUB_MODELS_URL)
-# Esto permite intercambiar proveedores sin tocar el código.
+# Variables de entorno requeridas (agnósticas del proveedor):
+#   - LLM_MODEL_ID
+#   - LLM_API_KEY
+#   - LLM_BASE_URL
+#   - MODEL_PROVIDER
+# Ajusta estas para cambiar de proveedor/modelo sin tocar el código.
 # ==========================================
 console.print(Panel.fit(
     "🚀 [bold cyan]Inicializando modelo de chat...[/bold cyan]", border_style="cyan"))
 chat_model = init_chat_model(
-    model=os.getenv("GITHUB_MODEL_ID"),
-    # LangChain internamente hace la llamada compatible
-    model_provider=os.getenv("GITHUB_MODEL_PROVIDER"),
-    api_key=os.getenv("GITHUB_TOKEN"),
-    base_url=os.getenv("GITHUB_MODELS_URL"),
+    model=os.getenv("LLM_MODEL_ID"),
+    model_provider=os.getenv("MODEL_PROVIDER"),
+    api_key=os.getenv("LLM_API_KEY"),
+    base_url=os.getenv("LLM_BASE_URL"),
 )
 console.print("✅ Modelo listo", style="green")
 
