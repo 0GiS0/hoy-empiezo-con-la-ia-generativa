@@ -118,6 +118,18 @@ En cada carpeta encontrarás:
             <br/>
             <a href="structured-outputs/README.md">Código</a>
         </td>
+    </tr>
+    <tr>
+         <td align="center" width="33%">
+            <a href="structured-outputs/README.md">
+                <img src="https://img.youtube.com/vi/Q40WpsPLfH8/maxresdefault.jpg" alt="🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10" width="100%" />
+            <br/>
+            <strong>🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10</strong>
+            </a>
+            <br/>
+            <a href="structured-outputs/README.md">Código</a>
+        </td>
+    </tr>
 </div>
 
 ---
