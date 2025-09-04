@@ -116,7 +116,7 @@ En cada carpeta encontrarás:
             <strong>⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9</strong>
             </a>
             <br/>
-            <a href="structured-outputs/README.md">Código</a>
+             <a href="https://youtu.be/wJvDknbJR-o">Ver vídeo</a> · <a href="structured-outputs/README.md">Código</a>
         </td>
     </tr>
     <tr>
@@ -127,7 +127,7 @@ En cada carpeta encontrarás:
             <strong>🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10</strong>
             </a>
             <br/>
-            <a href="structured-outputs/README.md">Código</a>
+             <a href="https://youtu.be/Q40WpsPLfH8">Ver vídeo</a> · <a href="structured-outputs/README.md">Código</a>
         </td>
     </tr>
 </div>
