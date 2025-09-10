@@ -129,6 +129,15 @@ En cada carpeta encontrarás:
             <br/>
              <a href="https://youtu.be/Q40WpsPLfH8">Ver vídeo</a> · <a href="structured-outputs/README.md">Código</a>
         </td>
+        <td align="center" width="33%">
+            <a href="frameworks/langchain/intro/README.md">
+                <img src="https://img.youtube.com/vi/PM33QnrClzU/maxresdefault.jpg" alt="Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11" width="100%" />
+            <br/>
+            <strong>Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11</strong>
+            </a>
+            <br/>
+            <a href="https://youtu.be/PM33QnrClzU">Ver vídeo</a> · <a href="frameworks/langchain/intro/README.md">Código</a>
+        </td>
     </tr>
 </div>
 
@@ -224,7 +233,7 @@ Cada nuevo suscriptor me motiva a seguir creando contenido de calidad y mantener
 
 [![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/GiselaTorres?sub_confirmation=1)
 
-*¡Nos vemos en el próximo capítulo!* 👋🏻
+*¡Nos vemos 👋🏻!
 
 </div>
 
