@@ -233,7 +233,7 @@ Cada nuevo suscriptor me motiva a seguir creando contenido de calidad y mantener
 
 [![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/GiselaTorres?sub_confirmation=1)
 
-*¡Nos vemos 👋🏻!
+¡Nos vemos 👋🏻!
 
 </div>
 
