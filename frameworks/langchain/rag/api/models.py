@@ -1,6 +1,5 @@
 from typing import Literal
-from langchain_core.pydantic_v1 import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class RouteDecision(BaseModel):
