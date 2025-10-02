@@ -174,11 +174,58 @@ def format_docs(docs):
     return formatted
 
 
-# Creamos un RunnableMap que nos permite ejecutar primeramente el clasificador para saber si tenemos que hacer RAG o no
-# (Por ahora comentado hasta implementar la lógica completa)
-# rag_chain = RunnableMap({
-#     "context": retrieve
-# })
+def build_chat_hint(messages, max_messages=6):
+    """Construye un resumen corto del historial reciente para ayudar al router."""
+    recent = messages[-max_messages:]
+    if not recent:
+        return ""
+    return " | ".join(f"{msg.type}: {msg.content[:50]}" for msg in recent)
+
+
+def decide_route(question, chat_hint):
+    """Clasifica la pregunta para decidir si usar RAG o respuesta directa."""
+    console.print(":thinking_face: [yellow]Clasificando pregunta...[/yellow]")
+    routing_decision = router.invoke({
+        "question": question,
+        "chat_hint": chat_hint
+    })
+
+    action = routing_decision.get("action", "direct")
+    rationale = routing_decision.get("rationale", "Sin explicación")
+
+    console.print(f":robot: [magenta]Decisión:[/magenta] [bold]{action}[/bold]")
+    console.print(f":bulb: [dim]Razón: {rationale}[/dim]")
+    return action, rationale
+
+
+def run_retrieve_chain(question):
+    """Ejecuta la ruta RAG recuperando documentos y generando respuesta con contexto."""
+    console.print(f":mag: [cyan]Recuperando documentos relevantes...[/cyan]")
+    retrieved_docs = retrieve(question)
+    context = format_docs(retrieved_docs)
+
+    console.print(f":robot: [green]Generando respuesta con RAG...[/green]")
+    response = rag_chain.invoke({
+        "question": question,
+        "context": context
+    })
+    return response.content
+
+
+def run_direct_chain(question):
+    """Genera una respuesta directa usando solo el conocimiento del modelo."""
+    console.print(f":zap: [green]Generando respuesta directa...[/green]")
+    response = direct_chain.invoke({
+        "question": question
+    })
+    return response.content
+
+
+ACTION_HANDLERS = {
+    "retrieve": run_retrieve_chain,
+    "direct": run_direct_chain,
+}
+
 
 
 #######################
@@ -222,43 +269,15 @@ def chat_invoke():
     # Añade el mensaje del usuario al historial
     message_history.add_user_message(user_text)
 
-    # Construir hint de contexto del historial reciente (últimos 3 mensajes)
-    recent_history = message_history.messages[-6:] if len(message_history.messages) > 0 else []
-    chat_hint = " | ".join([f"{msg.type}: {msg.content[:50]}" for msg in recent_history])
+    # Construir hint de contexto del historial reciente (últimos mensajes)
+    chat_hint = build_chat_hint(message_history.messages)
 
     # 1️⃣ Clasificar la pregunta (¿necesita RAG o respuesta directa?)
-    console.print(f":thinking_face: [yellow]Clasificando pregunta...[/yellow]")
-    routing_decision = router.invoke({
-        "question": user_text,
-        "chat_hint": chat_hint
-    })
-    
-    action = routing_decision.get("action", "direct")
-    rationale = routing_decision.get("rationale", "Sin explicación")
-    
-    console.print(f":robot: [magenta]Decisión:[/magenta] [bold]{action}[/bold]")
-    console.print(f":bulb: [dim]Razón: {rationale}[/dim]")
+    action, rationale = decide_route(user_text, chat_hint)
 
     # 2️⃣ Ejecutar la cadena correspondiente
-    if action == "retrieve":
-        # Ruta RAG: recuperar documentos y generar respuesta con contexto
-        console.print(f":mag: [cyan]Recuperando documentos relevantes...[/cyan]")
-        retrieved_docs = retrieve(user_text)
-        context = format_docs(retrieved_docs)
-        
-        console.print(f":robot: [green]Generando respuesta con RAG...[/green]")
-        response = rag_chain.invoke({
-            "question": user_text,
-            "context": context
-        })
-        reply = response.content
-    else:
-        # Ruta directa: responder con conocimiento general
-        console.print(f":zap: [green]Generando respuesta directa...[/green]")
-        response = direct_chain.invoke({
-            "question": user_text
-        })
-        reply = response.content
+    handler = ACTION_HANDLERS.get(action, run_direct_chain)
+    reply = handler(user_text)
 
     # Añadir la respuesta del modelo al historial
     message_history.add_ai_message(reply)
