@@ -1,6 +1,6 @@
 # 🦜🔗 RAG con LangChain
 
-> **Demo de Retrieval-Augmented Generation (RAG) usando LangChain, Qdrant y OpenAI**
+> **Demo de Retrieval-Augmented Generation (RAG) usando LangChain, Qdrant y modelos compatibles con el SDK de OpenAI**
 
 Esta demo muestra cómo construir un sistema RAG completo utilizando LangChain para crear un asistente inteligente que ayuda a los creadores de contenido de YouTube con información actualizada de la documentación oficial de Google.
 
@@ -104,19 +104,21 @@ Crea un archivo `.env` en la carpeta `api/`:
 
 ```env
 # Endpoints
-ENDPOINT_URL=https://models.inference.ai.azure.com
-API_KEY=tu_github_token_aqui
+ENDPOINT_URL=http://model-runner.docker.internal/engines/llama.cpp/v1
+API_KEY=ollama
 
 # Modelo para el router (clasifica preguntas)
-LLM_ROUTER_MODEL_ID=gpt-4o-mini
+LLM_ROUTER_MODEL_ID=ai/mistral-nemo
 MODEL_PROVIDER=openai
 
 # Modelo para respuestas
-LLM_ANSWER_MODEL_ID=gpt-4o
+LLM_ANSWER_MODEL_ID=ai/mistral-nemo
 
 # Modelo de embeddings
-EMBEDDINGS_MODEL_ID=text-embedding-3-large
+EMBEDDINGS_MODEL_ID=ai/embeddinggemma
 ```
+
+> 💡 **Tip:** Si usas GitHub Models u OpenAI, reemplaza `ENDPOINT_URL`, `API_KEY` y los IDs de modelo por los equivalentes de tu proveedor.
 
 ### 2. Instalar Dependencias
 
@@ -191,21 +193,32 @@ Cada sesión se identifica con un `session_id` único almacenado en SQLite:
 ```python
 message_history = SQLChatMessageHistory(
     session_id=session_id,
-    connection_string=f'sqlite:///{DB_FILE}'
+    connection_string=f"sqlite:///{DB_FILE}"
 )
 ```
 
-Esto permite conversaciones contextuales donde el modelo "recuerda" mensajes anteriores.
+Esto permite conversaciones contextuales donde el modelo "recuerda" mensajes anteriores. El servidor además genera un *chat hint* con los últimos mensajes para ayudar al router a clasificar la intención sin reenviar todo el historial.
 
 ### 🔍 Búsqueda Semántica
 
 Usa `QdrantVectorStore` para encontrar los chunks más relevantes:
 
 ```python
-retrieved_docs = vector_store.similarity_search(query)
+retrieved_docs = vector_store.similarity_search(query, k=3)
 ```
 
-Los embeddings capturan el **significado semántico**, no solo palabras clave.
+Los embeddings capturan el **significado semántico**, no solo palabras clave. Además, el servidor registra en consola cada documento recuperado (metadata + preview) y la longitud del contexto enviado al LLM para facilitar el debugging.
+
+### 📜 Logging Enriquecido
+
+Cada petición registra en consola:
+
+- Número de documentos recuperados y metadatos asociados
+- Preview del contenido (primeros caracteres) para validar relevancia
+- Longitud total del contexto que se envía al modelo
+- Decisión del router (`retrieve` / `direct`) junto a su racional
+
+Esto permite depurar rápidamente por qué el modelo respondió de cierta manera sin necesidad de instrumentar herramientas adicionales.
 
 ---
 
@@ -215,8 +228,8 @@ Los embeddings capturan el **significado semántico**, no solo palabras clave.
 |------------|------------|
 | 🦜 Framework RAG | LangChain |
 | 💾 Base de datos vectorial | Qdrant |
-| 🤖 Modelos LLM | OpenAI / GitHub Models |
-| 🔢 Embeddings | `text-embedding-3-large` |
+| 🤖 Modelos LLM | OpenAI / GitHub Models / Model Runner |
+| 🔢 Embeddings | `ai/embeddinggemma` (por defecto) |
 | 🌐 Backend | Flask |
 | 💬 Frontend | Vanilla JS + HTML/CSS |
 | 🗄️ Historial | SQLite |
@@ -229,19 +242,19 @@ Los embeddings capturan el **significado semántico**, no solo palabras clave.
 frameworks/langchain/rag/
 │
 ├── document-loaders.py      # 📥 Script de indexación
-├── requirements.txt          # 📦 Dependencias Python
+├── requirements.txt         # 📦 Dependencias Python
 │
-├── api/                      # 🚀 Backend Flask
-│   ├── server.py             # API principal con router
-│   ├── models.py             # Modelos Pydantic
-│   ├── requirements.txt      # Dependencias API
-│   ├── .env.sample           # Plantilla de variables
-│   └── data/                 # 💾 SQLite (generado en runtime)
+├── api/                     # 🚀 Backend Flask
+│   ├── server.py            # API principal con router + logging de RAG
+│   ├── models.py            # Modelos Pydantic
+│   ├── requirements.txt     # Dependencias API
+│   ├── .env.sample          # Plantilla de variables
+│   └── data/                # 💾 SQLite (generado en runtime)
 │
-└── web/                      # 🌐 Frontend
-    ├── index.html            # Interfaz de chat
-    ├── chat.js               # Lógica del cliente
-    └── styles.css            # Estilos
+└── web/                     # 🌐 Frontend
+    ├── index.html           # Interfaz de chat
+    ├── chat.js              # Lógica del cliente
+    └── styles.css           # Estilos
 ```
 
 ---
@@ -285,7 +298,7 @@ vector_store = QdrantVectorStore(
 )
 ```
 
-Almacenan embeddings para búsqueda semántica eficiente.
+Almacenan embeddings para búsqueda semántica eficiente y permiten instrumentar logging detallado de los documentos recuperados.
 
 ### 4. Chat Message History 💬
 
@@ -294,11 +307,11 @@ from langchain_community.chat_message_histories import SQLChatMessageHistory
 
 message_history = SQLChatMessageHistory(
     session_id=session_id,
-    connection_string='sqlite:///chat.db'
+    connection_string=f"sqlite:///{DB_FILE}"
 )
 ```
 
-Persisten conversaciones para contexto multi-turn.
+Persisten conversaciones para contexto multi-turn y sirven de base para construir el *chat hint* que alimenta al router.
 
 ### 5. Prompts & Chains ⛓️
 
