@@ -1,11 +1,13 @@
 // URL del endpoint del backend, obtenida dinámicamente por si cambia el puerto.
 const API_URL = document.location.origin + '/chat';
+const HISTORY_URL = document.location.origin + '/history';
 
 // Elementos del DOM
 const messagesEl = document.getElementById('messages');
 const form = document.getElementById('chat-form');
 const input = document.getElementById('input');
 const statusEl = document.getElementById('status');
+const clearHistoryBtn = document.getElementById('clear-history');
 
 // Generar / recuperar un sessionId persistente para simular usuarios distintos
 function getSessionId() {
@@ -135,5 +137,83 @@ input.addEventListener('keydown', e => {
   }
 });
 
-// Mensaje de bienvenida
-appendMessage('assistant', 'Hola, ¿en qué te puedo ayudar?');
+// 📜 Cargar historial previo si existe
+async function loadHistory() {
+  try {
+    statusEl.hidden = false;
+    statusEl.textContent = '📜 Cargando historial...';
+    
+    const resp = await fetch(`${HISTORY_URL}/${SESSION_ID}`);
+    if (!resp.ok) throw new Error('No se pudo cargar el historial');
+    
+    const data = await resp.json();
+    
+    // 🔄 Si hay mensajes previos, mostrarlos
+    if (data.messages && data.messages.length > 0) {
+      console.log(`📜 Cargando ${data.messages.length} mensajes del historial`);
+      
+      // 💬 Mostrar cada mensaje del historial
+      data.messages.forEach(msg => {
+        if (msg.type === 'human') {
+          appendMessage('user', msg.content);
+        } else if (msg.type === 'ai') {
+          // 🤖 Para mensajes del AI, usar routing info si está disponible
+          const routingAction = msg.routing || null;  // "retrieve" o "direct"
+          appendMessage('assistant', msg.content, null, routingAction);
+        }
+      });
+      
+      console.log('✅ Historial cargado correctamente');
+      statusEl.hidden = true;
+      return; // Ya cargamos el historial, no mostrar mensaje de bienvenida
+    }
+    
+    // 👋 Si no hay historial, mostrar mensaje de bienvenida
+    appendMessage('assistant', 'Hola, ¿en qué te puedo ayudar?');
+    statusEl.hidden = true;
+    
+  } catch (err) {
+    console.error('Error al cargar historial:', err);
+    // 👋 Si falla, mostrar mensaje de bienvenida normal
+    appendMessage('assistant', 'Hola, ¿en qué te puedo ayudar?');
+    statusEl.hidden = true;
+  }
+}
+
+// 🗑️ Limpiar historial
+async function clearHistory() {
+  if (!confirm('¿Estás seguro de que quieres borrar todo el historial de esta conversación?')) {
+    return;
+  }
+  
+  try {
+    statusEl.hidden = false;
+    statusEl.textContent = '🗑️ Limpiando historial...';
+    
+    const resp = await fetch(`${HISTORY_URL}/${SESSION_ID}`, {
+      method: 'DELETE'
+    });
+    
+    if (!resp.ok) throw new Error('No se pudo eliminar el historial');
+    
+    // ✅ Limpiar la UI
+    messagesEl.innerHTML = '';
+    
+    // 👋 Mostrar mensaje de bienvenida nuevamente
+    appendMessage('assistant', 'Historial eliminado. ¿En qué te puedo ayudar?');
+    
+    statusEl.hidden = true;
+    console.log('✅ Historial eliminado correctamente');
+    
+  } catch (err) {
+    statusEl.hidden = true;
+    alert('Error al eliminar el historial: ' + err.message);
+    console.error('Error al eliminar historial:', err);
+  }
+}
+
+// 🗑️ Event listener para el botón de limpiar historial
+clearHistoryBtn.addEventListener('click', clearHistory);
+
+// 🚀 Cargar historial al iniciar la aplicación
+loadHistory();
