@@ -1,7 +1,6 @@
 import os
 
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 from langchain_openai import OpenAIEmbeddings
 from langchain.chat_models import init_chat_model
 from langchain_community.chat_message_histories import SQLChatMessageHistory
@@ -23,7 +22,6 @@ from models import RouteDecision
 load_dotenv()
 
 app = Flask(__name__, static_folder='../web', static_url_path='')
-CORS(app)  # Habilitar CORS para todas las rutas
 console = Console()
 
 # Modelo para clasificar la pregunta
@@ -47,7 +45,7 @@ router_prompt = ChatPromptTemplate.from_messages([
      "Eres un clasificador. Decide si la pregunta NECESITA búsqueda externa (retrieve) o se puede responder con conocimiento general (direct). "
      "Responde SOLO en JSON con las claves: action, rationale. "
      "Reglas: "
-     "- retrieve: preguntas factuales sobre documentos/empresa, manuales, políticas, referencias, cifras, fechas después del conocimiento del modelo, códigos específicos del dominio, ‘dónde está en el doc’, ‘según el PDF’, etc. "
+     "- retrieve: preguntas sobre YouTube o relacionadas con vídeos. "
      "- direct: saludos, chit-chat, traducciones, reescrituras, programación genérica que no depende de tu corpus, instrucciones de uso generales."
      ),
     ("user",
@@ -100,11 +98,13 @@ DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")
 # Para API_KEY, si no está configurado o es placeholder, usar valor dummy (para Ollama/Model Runner)
 api_key = os.getenv("API_KEY")
 if not api_key or api_key == "__PON_AQUI_TU_API_KEY__":
-    console.print(":information: [yellow]API_KEY no configurado, usando valor dummy (útil para Ollama/Model Runner)[/yellow]")
+    console.print(
+        ":information: [yellow]API_KEY no configurado, usando valor dummy (útil para Ollama/Model Runner)[/yellow]")
     api_key = "dummy-key"
 
 embeddings_model = os.getenv("EMBEDDINGS_MODEL_ID", "ai/embeddinggemma")
-console.print(f":gear: [cyan]Usando modelo de embeddings:[/cyan] [bold]{embeddings_model}[/bold]")
+console.print(
+    f":gear: [cyan]Usando modelo de embeddings:[/cyan] [bold]{embeddings_model}[/bold]")
 
 embeddings = OpenAIEmbeddings(
     model=embeddings_model,
@@ -120,10 +120,12 @@ elif "text-embedding-3-large" in embeddings_model:
 elif "text-embedding-3-small" in embeddings_model:
     vector_size = 1536
 else:
-    console.print(f":warning: [yellow]Modelo desconocido, usando 768 dimensiones por defecto[/yellow]")
+    console.print(
+        f":warning: [yellow]Modelo desconocido, usando 768 dimensiones por defecto[/yellow]")
     vector_size = 768
 
-console.print(f":bar_chart: [cyan]Tamaño del vector:[/cyan] [bold]{vector_size}[/bold] dimensiones")
+console.print(
+    f":bar_chart: [cyan]Tamaño del vector:[/cyan] [bold]{vector_size}[/bold] dimensiones")
 
 # https://python.langchain.com/docs/integrations/vectorstores/
 client = QdrantClient("http://qdrant:6333")
@@ -132,16 +134,21 @@ collection_name = "youtube_guides"
 
 # Verificar si la colección existe, si no existe se debe crear primero ejecutando document-loaders.py
 if not client.collection_exists(collection_name):
-    console.print(f":warning: [red]La colección '[bold]{collection_name}[/bold]' no existe. Ejecuta document-loaders.py primero.[/red]")
-    console.print(":information: [yellow]Creando colección vacía temporalmente...[/yellow]")
+    console.print(
+        f":warning: [red]La colección '[bold]{collection_name}[/bold]' no existe. Ejecuta document-loaders.py primero.[/red]")
+    console.print(
+        ":information: [yellow]Creando colección vacía temporalmente...[/yellow]")
     client.create_collection(
         collection_name=collection_name,
-        vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+        vectors_config=VectorParams(
+            size=vector_size, distance=Distance.COSINE),
     )
 else:
-    console.print(f":white_check_mark: [green]Colección '[bold]{collection_name}[/bold]' encontrada.[/green]")
+    console.print(
+        f":white_check_mark: [green]Colección '[bold]{collection_name}[/bold]' encontrada.[/green]")
 
-    console.print(f":white_check_mark: [green]Colección '[bold]{collection_name}[/bold]' encontrada.[/green]")
+    console.print(
+        f":white_check_mark: [green]Colección '[bold]{collection_name}[/bold]' encontrada.[/green]")
 
 vector_store = QdrantVectorStore(
     client=client,
@@ -154,22 +161,26 @@ vector_store = QdrantVectorStore(
 def retrieve(query):
     """Recupera documentos relevantes del vector store"""
     retrieved_docs = vector_store.similarity_search(query, k=3)
-    console.print(f":mag: [cyan]Documentos recuperados:[/cyan] {len(retrieved_docs)}")
-    
+    console.print(
+        f":mag: [cyan]Documentos recuperados:[/cyan] {len(retrieved_docs)}")
+
     # Mostrar detalles de cada documento recuperado
     for i, doc in enumerate(retrieved_docs, 1):
         console.print(f"\n[bold yellow]📄 Documento {i}:[/bold yellow]")
         console.print(f"[dim]Metadata:[/dim] {doc.metadata}")
-        content_preview = doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+        content_preview = doc.page_content[:200] + "..." if len(
+            doc.page_content) > 200 else doc.page_content
         console.print(f"[dim]Contenido (preview):[/dim] {content_preview}")
-    
+
     return retrieved_docs
 
 
 def format_docs(docs):
     """Formatea los documentos recuperados como texto"""
-    formatted = "\n\n".join([f"--- Documento {i} ---\n{doc.page_content}" for i, doc in enumerate(docs, 1)])
-    console.print(f"\n[bold green]📝 Contexto formateado para el modelo:[/bold green]")
+    formatted = "\n\n".join(
+        [f"--- Documento {i} ---\n{doc.page_content}" for i, doc in enumerate(docs, 1)])
+    console.print(
+        f"\n[bold green]📝 Contexto formateado para el modelo:[/bold green]")
     console.print(f"[dim]Longitud total: {len(formatted)} caracteres[/dim]")
     return formatted
 
@@ -193,7 +204,8 @@ def decide_route(question, chat_hint):
     action = routing_decision.get("action", "direct")
     rationale = routing_decision.get("rationale", "Sin explicación")
 
-    console.print(f":robot: [magenta]Decisión:[/magenta] [bold]{action}[/bold]")
+    console.print(
+        f":robot: [magenta]Decisión:[/magenta] [bold]{action}[/bold]")
     console.print(f":bulb: [dim]Razón: {rationale}[/dim]")
     return action, rationale
 
@@ -225,7 +237,6 @@ ACTION_HANDLERS = {
     "retrieve": run_retrieve_chain,
     "direct": run_direct_chain,
 }
-
 
 
 #######################
@@ -264,7 +275,8 @@ def chat_invoke():
         session_id=session_id, connection_string=f'sqlite:///{DB_FILE}'
     )
 
-    console.print(f":book: [cyan]Historial previo:[/cyan] {len(message_history.messages)} mensajes")
+    console.print(
+        f":book: [cyan]Historial previo:[/cyan] {len(message_history.messages)} mensajes")
 
     # Añade el mensaje del usuario al historial
     message_history.add_user_message(user_text)
