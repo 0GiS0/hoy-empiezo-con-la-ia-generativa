@@ -45,3 +45,74 @@ textarea:focus { outline:2px solid var(--primary); outline-offset:2px; }
   form { grid-template-columns: 1fr auto; }
   #messages { max-height:50vh; }
 }
+
+/* 📚 Estilos para las referencias */
+.references {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.references-title {
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reference-card {
+  background: #13171d;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.reference-card:hover {
+  border-color: var(--primary);
+  background: #181b21;
+  transform: translateX(2px);
+}
+
+.reference-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.reference-number {
+  background: var(--primary);
+  color: #031627;
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.reference-title {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text);
+  flex: 1;
+}
+
+.reference-url {
+  color: var(--primary-accent);
+  text-decoration: none;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.reference-url:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}

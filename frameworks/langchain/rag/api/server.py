@@ -221,7 +221,36 @@ def run_retrieve_chain(question):
         "question": question,
         "context": context
     })
-    return response.content
+    
+    # 📚 Formatear las referencias de los documentos recuperados
+    # 🔗 Agrupar por URL para evitar duplicados
+    unique_sources = {}
+    for doc in retrieved_docs:
+        source_url = doc.metadata.get("source", "Documento sin fuente")
+        
+        # Si ya tenemos este enlace, saltamos
+        if source_url in unique_sources:
+            continue
+            
+        unique_sources[source_url] = {
+            "source": source_url,
+            "title": doc.metadata.get("title", "Documento"),
+            "content_preview": doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content,
+            "metadata": doc.metadata
+        }
+    
+    # Convertir el diccionario a lista con IDs numerados
+    references = []
+    for i, (url, ref_data) in enumerate(unique_sources.items(), 1):
+        ref_data["id"] = i
+        references.append(ref_data)
+    
+    console.print(f":books: [cyan]Referencias únicas encontradas:[/cyan] {len(references)} (de {len(retrieved_docs)} chunks)")
+    
+    return {
+        "content": response.content,
+        "references": references
+    }
 
 
 def run_direct_chain(question):
@@ -230,7 +259,10 @@ def run_direct_chain(question):
     response = direct_chain.invoke({
         "question": question
     })
-    return response.content
+    return {
+        "content": response.content,
+        "references": None
+    }
 
 
 ACTION_HANDLERS = {
@@ -289,19 +321,27 @@ def chat_invoke():
 
     # 2️⃣ Ejecutar la cadena correspondiente
     handler = ACTION_HANDLERS.get(action, run_direct_chain)
-    reply = handler(user_text)
+    result = handler(user_text)
 
     # Añadir la respuesta del modelo al historial
-    message_history.add_ai_message(reply)
+    message_history.add_ai_message(result["content"])
 
-    return jsonify({
+    # 📋 Preparar la respuesta con referencias si están disponibles
+    response_data = {
         "session_id": session_id,
-        "reply": reply,
+        "reply": result["content"],
         "routing": {
             "action": action,
             "rationale": rationale
         }
-    })
+    }
+    
+    # ✨ Si hay referencias (RAG fue usado), agregarlas a la respuesta
+    if result.get("references"):
+        response_data["references"] = result["references"]
+        console.print(f":books: [green]Enviando {len(result['references'])} referencias con la respuesta[/green]")
+
+    return jsonify(response_data)
 
 
 if __name__ == '__main__':

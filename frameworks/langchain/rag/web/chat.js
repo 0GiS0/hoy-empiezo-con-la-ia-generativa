@@ -24,15 +24,51 @@ function getSessionId() {
 const SESSION_ID = getSessionId();
 
 // Permite añadir un mensaje al chat
-function appendMessage(role, content) {
+function appendMessage(role, content, references = null) {
   const tpl = document.getElementById('message-template');
   const node = tpl.content.firstElementChild.cloneNode(true);
   node.classList.add(role === 'user' ? 'user' : 'assistant');
   node.querySelector('[data-role="avatar"]').textContent = role === 'user' ? '👤' : '🤖';
-  node.querySelector('[data-role="bubble"]').textContent = content;
+  
+  const bubbleEl = node.querySelector('[data-role="bubble"]');
+  bubbleEl.textContent = content;
+  
+  // 📚 Si hay referencias, agregarlas después del contenido
+  if (references && references.length > 0) {
+    const referencesContainer = document.createElement('div');
+    referencesContainer.className = 'references';
+    
+    const referencesTitle = document.createElement('div');
+    referencesTitle.className = 'references-title';
+    referencesTitle.innerHTML = `📚 <strong>Referencias consultadas:</strong>`;
+    referencesContainer.appendChild(referencesTitle);
+    
+    references.forEach(ref => {
+      const refCard = document.createElement('div');
+      refCard.className = 'reference-card';
+      
+      const refHeader = document.createElement('div');
+      refHeader.className = 'reference-header';
+      refHeader.innerHTML = `<span class="reference-number">${ref.id}</span> <span class="reference-title">${ref.title || ref.source}</span>`;
+      
+      const refUrl = document.createElement('a');
+      refUrl.className = 'reference-url';
+      refUrl.href = ref.source;
+      refUrl.target = '_blank';
+      refUrl.textContent = '🔗 Ver documento';
+      
+      refCard.appendChild(refHeader);
+      refCard.appendChild(refUrl);
+      
+      referencesContainer.appendChild(refCard);
+    });
+    
+    bubbleEl.appendChild(referencesContainer);
+  }
+  
   messagesEl.appendChild(node);
   messagesEl.scrollTop = messagesEl.scrollHeight;
-  return node.querySelector('[data-role="bubble"]');
+  return bubbleEl;
 }
 
 // Envía un mensaje al backend y maneja la respuesta
@@ -50,7 +86,12 @@ async function sendMessage(message) {
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
-    assistantBubble.textContent = data.reply;
+    
+    // 🎨 Limpiar el bubble y recrear el mensaje con referencias
+    const parentArticle = assistantBubble.closest('.msg');
+    parentArticle.remove();
+    appendMessage('assistant', data.reply, data.references);
+    
   } catch (err) {
     assistantBubble.textContent = '[Error] ' + err.message;
   } finally {
