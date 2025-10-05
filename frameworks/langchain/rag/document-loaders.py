@@ -148,8 +148,14 @@ for url in URLs:
     loader = WebBaseLoader(web_path=url["url"])
     docs = loader.load()
 
+    # 📏 Chunks más grandes para mantener contexto coherente
+    # chunk_size: tamaño ideal para consejos/guías completas (antes 500, ahora 2000)
+    # chunk_overlap: solapamiento para mantener continuidad entre chunks (antes 100, ahora 200)
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500, chunk_overlap=100)  # ⚡ Reducido para Docker Model Runner
+        chunk_size=2000, 
+        chunk_overlap=200,
+        separators=["\n\n", "\n", ". ", " ", ""]  # Prioriza separadores naturales
+    )
     all_splits = text_splitter.split_documents(docs)
 
     # 💾 Procesar de 1 en 1 para evitar errores de "input too large"
