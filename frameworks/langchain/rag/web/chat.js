@@ -24,11 +24,27 @@ function getSessionId() {
 const SESSION_ID = getSessionId();
 
 // Permite añadir un mensaje al chat
-function appendMessage(role, content, references = null) {
+function appendMessage(role, content, references = null, routingAction = null) {
   const tpl = document.getElementById('message-template');
   const node = tpl.content.firstElementChild.cloneNode(true);
   node.classList.add(role === 'user' ? 'user' : 'assistant');
-  node.querySelector('[data-role="avatar"]').textContent = role === 'user' ? '👤' : '🤖';
+  
+  // 🎨 Configurar avatar según el tipo de respuesta
+  const avatarEl = node.querySelector('[data-role="avatar"]');
+  if (role === 'user') {
+    avatarEl.textContent = '👤';
+  } else {
+    // 🤖 Para el asistente, cambiar según si usó RAG o respuesta directa
+    if (routingAction === 'retrieve') {
+      avatarEl.textContent = '📚'; // Emoji de libro para RAG
+      avatarEl.classList.add('rag-mode');
+    } else if (routingAction === 'direct') {
+      avatarEl.textContent = '⚡'; // Emoji de rayo para respuesta directa
+      avatarEl.classList.add('direct-mode');
+    } else {
+      avatarEl.textContent = '🤖'; // Por defecto (mensaje de bienvenida, etc.)
+    }
+  }
   
   const bubbleEl = node.querySelector('[data-role="bubble"]');
   bubbleEl.textContent = content;
@@ -87,10 +103,11 @@ async function sendMessage(message) {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     
-    // 🎨 Limpiar el bubble y recrear el mensaje con referencias
+    // 🎨 Limpiar el bubble y recrear el mensaje con referencias y tipo de routing
     const parentArticle = assistantBubble.closest('.msg');
     parentArticle.remove();
-    appendMessage('assistant', data.reply, data.references);
+    const routingAction = data.routing?.action || null;
+    appendMessage('assistant', data.reply, data.references, routingAction);
     
   } catch (err) {
     assistantBubble.textContent = '[Error] ' + err.message;

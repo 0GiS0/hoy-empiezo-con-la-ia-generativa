@@ -26,6 +26,20 @@ header h1 { font-size:1.25rem; margin:0; display:flex; gap:.5rem; align-items:ce
 .msg.user { flex-direction:row-reverse; }
 .avatar { width:40px; height:40px; background:#22303c; display:grid; place-items:center; font-size:20px; border-radius:50%; flex-shrink:0; border:1px solid var(--border); }
 .msg.user .avatar { background:#2c3e50; }
+
+/* 🎨 Estilos para diferentes tipos de respuesta del asistente */
+.avatar.rag-mode {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8c 100%);
+  border-color: #4da3ff;
+  box-shadow: 0 0 12px rgba(77, 163, 255, 0.3);
+}
+
+.avatar.direct-mode {
+  background: linear-gradient(135deg, #3d2d5f 0%, #5d3d8c 100%);
+  border-color: #a855f7;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+}
+
 .bubble { background:#1f242c; padding:.75rem 1rem; border-radius:var(--radius); max-width:70ch; position:relative; white-space:pre-wrap; word-wrap:break-word; }
 .msg.user .bubble { background:#264966; }
 .msg.streaming .bubble::after { content:"…"; animation:blink 1s steps(1) infinite; position:absolute; bottom:.35rem; right:.6rem; opacity:.7; }
