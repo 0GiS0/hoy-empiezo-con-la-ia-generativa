@@ -2,41 +2,6 @@
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                    🦜 RAG con LangChain - API Server                      ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
-
-📚 Sistema de RAG (Retrieval Augmented Generation) con routing inteligente
-
-🔄 FLUJO DE OPERACIÓN:
-┌─────────────┐
-│   Usuario   │ Envía pregunta
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────┐
-│  🤖 Router LLM  │ Clasifica: ¿Necesita docs o respuesta directa?
-└────┬─────┬──────┘
-     │     │
-  retrieve direct
-     │     │
-     ▼     ▼
-┌─────────────┐  ┌──────────────┐
-│ 📚 RAG      │  │ ⚡ Respuesta  │
-│ (consulta   │  │ directa      │
-│  vectores)  │  │ (sin docs)   │
-└──────┬──────┘  └──────┬───────┘
-       │                │
-       └────────┬───────┘
-                ▼
-         ┌──────────────┐
-         │  💬 Respuesta │
-         │  + Referencias│
-         └──────────────┘
-
-🎯 COMPONENTES PRINCIPALES:
-- Router: Decide si usar RAG o respuesta directa
-- RAG Chain: Busca en documentos y genera respuesta contextual
-- Direct Chain: Responde con conocimiento general del modelo
-- Vector Store: Base de datos Qdrant con embeddings de documentos
-- History: SQLite para mantener contexto de conversación
 """
 
 import os
@@ -551,52 +516,6 @@ def static_files(filename):
         File: Archivo estático de la carpeta web/
     """
     return app.send_static_file(filename)
-
-
-@app.route("/info", methods=["GET"])
-def info():
-    """
-    ℹ️ Endpoint de información y debug
-    
-    Retorna el estado actual del servidor, configuración y estadísticas.
-    Útil para verificar que todo está funcionando correctamente.
-    
-    Returns:
-        JSON: {
-            "status": "ok",
-            "config": {...},
-            "vector_store": {...}
-        }
-        
-    Ejemplo:
-        >>> curl http://localhost:5500/info
-    """
-    try:
-        # 📊 Obtener estadísticas de la colección
-        collection_info = client.get_collection(COLLECTION_NAME)
-        
-        return jsonify({
-            "status": "ok",
-            "message": "🚀 Servidor RAG funcionando correctamente",
-            "config": {
-                "router_model": os.getenv("LLM_ROUTER_MODEL_ID"),
-                "answer_model": os.getenv("LLM_ANSWER_MODEL_ID"),
-                "embeddings_model": embeddings_model,
-                "vector_dimensions": vector_size,
-                "k_documents": K_DOCUMENTS,
-                "max_history": MAX_HISTORY_MESSAGES,
-            },
-            "vector_store": {
-                "collection": COLLECTION_NAME,
-                "documents_count": collection_info.points_count,
-                "status": "ready" if collection_info.points_count > 0 else "empty"
-            }
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Error al obtener información: {str(e)}"
-        }), 500
 
 
 @app.route("/chat", methods=["POST"])
