@@ -109,6 +109,36 @@ En cada carpeta encontrarás:
             <br/>
             <a href="https://youtu.be/B78mcUiPzbk">Ver vídeo</a> · <a href="audio/avanzado/README.md">Código</a>
         </td>
+        <td align="center" width="33%">
+            <a href="structured-outputs/README.md">
+                <img src="https://img.youtube.com/vi/wJvDknbJR-o/maxresdefault.jpg" alt="⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9" width="100%" />
+            <br/>
+            <strong>⚡🤖 Controla las respuestas de la IA: outputs estructurados 📊 | Cap. 9</strong>
+            </a>
+            <br/>
+             <a href="https://youtu.be/wJvDknbJR-o">Ver vídeo</a> · <a href="structured-outputs/README.md">Código</a>
+        </td>
+    </tr>
+    <tr>
+         <td align="center" width="33%">
+            <a href="structured-outputs/README.md">
+                <img src="https://img.youtube.com/vi/Q40WpsPLfH8/maxresdefault.jpg" alt="🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10" width="100%" />
+            <br/>
+            <strong>🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10</strong>
+            </a>
+            <br/>
+             <a href="https://youtu.be/Q40WpsPLfH8">Ver vídeo</a> · <a href="structured-outputs/README.md">Código</a>
+        </td>
+        <td align="center" width="33%">
+            <a href="frameworks/langchain/intro/README.md">
+                <img src="https://img.youtube.com/vi/PM33QnrClzU/maxresdefault.jpg" alt="Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11" width="100%" />
+            <br/>
+            <strong>Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11</strong>
+            </a>
+            <br/>
+            <a href="https://youtu.be/PM33QnrClzU">Ver vídeo</a> · <a href="frameworks/langchain/intro/README.md">Código</a>
+        </td>
+    </tr>
 </div>
 
 ---
@@ -203,7 +233,7 @@ Cada nuevo suscriptor me motiva a seguir creando contenido de calidad y mantener
 
 [![Suscríbete Ahora](https://img.shields.io/badge/🔔%20SUSCRÍBETE%20AHORA-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/c/GiselaTorres?sub_confirmation=1)
 
-*¡Nos vemos en el próximo capítulo!* 👋🏻
+¡Nos vemos 👋🏻!
 
 </div>
 

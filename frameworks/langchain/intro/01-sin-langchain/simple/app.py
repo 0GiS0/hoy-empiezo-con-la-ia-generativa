@@ -1,14 +1,17 @@
 # Módulos que necesito importar
-from ..common.models import Suggestions
+from ...common.models import Suggestions
+
+from rich import print
+from rich.console import Console
+
+# Módulo de SDK de OpenAI
+from openai import OpenAI
 
 import os
-import json
 from urllib import response
 from dotenv import load_dotenv
-from openai import OpenAI
-from rich import print
-from rich.json import JSON
-from rich.console import Console
+
+
 
 # Instanciar una consola de rich
 console = Console()
@@ -16,7 +19,7 @@ console = Console()
 # Cargar las variables de entorno que necesito para esta demo
 load_dotenv()
 
-print("🚀 [bold cyan]Configuración de la API[/bold cyan]")
+print("🚀 [bold cyan]Ejemplo sin Langchain ❌🦜🔗[/bold cyan]")
 print(f"🌐 [magenta]URL:[/magenta] [white]{os.getenv('GITHUB_MODELS_URL')}[/]")
 print(f"🧠 [magenta]Modelo:[/magenta] [white]{os.getenv('GITHUB_MODEL_ID')}[/]")
 print(f"🎛️ [magenta]Temperatura:[/magenta] [white]{os.getenv('TEMPERATURE', '0.7')}[/]")
@@ -29,9 +32,7 @@ client = OpenAI(
 )
 
 
-# Modelo importados desde models.py
-
-system_message = """
+SYSTEM_MESSAGE = """
 Eres un copywriter experto en títulos de YouTube orientados a SEO y CTR: creativo, claro y honesto.
 Tu tarea es mejorar el título que te envíe el usuario y proponer alternativas que inviten al clic sin prometer en exceso.
 """
@@ -41,7 +42,7 @@ print("\n⏳ [cyan]Llamando al modelo para generar sugerencias…[/cyan]")
 try:
     response = client.chat.completions.parse(
         messages=[
-            {"role": "system", "content": system_message},
+            {"role": "system", "content": SYSTEM_MESSAGE},
             {"role": "user", "content": os.getenv("YOUTUBE_TITLE")}
         ],
         model=os.getenv("GITHUB_MODEL_ID"),

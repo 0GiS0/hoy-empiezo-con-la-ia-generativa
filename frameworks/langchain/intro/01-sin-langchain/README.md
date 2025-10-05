@@ -2,7 +2,7 @@
 
 ¡Hola developer 👋🏻!
 
-En esta intro te muestro cómo, con el **SDK oficial de OpenAI** (en este caso GitHub Models vía API compatible), podemos pedir **5 sugerencias estructuradas** de títulos para un vídeo de YouTube 📺✨. El script principal está en `app.py` y devuelve un objeto validado con Pydantic (`Suggestions`) que incluye para cada propuesta:
+En esta intro te muestro cómo, con el **SDK oficial de OpenAI** (en este caso GitHub Models vía API compatible), podemos pedir **5 sugerencias estructuradas** de títulos para un vídeo de YouTube 📺✨. El script principal está en `simple/app.py` y devuelve un objeto validado con Pydantic (`Suggestions`) que incluye para cada propuesta:
 
 - 🏷️ Título optimizado (con emojis)
 - 🔢 Longitud calculada
@@ -39,7 +39,7 @@ Al comparar ambos (sin vs con LangChain) notarás cómo LangChain simplifica la 
 Al usar imports relativos, ejecuta desde la raíz del repo:
 
 ```bash
-python -m frameworks.langchain.intro.01-sin-langchain.app
+python -m frameworks.langchain.intro.01-sin-langchain.simple.app
 ```
 
 > Tip: Asegúrate de tener las variables de entorno cargadas (`GITHUB_MODELS_URL`, `GITHUB_MODEL_ID`, `GITHUB_TOKEN`, `YOUTUBE_TITLE`, etc.).

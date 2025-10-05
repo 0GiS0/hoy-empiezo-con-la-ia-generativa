@@ -1,10 +1,6 @@
-flask
-rich
-langchain
-# langgraph
-langchain-openai
-# langchain-core
-# langgraph-checkpoint-sqlite
-dotenv
-# openai
-langchain_community
+flask==3.1.2
+rich==14.1.0
+python-dotenv==1.1.1
+langchain_community==0.3.27
+langchain[openai]==0.3.27
+

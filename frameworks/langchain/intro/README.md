@@ -1,23 +1,21 @@
 # Introducción a LangChain (con vs. sin LangChain) ⚖️
 
+¡Hola developer 👋🏻! En esta sección quise hacer un par de vídeos donde te muestro cuál es la diferencia entre usar directamente un SDK como OpenAI para tus integraciones con la IA Generativa vs usar un framework como puede ser LangChain, para que puedas ver todas las cosas que debes tener en cuenta cuando desarrollas de una forma y de otra.
+
+## Introducción a LangChain
+
 <div align="center">
 
-<!-- Placeholder de carátula y link al vídeo (reemplaza VIDEO_ID y TÍTULO cuando esté listo) -->
-<a href="https://youtu.be/VIDEO_ID_PENDIENTE">
-	<img src="https://img.youtube.com/vi/VIDEO_ID_PENDIENTE/maxresdefault.jpg" alt="Cap. X - TÍTULO PENDIENTE" width="100%" />
+<!-- Vídeo 1 (Cap. 10) comparativa inicial sin vs con LangChain -->
+<a href="https://youtu.be/Q40WpsPLfH8">
+	<img src="https://img.youtube.com/vi/Q40WpsPLfH8/maxresdefault.jpg" alt="🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10" width="100%" />
 </a>
 <br/>
-<strong>TÍTULO DEL VÍDEO PENDIENTE</strong>
+<strong>🦜🔗 LangChain explicado con ejemplos: tu primera comparativa 🚀 | Cap. 10</strong>
 <br/>
-<a href="https://youtu.be/VIDEO_ID_PENDIENTE">Ver vídeo</a>
+<a href="https://youtu.be/Q40WpsPLfH8">Ver vídeo</a>
 
-</div>
-
----
-
-¡Hola developer 👋🏻!
-
-Este bloque de la serie compara el **mismo caso de uso** (generar 5 títulos optimizados de YouTube con estructura Pydantic) implementado de dos formas:
+En este vídeo se compara **mismo caso de uso** (generar 5 títulos optimizados de YouTube con estructura Pydantic) implementado de dos formas:
 
 | Versión | Ruta | Enfoque | Cuándo usar |
 |---------|------|---------|-------------|
@@ -28,71 +26,33 @@ Objetivo: observar diferencias en ergonomía, extensibilidad y control del outpu
 
 ## Qué incluye ✨
 
-- ✅ Configuración por entorno (GitHub Models vía OpenAI SDK compatible)
-- ✅ Esquema Pydantic compartido (`Suggestions`) para ambas versiones
-- ✅ Validación estricta: 5 títulos + longitud + emojis
-- ✅ Logging colorido con `rich` (emojis, métricas de longitud) en ambas variantes
-- ✅ En la versión LangChain: pipeline declarativa Prompt → Modelo → Parser
+✅ Configuración por entorno (GitHub Models vía OpenAI SDK compatible)
+✅ Esquema Pydantic compartido (`Suggestions`) para ambas versiones
+✅ Validación estricta: 5 títulos + longitud + emojis
+✅ Logging colorido con `rich` (emojis, métricas de longitud) en ambas variantes
 
-## Requisitos 🔧
+## Cómo crear un chat con histórico persistente
 
-- Python 3.10+
-- Variables de entorno (ver `.env-sample` en cada carpeta)
+<!-- Vídeo 2 (chat avanzado) -->
+<a href="https://youtu.be/PM33QnrClzU">
+	<img src="https://img.youtube.com/vi/PM33QnrClzU/maxresdefault.jpg" alt="Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11" width="100%" />
+</a>
+<br/>
+<strong>Construyendo chats con IA 🤖 OpenAI SDK vs LangChain explicado fácil 🎯 | Cap. 11</strong>
+<br/>
+<a href="https://youtu.be/PM33QnrClzU">Ver vídeo</a>
 
-## Instalación 📦
+</div>
 
-Desde cada carpeta (`01-sin-langchain` o `02-con-langchain`):
+En este segundo vídeo se profundiza en un **chat con memoria y formato de salida consistente** implementado de dos maneras: a manos con el SDK y con LangChain.
 
-```bash
-pip install -r requirements.txt
-```
+| Versión | Directorio | Enfoque técnico | Puntos clave |
+|---------|------------|-----------------|--------------|
+| 🚫 Sin LangChain | `frameworks/langchain/intro/01-sin-langchain/chat` | SDK directo + SQLite | Persistencia manual del historial, reconstrucción de contexto concatenando turnos, control explícito de tokens, manejo de errores artesanal |
+| ✅ Con LangChain | `frameworks/langchain/intro/02-con-langchain/chat` | `ChatPromptTemplate` + Memory + Parsers | Memory integrada (separa lógica del formateo), fácil añadir herramientas / retrieval, reintentos y validación estructurada reutilizable |
 
-## Configuración ⚙️
 
-1) Copia el ejemplo de entorno y edítalo:
+Y esto es solo un ejemplo de todo lo que tendrías que hacer de forma manual si no usas un framework que te abstraiga muchas de estas tareas comunes (que después de crear y editar el vídeo se me ocurrieron muchas más 😅...). Y lo mismo me ocurrió con LangChain, que tiene muchas más funcionalidades que no he podido cubrir en este vídeo introductorio ¡Que además están en constante evolución! (Sin hablar todavía de LangGraph o LangSmith 🥲)
 
-```bash
-cp .env-sample .env
-```
+Entra en cada uno de los dos directorios (`chat` dentro de cada variante) para ver el código y diferencias.
 
-2) Asegúrate de definir:
-
-- `GITHUB_MODELS_URL` (p. ej., `https://models.inference.ai.azure.com`)
-- `GITHUB_TOKEN` (token con acceso a GitHub Models)
-- `GITHUB_MODEL_ID` (p. ej., `openai/gpt-4.1`)
-- `YOUTUBE_TITLE` (título base a mejorar)
-- `TEMPERATURE` (opcional, por defecto 0.7)
-
-## Uso ▶️
-
-Ejecuta cada variante desde la raíz (por imports relativos):
-
-```bash
-python -m frameworks.langchain.intro.01-sin-langchain.app
-python -m frameworks.langchain.intro.02-con-langchain.app
-```
-
-## Diferencias clave 🔍
-
-| Tema | Sin LangChain | Con LangChain | Beneficio práctico |
-|------|---------------|---------------|--------------------|
-| Prompt | Lista manual de dicts | `ChatPromptTemplate` | Reutilización y parametrización limpia |
-| Estructura salida | `response_format` directo | `with_structured_output()` | Uniformidad entre proveedores futuros |
-| Parser / Validación | Implícita (confías en el modelo) | Pydantic + error temprano | Menos post‑procesado manual |
-| Escalado a más pasos | Copiar/pegar bloques | Composición funcional | Añadir retrieval / tools sin reescribir |
-| Legibilidad | Muy explícito | Ligeramente más declarativo | Mejor para crecer |
-| Cambiar modelo | Editas llamada cruda | Cambias init del chat model | Config centralizada |
-
-## ¿Y el chat? 💬
-En `01-sin-langchain/chat/` tienes un ejemplo más “real” (historial en SQLite, reconstrucción de contexto, formateo manual). Su futura versión con LangChain simplifica:
-
-- Gestión de historial / memory abstraída
-- Integración de herramientas o retrieval
-- Reintentos + validación estructurada reutilizable
-
-## Próximos pasos 🚀
-1. Ejecuta ambas versiones y compara el código.
-2. Modifica el esquema Pydantic (añade, por ejemplo, `categoria`) y observa el impacto.
-3. Extiende la versión con LangChain añadiendo un paso de “resumen previo” antes de generar títulos.
-
-¿Listo para hacer la versión con retrieval o herramientas? ¡Sigue explorando! 🤖
