@@ -1,10 +1,6 @@
 flask==3.1.2
 rich==14.1.0
 langchain==0.3.27
-# langgraph
 langchain-openai==0.3.34
-# langchain-core
-# langgraph-checkpoint-sqlite
 python-dotenv==1.1.1
-# openai
 langchain-community==0.3.30

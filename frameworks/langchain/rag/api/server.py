@@ -9,39 +9,55 @@ Este servidor implementa un sistema RAG (Retrieval Augmented Generation) con:
 - Búsqueda semántica en Qdrant
 """
 
+# Módulos generales
 import os
 import json
+from rich.console import Console
+from dotenv import load_dotenv
+
+# Para crear la API con Flask
 from flask import Flask, request, jsonify, Response
+
+# Para poder convertir en embeddings la pregunta del usuario
 from langchain_openai import OpenAIEmbeddings
+# Para obtener el objeto para comunicarme con los modelos
 from langchain.chat_models import init_chat_model
+# Para el histórico
 from langchain_community.chat_message_histories import SQLChatMessageHistory
+# Para interactuar con la base de datos vectorial Qdrant
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
+# Para parsear el output en JSON
 from langchain_core.output_parsers import JsonOutputParser
+# Para los promtps
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# Para la ejecución de las llamadas a los modelos
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from rich.console import Console
-from dotenv import load_dotenv
+
 
 #══════════════════════════════════════════════════════════════════════════════
 # 🔧 CONFIGURACIÓN INICIAL
 #══════════════════════════════════════════════════════════════════════════════
-
+# Cargar las variables de entorno
 load_dotenv()
+
+# Crear la app con Flask
 app = Flask(__name__, static_folder='../web', static_url_path='')
+
+# Crear un objeto consola de rich para que todos los mensajes sean más bonitos por el terminal
 console = Console()
 
 # Constantes
-K_DOCUMENTS = 3
-MAX_HISTORY_MESSAGES = 6
-COLLECTION_NAME = "youtube_guides"
+K_DOCUMENTS = 3 # Número de documentos máximo que se utiliza cuando se busca en la base de datos vectorial
+MAX_HISTORY_MESSAGES = 6 # Número de mensajes del histórico que se toman en cuenta para darle contexto al modelo de lo que se está hablando
+COLLECTION_NAME = "youtube_guides" # Nombre de la colección en qdrant que tiene la información relacionada con YouTube
 
 # Directorios
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
-DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")
+DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite") # Para crear el archivo para SQLite
 
 console.print("\n[bold cyan]🚀 Iniciando servidor RAG...[/bold cyan]\n")
 
@@ -50,6 +66,7 @@ console.print("\n[bold cyan]🚀 Iniciando servidor RAG...[/bold cyan]\n")
 #══════════════════════════════════════════════════════════════════════════════
 
 console.print("📋 Configurando modelos...")
+# Esta configuración usará el modelo que determinará si se tiene que dar una respuesta directa o bien usando RAG
 llm_router = init_chat_model(
     model=os.getenv("LLM_ROUTER_MODEL_ID"),
     model_provider=os.getenv("MODEL_PROVIDER", "openai"),
@@ -57,6 +74,7 @@ llm_router = init_chat_model(
     base_url=os.getenv("ENDPOINT_URL"),
 )
 
+# Este será el modelo que responderá con o sin contexto adicional
 llm_answer = init_chat_model(
     model=os.getenv("LLM_ANSWER_MODEL_ID"),
     model_provider=os.getenv("MODEL_PROVIDER", "openai"),
@@ -124,7 +142,7 @@ elif "text-embedding-3-small" in embeddings_model:
 else:
     vector_size = 768
 
-client = QdrantClient("http://qdrant:6333")
+client = QdrantClient(os.getenv("QDRANT_URL"))
 
 # Crear colección si no existe
 if not client.collection_exists(COLLECTION_NAME):
@@ -314,7 +332,7 @@ def run_direct_chain(question, session_id):
         return {"content": f"Error: {str(e)}", "references": None}
 
 
-# Mapa de acciones
+# Mapa de acciones. Esto se usa para 
 ACTION_HANDLERS = {
     "retrieve": run_retrieve_chain,
     "direct": run_direct_chain,
@@ -359,12 +377,26 @@ def chat_invoke():
         console.print(f"   👤 Session: {session_id[:8]}...")
         console.print(f"   💬 Mensaje: {user_text[:100]}...")
 
-        # Construir hint del historial para el router
+        # Construir hint del historial para el router, de tal forma que así sabe de qué se habló antes.
         message_history = SQLChatMessageHistory(
             session_id=session_id,
             connection=f'sqlite:///{DB_FILE}'
         )
         chat_hint = build_chat_hint(message_history.messages)
+
+        # 📜 Mostrar el hint que va a recibir el modelo para saber de lo último que se habló, sin pasarle todo el historial
+        if chat_hint:
+            console.print("\n   📜 [bold cyan]Contexto del historial:[/bold cyan]")
+            # Dividir por el separador " | " para mostrar cada mensaje
+            messages = chat_hint.split(" | ")
+            for msg in messages:
+                if msg.startswith("Usuario:"):
+                    console.print(f"      [blue]👤 {msg[9:]}[/blue]")  # Remover "Usuario: "
+                elif msg.startswith("Asistente:"):
+                    console.print(f"      [green]🤖 {msg[11:]}[/green]")  # Remover "Asistente: "
+            console.print()
+        else:
+            console.print("\n   📜 [dim]Sin historial previo[/dim]\n")
 
         # Clasificar pregunta
         console.print("\n   🎯 Clasificando pregunta...")
@@ -372,7 +404,10 @@ def chat_invoke():
 
         # Ejecutar handler correspondiente (historial automático)
         console.print(f"\n   ⚙️  Ejecutando handler '{action}' con streaming...")
+
+        # Pide el handler que corresponda. Por defecto se devuelve run_direct_chain, que es el segundo parámetro en esta llamada.
         handler = ACTION_HANDLERS.get(action, run_direct_chain)
+        # Se ejecuta con el texto del usuario y el session_id
         result = handler(user_text, session_id)
 
         # 🌊 Generar función de streaming SSE
