@@ -29,14 +29,17 @@ required_vars = ["EMBEDDINGS_MODEL_ID", "ENDPOINT_URL"]
 missing_vars = [var for var in required_vars if not os.getenv(var)]
 
 if missing_vars:
-    console.print(f":x: [bold red]Error: Faltan variables de entorno:[/bold red] {', '.join(missing_vars)}")
-    console.print(":warning: [yellow]Por favor, configura tu archivo .env con valores reales.[/yellow]")
+    console.print(
+        f":x: [bold red]Error: Faltan variables de entorno:[/bold red] {', '.join(missing_vars)}")
+    console.print(
+        ":warning: [yellow]Por favor, configura tu archivo .env con valores reales.[/yellow]")
     sys.exit(1)
 
 # 🔐 Para API_KEY, si no está configurado o es placeholder, usar valor dummy (para Ollama/Model Runner)
 api_key = os.getenv("API_KEY")
 if not api_key or api_key == "__PON_AQUI_TU_API_KEY__":
-    console.print(":information: [yellow]API_KEY no configurado, usando valor dummy (útil para Ollama/Model Runner)[/yellow]")
+    console.print(
+        ":information: [yellow]API_KEY no configurado, usando valor dummy (útil para Ollama/Model Runner)[/yellow]")
     api_key = "dummy-key"
 
 # 🎬 Siguiendo el ejemplo de rag que te mostré en este otro vídeo, vamos a indexar información de Google para ser mejores Youtubers
@@ -91,12 +94,14 @@ URLs = [
 
 # 🚀 Inicializar embeddings
 embeddings_model = os.getenv("EMBEDDINGS_MODEL_ID")
-console.print(f":gear: [cyan]Usando modelo de embeddings:[/cyan] [bold]{embeddings_model}[/bold]")
+console.print(
+    f":gear: [cyan]Usando modelo de embeddings:[/cyan] [bold]{embeddings_model}[/bold]")
 
 embeddings = OpenAIEmbeddings(
     model=embeddings_model,
     base_url=os.getenv("ENDPOINT_URL"),
-    api_key=api_key  # 🔑 Usa el valor validado (puede ser dummy para Ollama/Model Runner)
+    # 🔑 Usa el valor validado (puede ser dummy para Ollama/Model Runner)
+    api_key=api_key
 )
 
 # 📏 Determinar el tamaño del vector según el modelo
@@ -111,28 +116,33 @@ elif "text-embedding-3-small" in embeddings_model:
     vector_size = 1536
 else:
     # ⚠️ Valor por defecto, pero se recomienda verificar
-    console.print(f":warning: [yellow]Modelo desconocido, usando 768 dimensiones por defecto. Verifica que sea correcto.[/yellow]")
+    console.print(
+        f":warning: [yellow]Modelo desconocido, usando 768 dimensiones por defecto. Verifica que sea correcto.[/yellow]")
     vector_size = 768
 
-console.print(f":bar_chart: [cyan]Tamaño del vector:[/cyan] [bold]{vector_size}[/bold] dimensiones")
+console.print(
+    f":bar_chart: [cyan]Tamaño del vector:[/cyan] [bold]{vector_size}[/bold] dimensiones")
 
 # 🔌 https://python.langchain.com/docs/integrations/vectorstores/
-client = QdrantClient("http://qdrant:6333")
+client = QdrantClient(os.getenv("QDRANT_URL"))
 
 # 🔄 Recrear la colección (usando método recomendado en lugar del deprecado)
 collection_name = "youtube_guides"
 
 if client.collection_exists(collection_name):
-    console.print(f":wastebasket: [yellow]La colección '[bold]{collection_name}[/bold]' ya existe. Eliminándola...[/yellow]")
+    console.print(
+        f":wastebasket: [yellow]La colección '[bold]{collection_name}[/bold]' ya existe. Eliminándola...[/yellow]")
     client.delete_collection(collection_name)
     console.print(f":white_check_mark: [green]Colección eliminada.[/green]")
 
-console.print(f":sparkles: [cyan]Creando colección '[bold]{collection_name}[/bold]'...[/cyan]")
+console.print(
+    f":sparkles: [cyan]Creando colección '[bold]{collection_name}[/bold]'...[/cyan]")
 client.create_collection(
     collection_name=collection_name,
     vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
 )
-console.print(f":white_check_mark: [green]Colección creada correctamente.[/green]")
+console.print(
+    f":white_check_mark: [green]Colección creada correctamente.[/green]")
 
 vector_store = QdrantVectorStore(
     client=client,
@@ -152,14 +162,14 @@ header_template = {
 for url in URLs:
     console.print(
         f":mag: [bold blue]Indexando:[/bold blue] {url['name']} ([cyan]{url['url']}[/cyan])")
-    
+
     # 🌐 WebBaseLoader con headers personalizados para forzar español
     loader = WebBaseLoader(
         web_path=url["url"],
         header_template=header_template
     )
     docs = loader.load()
-    
+
     # 🏷️ Añadir metadata de idioma y título al documento
     for doc in docs:
         doc.metadata["language"] = "es"
@@ -169,9 +179,10 @@ for url in URLs:
     # chunk_size: tamaño ideal para consejos/guías completas: ahora 2000
     # chunk_overlap: solapamiento para mantener continuidad entre chunks: 200
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=2000, 
+        chunk_size=2000,
         chunk_overlap=200,
-        separators=["\n\n", "\n", ". ", " ", ""]  # Prioriza separadores naturales
+        # Prioriza separadores naturales
+        separators=["\n\n", "\n", ". ", " ", ""]
     )
     all_splits = text_splitter.split_documents(docs)
 
@@ -180,9 +191,11 @@ for url in URLs:
         try:
             _ = vector_store.add_documents(documents=[doc])
             if (i + 1) % 5 == 0 or (i + 1) == len(all_splits):
-                console.print(f":white_check_mark: [green]Procesados {i+1} de {len(all_splits)} chunks[/green]")
+                console.print(
+                    f":white_check_mark: [green]Procesados {i+1} de {len(all_splits)} chunks[/green]")
         except Exception as e:
-            console.print(f":warning: [yellow]Error en chunk {i+1}: {str(e)[:100]}...[/yellow]")
+            console.print(
+                f":warning: [yellow]Error en chunk {i+1}: {str(e)[:100]}...[/yellow]")
             continue
 
 
