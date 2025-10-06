@@ -93,12 +93,26 @@ function appendMessage(role, content, references = null, routingAction = null) {
   return bubbleEl;
 }
 
-// 📤 Envía un mensaje al backend y maneja la respuesta
+// 📤 Envía un mensaje al backend y maneja la respuesta en streaming
 async function sendMessage(message) {
   appendMessage('user', message);
-  const assistantBubble = appendMessage('assistant', '...');
+  
+  // 📝 Crear mensaje del asistente (inicialmente vacío, iremos añadiendo contenido)
+  const tpl = document.getElementById('message-template');
+  const node = tpl.content.firstElementChild.cloneNode(true);
+  node.classList.add('assistant', 'streaming');
+  
+  const avatarEl = node.querySelector('[data-role="avatar"]');
+  avatarEl.textContent = '🤖'; // Por defecto, cambiaremos cuando llegue metadata
+  
+  const bubbleEl = node.querySelector('[data-role="bubble"]');
+  bubbleEl.textContent = '';
+  
+  messagesEl.appendChild(node);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  
   statusEl.hidden = false;
-  statusEl.textContent = 'Generando respuesta';
+  statusEl.textContent = '🔄 Generando respuesta...';
 
   try {
     const resp = await fetch(API_URL, {
@@ -106,17 +120,114 @@ async function sendMessage(message) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: SESSION_ID, message })
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
     
-    // 🔄 Limpiar el bubble y recrear el mensaje con referencias y tipo de routing
-    const parentArticle = assistantBubble.closest('.msg');
-    parentArticle.remove();
-    const routingAction = data.routing?.action || null;
-    appendMessage('assistant', data.reply, data.references, routingAction);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullContent = ''; // 📝 Acumular todo el contenido para renderizar markdown
+    let metadata = null;
+    
+    // 🌊 Leer el stream
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      
+      // � Procesar líneas completas (formato SSE: "data: {...}\n\n")
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop(); // Guardar última línea incompleta
+      
+      for (const line of lines) {
+        if (!line.trim() || !line.startsWith('data: ')) continue;
+        
+        const jsonStr = line.substring(6); // Remover "data: "
+        try {
+          const data = JSON.parse(jsonStr);
+          
+          // 📋 Metadata (routing + referencias)
+          if (data.type === 'metadata') {
+            metadata = data;
+            
+            // 🎨 Actualizar avatar según routing
+            if (data.routing?.action === 'retrieve') {
+              avatarEl.textContent = '📚';
+              avatarEl.classList.add('rag-mode');
+            } else if (data.routing?.action === 'direct') {
+              avatarEl.textContent = '⚡';
+              avatarEl.classList.add('direct-mode');
+            }
+            
+            statusEl.textContent = `🔄 ${data.routing?.action === 'retrieve' ? 'Consultando documentos' : 'Generando respuesta'}...`;
+          }
+          
+          // 📝 Contenido (chunks de texto)
+          else if (data.type === 'content') {
+            fullContent += data.content;
+            // 🎨 Renderizar markdown progresivamente
+            bubbleEl.innerHTML = marked.parse(fullContent);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }
+          
+          // 🏁 Fin del stream
+          else if (data.type === 'done') {
+            node.classList.remove('streaming');
+            
+            // 📚 Agregar referencias si existen
+            if (metadata?.references && metadata.references.length > 0) {
+              const referencesContainer = document.createElement('div');
+              referencesContainer.className = 'references';
+              
+              const referencesTitle = document.createElement('div');
+              referencesTitle.className = 'references-title';
+              referencesTitle.innerHTML = `📚 <strong>Referencias consultadas:</strong>`;
+              referencesContainer.appendChild(referencesTitle);
+              
+              metadata.references.forEach(ref => {
+                const refCard = document.createElement('div');
+                refCard.className = 'reference-card';
+                
+                const refHeader = document.createElement('div');
+                refHeader.className = 'reference-header';
+                refHeader.innerHTML = `<span class="reference-number">${ref.id}</span> <span class="reference-title">${ref.title || ref.source}</span>`;
+                
+                const refUrl = document.createElement('a');
+                refUrl.className = 'reference-url';
+                refUrl.href = ref.source;
+                refUrl.target = '_blank';
+                refUrl.textContent = '🔗 Ver documento';
+                
+                refCard.appendChild(refHeader);
+                refCard.appendChild(refUrl);
+                
+                referencesContainer.appendChild(refCard);
+              });
+              
+              bubbleEl.appendChild(referencesContainer);
+            }
+            
+            statusEl.textContent = '✅ Respuesta completa';
+            setTimeout(() => { statusEl.hidden = true; }, 2000);
+          }
+          
+          // ❌ Error
+          else if (data.type === 'error') {
+            bubbleEl.textContent = '[Error] ' + data.error;
+            node.classList.remove('streaming');
+            statusEl.hidden = true;
+          }
+          
+        } catch (parseErr) {
+          console.error('Error parseando SSE:', parseErr, jsonStr);
+        }
+      }
+    }
     
   } catch (err) {
-    assistantBubble.textContent = '[Error] ' + err.message;
+    bubbleEl.textContent = '[Error] ' + err.message;
+    node.classList.remove('streaming');
   } finally {
     statusEl.hidden = true;
   }

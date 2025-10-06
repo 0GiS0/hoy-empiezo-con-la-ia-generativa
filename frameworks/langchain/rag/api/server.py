@@ -10,7 +10,8 @@ Este servidor implementa un sistema RAG (Retrieval Augmented Generation) con:
 """
 
 import os
-from flask import Flask, request, jsonify
+import json
+from flask import Flask, request, jsonify, Response
 from langchain_openai import OpenAIEmbeddings
 from langchain.chat_models import init_chat_model
 from langchain_community.chat_message_histories import SQLChatMessageHistory
@@ -259,18 +260,12 @@ def decide_route(question, chat_hint=""):
 
 
 def run_retrieve_chain(question, session_id):
-    """Ejecuta la cadena RAG completa"""
-    console.print("   📚 Ejecutando cadena RAG...")
+    """Ejecuta la cadena RAG completa CON STREAMING"""
+    console.print("   📚 Ejecutando cadena RAG con streaming...")
     try:
         # Recuperar documentos
         retrieved_docs = retrieve(question)
         context = format_docs(retrieved_docs)
-
-        # Generar respuesta con historial automático
-        response = rag_chain_with_history.invoke(
-            {"input": question, "context": context},
-            config={"configurable": {"session_id": session_id}}
-        )
 
         # Formatear referencias únicas
         unique_sources = {}
@@ -289,7 +284,13 @@ def run_retrieve_chain(question, session_id):
             for i, (url, data) in enumerate(unique_sources.items(), 1)
         ]
 
-        return {"content": response.content, "references": references}
+        # Generar respuesta con streaming usando historial automático
+        stream = rag_chain_with_history.stream(
+            {"input": question, "context": context},
+            config={"configurable": {"session_id": session_id}}
+        )
+
+        return {"stream": stream, "references": references}
 
     except Exception as e:
         console.print(f"   ❌ Error en RAG: {str(e)}")
@@ -300,14 +301,14 @@ def run_retrieve_chain(question, session_id):
 
 
 def run_direct_chain(question, session_id):
-    """Ejecuta la cadena directa (sin RAG)"""
-    console.print("   ⚡ Ejecutando cadena directa...")
+    """Ejecuta la cadena directa (sin RAG) CON STREAMING"""
+    console.print("   ⚡ Ejecutando cadena directa con streaming...")
     try:
-        response = direct_chain_with_history.invoke(
+        stream = direct_chain_with_history.stream(
             {"input": question},
             config={"configurable": {"session_id": session_id}}
         )
-        return {"content": response.content, "references": None}
+        return {"stream": stream, "references": None}
     except Exception as e:
         console.print(f"   ❌ Error: {str(e)}")
         return {"content": f"Error: {str(e)}", "references": None}
@@ -338,13 +339,13 @@ def static_files(filename):
 @app.route("/chat", methods=["POST"])
 def chat_invoke():
     """
-    💬 Endpoint principal del chat
+    💬 Endpoint principal del chat con STREAMING
     
     Request: {"session_id": "...", "message": "..."}
-    Response: {"session_id": "...", "reply": "...", "routing": {...}, "references": [...]}
+    Response: Server-Sent Events (SSE) con chunks de texto
     """
     console.print("\n" + "="*80)
-    console.print("[bold cyan]📨 Nueva petición al chat[/bold cyan]")
+    console.print("[bold cyan]📨 Nueva petición al chat (streaming)[/bold cyan]")
     console.print("="*80)
 
     try:
@@ -370,24 +371,76 @@ def chat_invoke():
         action, rationale = decide_route(user_text, chat_hint)
 
         # Ejecutar handler correspondiente (historial automático)
-        console.print(f"\n   ⚙️  Ejecutando handler '{action}'...")
+        console.print(f"\n   ⚙️  Ejecutando handler '{action}' con streaming...")
         handler = ACTION_HANDLERS.get(action, run_direct_chain)
         result = handler(user_text, session_id)
 
-        # Preparar respuesta
-        response_data = {
-            "session_id": session_id,
-            "reply": result["content"],
-            "routing": {"action": action, "rationale": rationale}
-        }
+        # 🌊 Generar función de streaming SSE
+        def generate():
+            """Generator que emite eventos SSE"""
+            try:
+                # 📤 Enviar metadata inicial (routing + referencias)
+                metadata = {
+                    "type": "metadata",
+                    "session_id": session_id,
+                    "routing": {"action": action, "rationale": rationale}
+                }
+                
+                if result.get("references"):
+                    metadata["references"] = result["references"]
+                
+                yield f"data: {json.dumps(metadata, ensure_ascii=False)}\n\n"
+                
+                # 📝 Stream de contenido
+                if "stream" in result:
+                    for chunk in result["stream"]:
+                        # LangChain devuelve objetos AIMessage o chunks
+                        if hasattr(chunk, "content"):
+                            content = chunk.content
+                        else:
+                            content = str(chunk)
+                        
+                        if content:
+                            chunk_data = {
+                                "type": "content",
+                                "content": content
+                            }
+                            yield f"data: {json.dumps(chunk_data, ensure_ascii=False)}\n\n"
+                    
+                    console.print(f"\n   ✅ [bold green]Streaming completado[/bold green]")
+                    
+                    # 🏁 Señal de fin
+                    yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                
+                # ❌ Caso de error (sin stream disponible)
+                elif "content" in result:
+                    error_data = {
+                        "type": "content",
+                        "content": result["content"]
+                    }
+                    yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                
+            except Exception as e:
+                console.print(f"\n   ❌ Error en streaming: {str(e)}")
+                error_data = {
+                    "type": "error",
+                    "error": str(e)
+                }
+                yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
+            
+            console.print("="*80 + "\n")
 
-        if result.get("references"):
-            response_data["references"] = result["references"]
-
-        console.print(f"\n   ✅ [bold green]Respuesta enviada[/bold green]")
-        console.print("="*80 + "\n")
-
-        return jsonify(response_data)
+        # 🔄 Retornar respuesta SSE
+        return Response(
+            generate(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no',
+                'Connection': 'keep-alive'
+            }
+        )
 
     except Exception as e:
         console.print(f"\n   ❌ Error: {str(e)}")
