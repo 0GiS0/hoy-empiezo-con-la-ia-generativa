@@ -47,7 +47,13 @@ function appendMessage(role, content, references = null, routingAction = null) {
   }
   
   const bubbleEl = node.querySelector('[data-role="bubble"]');
-  bubbleEl.textContent = content;
+  
+  // 📝 Para el asistente, parsear markdown usando marked
+  if (role === 'assistant') {
+    bubbleEl.innerHTML = marked.parse(content);
+  } else {
+    bubbleEl.textContent = content;
+  }
   
   // 📚 Si hay referencias, agregarlas después del contenido
   if (references && references.length > 0) {
