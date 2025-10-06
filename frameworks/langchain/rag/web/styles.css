@@ -34,8 +34,104 @@ body,textarea { font-size:15px; line-height:1.4; }
   min-width: 0; /* Evita overflow */
   height: calc(100vh - 2rem); /* Altura completa menos padding */
 }
-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
-header h1 { font-size:1.25rem; margin:0; display:flex; gap:.5rem; align-items:center; }
+
+/* 🎨 Header mejorado con diseño moderno */
+header { 
+  display: flex; 
+  flex-wrap: wrap; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 1rem; 
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #1a1f2e 0%, #2a2f3e 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(77, 163, 255, 0.3));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-text h1 { 
+  font-size: 1.5rem; 
+  margin: 0; 
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.badge-primary {
+  background: rgba(77, 163, 255, 0.15);
+  color: var(--primary-accent);
+  border-color: rgba(77, 163, 255, 0.3);
+}
+
+.badge-primary:hover {
+  background: rgba(77, 163, 255, 0.25);
+  border-color: rgba(77, 163, 255, 0.5);
+}
+
+.badge-secondary {
+  background: rgba(147, 51, 234, 0.15);
+  color: #c084fc;
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.badge-secondary:hover {
+  background: rgba(147, 51, 234, 0.25);
+  border-color: rgba(147, 51, 234, 0.5);
+}
+
 .tag { background:var(--primary); color:#031627; padding:.15rem .5rem; border-radius:999px; font-size:.75rem; font-weight:600; }
 
 #messages { 
