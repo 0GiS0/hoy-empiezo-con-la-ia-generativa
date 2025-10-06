@@ -9,55 +9,55 @@ Este servidor implementa un sistema RAG (Retrieval Augmented Generation) con:
 - Búsqueda semántica en Qdrant
 """
 
-# Módulos generales
+# 📦 Módulos generales
 import os
 import json
 from rich.console import Console
 from dotenv import load_dotenv
 
-# Para crear la API con Flask
+# 🌐 Flask: Framework web para crear la API REST
 from flask import Flask, request, jsonify, Response
 
-# Para poder convertir en embeddings la pregunta del usuario
+# 🧬 OpenAI Embeddings: Convierte texto en vectores numéricos para búsqueda semántica
 from langchain_openai import OpenAIEmbeddings
-# Para obtener el objeto para comunicarme con los modelos
+# 🤖 LLM: Inicializador universal de modelos de lenguaje (OpenAI, Ollama, Azure, etc.)
 from langchain.chat_models import init_chat_model
-# Para el histórico
+# 💾 Historial: Almacena mensajes de chat en SQLite para mantener contexto entre peticiones
 from langchain_community.chat_message_histories import SQLChatMessageHistory
-# Para interactuar con la base de datos vectorial Qdrant
+# 🗄️ Vector Store: Interfaz para interactuar con Qdrant (base de datos vectorial)
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-# Para parsear el output en JSON
+# 📋 JSON Parser: Convierte respuestas del LLM en objetos JSON estructurados
 from langchain_core.output_parsers import JsonOutputParser
-# Para los promtps
+# 💬 Prompts: Templates para construir mensajes al LLM (system, user, history)
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-# Para la ejecución de las llamadas a los modelos
+# 🔄 Historial automático: Envuelve cadenas para inyectar/guardar historial automáticamente
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 
 #══════════════════════════════════════════════════════════════════════════════
 # 🔧 CONFIGURACIÓN INICIAL
 #══════════════════════════════════════════════════════════════════════════════
-# Cargar las variables de entorno
+# 🔐 Cargar variables de entorno desde archivo .env
 load_dotenv()
 
-# Crear la app con Flask
+# 🌐 Crear aplicación Flask (API web + servidor de archivos estáticos)
 app = Flask(__name__, static_folder='../web', static_url_path='')
 
-# Crear un objeto consola de rich para que todos los mensajes sean más bonitos por el terminal
+# 🎨 Crear consola Rich para output formateado con colores y emojis en el terminal
 console = Console()
 
-# Constantes
-K_DOCUMENTS = 3 # Número de documentos máximo que se utiliza cuando se busca en la base de datos vectorial
-MAX_HISTORY_MESSAGES = 6 # Número de mensajes del histórico que se toman en cuenta para darle contexto al modelo de lo que se está hablando
-COLLECTION_NAME = "youtube_guides" # Nombre de la colección en qdrant que tiene la información relacionada con YouTube
+# ⚙️ Constantes de configuración
+K_DOCUMENTS = 3  # 📊 Número máximo de documentos recuperados de Qdrant por consulta
+MAX_HISTORY_MESSAGES = 6  # 📜 Cantidad de mensajes del historial enviados al router como contexto
+COLLECTION_NAME = "youtube_guides"  # 🏷️ Nombre de la colección en Qdrant con documentación de YouTube
 
-# Directorios
+# 📁 Configuración de directorios
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
-DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite") # Para crear el archivo para SQLite
+DB_FILE = os.path.join(DATA_DIR, "message_history.sqlite")  # 💾 Base de datos SQLite para historial de chat
 
 console.print("\n[bold cyan]🚀 Iniciando servidor RAG...[/bold cyan]\n")
 
@@ -66,7 +66,9 @@ console.print("\n[bold cyan]🚀 Iniciando servidor RAG...[/bold cyan]\n")
 #══════════════════════════════════════════════════════════════════════════════
 
 console.print("📋 Configurando modelos...")
-# Esta configuración usará el modelo que determinará si se tiene que dar una respuesta directa o bien usando RAG
+
+# 🧭 Modelo Router: Decide si una pregunta requiere RAG (retrieve) o respuesta directa (direct)
+# Usa un modelo más pequeño/rápido para esta tarea de clasificación simple
 llm_router = init_chat_model(
     model=os.getenv("LLM_ROUTER_MODEL_ID"),
     model_provider=os.getenv("MODEL_PROVIDER", "openai"),
@@ -74,7 +76,8 @@ llm_router = init_chat_model(
     base_url=os.getenv("ENDPOINT_URL"),
 )
 
-# Este será el modelo que responderá con o sin contexto adicional
+# 💬 Modelo Answer: Genera respuestas finales al usuario (con o sin contexto RAG)
+# Usa un modelo más capaz para generar respuestas de calidad
 llm_answer = init_chat_model(
     model=os.getenv("LLM_ANSWER_MODEL_ID"),
     model_provider=os.getenv("MODEL_PROVIDER", "openai"),
@@ -84,10 +87,10 @@ llm_answer = init_chat_model(
 console.print("   ✓ Modelos configurados\n")
 
 #══════════════════════════════════════════════════════════════════════════════
-# 📝 PROMPTS Y CADENAS
+# 📝 PROMPTS Y CADENAS (LCEL - LangChain Expression Language)
 #══════════════════════════════════════════════════════════════════════════════
 
-# Router: decide si usar RAG o responder directamente
+# 🧭 Router: Clasifica preguntas en "retrieve" (necesita RAG) o "direct" (conocimiento general)
 router_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Eres un clasificador. Decide si la pregunta NECESITA búsqueda externa (retrieve) "
@@ -98,41 +101,43 @@ router_prompt = ChatPromptTemplate.from_messages([
      '{{"action": "direct", "rationale": "Es un saludo simple"}}'),
     ("user", "Pregunta: {question}\nContexto: {chat_hint}")
 ])
+# ⛓️ Cadena: prompt → LLM → JSON parser (devuelve dict con "action" y "rationale")
 router = router_prompt | llm_router | JsonOutputParser()
 
-# Cadena directa (sin RAG)
+# ⚡ Cadena Directa: Para preguntas que NO requieren RAG (saludos, conocimiento general)
 direct_prompt = ChatPromptTemplate.from_messages([
     ("system", "Responde con precisión usando tu conocimiento general."),
-    MessagesPlaceholder(variable_name="history"),
+    MessagesPlaceholder(variable_name="history"),  # 📜 Inyecta historial automáticamente
     ("user", "{input}")
 ])
 direct_chain = direct_prompt | llm_answer
 
-# Cadena RAG (con documentos)
+# 📚 Cadena RAG: Para preguntas que SÍ requieren contexto de documentos
 rag_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Eres un asistente experto. Responde basándote en el contexto proporcionado.\n"
      "Contexto:\n{context}"),
-    MessagesPlaceholder(variable_name="history"),
+    MessagesPlaceholder(variable_name="history"),  # 📜 Inyecta historial automáticamente
     ("user", "{input}")
 ])
 rag_chain = rag_prompt | llm_answer
 
 #══════════════════════════════════════════════════════════════════════════════
-# 🗄️ VECTOR STORE (Qdrant)
+# 🗄️ VECTOR STORE (Qdrant - Base de Datos Vectorial)
 #══════════════════════════════════════════════════════════════════════════════
 
 console.print("🔍 Configurando Vector Store...")
 api_key = os.getenv("API_KEY", "dummy-key")
 embeddings_model = os.getenv("EMBEDDINGS_MODEL_ID", "text-embedding-3-small")
 
+# 🧬 Modelo de Embeddings: Convierte texto en vectores numéricos para búsqueda semántica
 embeddings = OpenAIEmbeddings(
     model=embeddings_model,
     base_url=os.getenv("ENDPOINT_URL"),
     api_key=api_key
 )
 
-# Determinar dimensionalidad
+# 📐 Determinar dimensionalidad del vector según el modelo (crítico para Qdrant)
 if "embeddinggemma" in embeddings_model:
     vector_size = 768
 elif "text-embedding-3-large" in embeddings_model:
@@ -140,11 +145,12 @@ elif "text-embedding-3-large" in embeddings_model:
 elif "text-embedding-3-small" in embeddings_model:
     vector_size = 1536
 else:
-    vector_size = 768
+    vector_size = 768  # 🔧 Fallback por defecto
 
+# 🔌 Cliente Qdrant: Conexión con la base de datos vectorial
 client = QdrantClient(os.getenv("QDRANT_URL"))
 
-# Crear colección si no existe
+# 🏗️ Crear colección si no existe (con configuración de vectores)
 if not client.collection_exists(COLLECTION_NAME):
     console.print(f"   ⚠️  Colección '{COLLECTION_NAME}' no existe. Creando...")
     client.create_collection(
@@ -152,6 +158,7 @@ if not client.collection_exists(COLLECTION_NAME):
         vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
     )
 
+# 🗄️ Vector Store: Abstracción de LangChain para interactuar con Qdrant
 vector_store = QdrantVectorStore(
     client=client,
     collection_name=COLLECTION_NAME,
@@ -160,29 +167,36 @@ vector_store = QdrantVectorStore(
 console.print("   ✓ Vector Store listo\n")
 
 #══════════════════════════════════════════════════════════════════════════════
-# 🔄 GESTIÓN AUTOMÁTICA DE HISTORIAL
+# 🔄 GESTIÓN AUTOMÁTICA DE HISTORIAL (RunnableWithMessageHistory)
 #══════════════════════════════════════════════════════════════════════════════
 
 def get_history(session_id: str):
-    """Factoría: retorna historial para una sesión"""
+    """
+    🏭 Factoría de historial: Retorna un objeto SQLChatMessageHistory para una sesión.
+    LangChain llamará automáticamente esta función para cargar/guardar mensajes.
+    """
     return SQLChatMessageHistory(
         session_id=session_id,
         connection=f"sqlite:///{DB_FILE}"
     )
 
-# Envolver cadenas con gestión automática de historial
+# 🔗 Envolver cadenas con gestión automática de historial
+# Esto hace que las cadenas automáticamente:
+# 1. 📥 CARGUEN el historial antes de ejecutar
+# 2. 📤 GUARDEN el mensaje del usuario y la respuesta después de ejecutar
+
 direct_chain_with_history = RunnableWithMessageHistory(
     direct_chain,
     get_history,
-    input_messages_key="input",
-    history_messages_key="history",
+    input_messages_key="input",      # 🔑 Clave donde está el mensaje del usuario
+    history_messages_key="history",  # 🔑 Clave donde se inyectará el historial
 )
 
 rag_chain_with_history = RunnableWithMessageHistory(
     rag_chain,
     get_history,
-    input_messages_key="input",
-    history_messages_key="history",
+    input_messages_key="input",      # 🔑 Clave donde está el mensaje del usuario
+    history_messages_key="history",  # 🔑 Clave donde se inyectará el historial
 )
 
 console.print("🔄 Gestión automática de historial configurada\n")
@@ -192,18 +206,26 @@ console.print("🔄 Gestión automática de historial configurada\n")
 #══════════════════════════════════════════════════════════════════════════════
 
 def retrieve(query):
-    """Recupera documentos relevantes del vector store"""
-    docs_with_scores = vector_store.similarity_search_with_score(query, k=K_DOCUMENTS)
-    console.print(f"\n   � [bold cyan]Documentos recuperados: {len(docs_with_scores)}[/bold cyan]")
+    """
+    🔍 Recupera documentos relevantes del vector store usando búsqueda semántica.
     
-    # Mostrar detalles de cada documento
+    Args:
+        query (str): Pregunta del usuario convertida a embedding para comparar
+    
+    Returns:
+        list: Documentos más similares (sin scores, para compatibilidad)
+    """
+    docs_with_scores = vector_store.similarity_search_with_score(query, k=K_DOCUMENTS)
+    console.print(f"\n   📚 [bold cyan]Documentos recuperados: {len(docs_with_scores)}[/bold cyan]")
+    
+    # 📊 Mostrar detalles de cada documento con score de similitud
     for i, (doc, score) in enumerate(docs_with_scores, 1):
-        # El score en Qdrant con COSINE es la distancia (menor = más similar)
-        # Para hacerlo más intuitivo, mostramos la similitud (1 - distancia)
+        # ⚠️ IMPORTANTE: En Qdrant con distancia COSINE, el score es la DISTANCIA (0=idéntico, 2=opuesto)
+        # Convertimos a similitud (porcentaje) para hacerlo más intuitivo: similitud = 1 - distancia
         similarity = 1 - score
         similarity_percent = similarity * 100
         
-        # Color según relevancia
+        # 🎨 Color según relevancia del documento
         if similarity_percent >= 80:
             score_color = "green"
             relevance = "Alta"
@@ -219,51 +241,78 @@ def retrieve(query):
         console.print(f"      🔗 Fuente: [blue]{doc.metadata.get('source', 'Sin fuente')}[/blue]")
         console.print(f"      📝 Título: {doc.metadata.get('title', 'Sin título')}")
         
-        # Mostrar preview del contenido (primeras 150 caracteres)
+        # 📖 Mostrar preview del contenido (primeras 150 caracteres)
         preview = doc.page_content[:150].replace('\n', ' ')
         console.print(f"      📖 Preview: [dim]{preview}...[/dim]")
         
-        # Mostrar metadata adicional si existe
+        # 🔢 Mostrar índice de chunk si el documento fue dividido
         if 'chunk_index' in doc.metadata:
             console.print(f"      🔢 Chunk: {doc.metadata['chunk_index']}")
     
     console.print()  # Línea en blanco para separación
     
-    # Retornar solo los documentos (sin scores) para mantener compatibilidad
+    # 🔄 Retornar solo los documentos (sin scores) para mantener compatibilidad con el resto del código
     return [doc for doc, _ in docs_with_scores]
 
 
 def format_docs(docs):
-    """Formatea documentos como texto para el contexto"""
+    """
+    📑 Formatea documentos como texto plano para inyectar en el prompt.
+    Concatena el contenido de todos los docs separados por "---"
+    """
     return "\n\n---\n\n".join(doc.page_content for doc in docs)
 
 
 def build_chat_hint(messages):
-    """Construye un hint del historial para el router"""
+    """
+    📜 Construye un resumen del historial para el router (no todo el historial completo).
+    
+    El router solo necesita saber "de qué se habló" para clasificar mejor,
+    no necesita el historial completo (eso lo reciben las cadenas de respuesta).
+    
+    Args:
+        messages: Lista de mensajes del historial (HumanMessage, AIMessage)
+    
+    Returns:
+        str: Resumen tipo "Usuario: ... | Asistente: ... | Usuario: ..."
+    """
     if len(messages) < 2:
         return ""
+    
+    # 🔪 Tomar solo los últimos N mensajes (definido en MAX_HISTORY_MESSAGES)
     recent = messages[-MAX_HISTORY_MESSAGES:]
     hint_parts = []
+    
     for msg in recent:
         role = "Usuario" if msg.type == "human" else "Asistente"
-        content_preview = msg.content[:100]
+        content_preview = msg.content[:100]  # 📏 Truncar a 100 caracteres
         hint_parts.append(f"{role}: {content_preview}")
+    
     return " | ".join(hint_parts)
 
 
 def decide_route(question, chat_hint=""):
-    """Clasifica la pregunta usando el router LLM"""
+    """
+    🧭 Clasifica la pregunta usando el router LLM.
+    
+    Args:
+        question (str): Pregunta del usuario
+        chat_hint (str): Resumen del historial reciente
+    
+    Returns:
+        tuple: (action, rationale) donde action es "retrieve" o "direct"
+    """
     try:
         result = router.invoke({
             "question": question,
             "chat_hint": chat_hint or "Sin contexto previo"
         })
         
-        # Validar que tengamos los campos necesarios
+        # ✅ Validar que tengamos los campos necesarios en el JSON
         action = result.get("action", "direct")
         rationale = result.get("rationale", "Sin explicación")
         
-        # Validar que action sea válido
+        # ⚠️ Validar que action sea uno de los valores permitidos
         if action not in ["retrieve", "direct"]:
             console.print(f"   ⚠️  Action inválido '{action}', usando 'direct' por defecto")
             action = "direct"
@@ -272,20 +321,35 @@ def decide_route(question, chat_hint=""):
         return action, rationale
         
     except Exception as e:
+        # 🛡️ Fallback: En caso de error, usar respuesta directa (más seguro)
         console.print(f"   ⚠️  Error en router: {str(e)}")
         console.print(f"   ℹ️  Usando respuesta directa por defecto")
         return "direct", f"Error en clasificación, respondiendo directamente"
 
 
 def run_retrieve_chain(question, session_id):
-    """Ejecuta la cadena RAG completa CON STREAMING"""
+    """
+    📚 Ejecuta la cadena RAG completa CON STREAMING.
+    
+    Flujo:
+    1. 🔍 Recupera documentos relevantes de Qdrant
+    2. 📋 Formatea documentos como contexto
+    3. 🌊 Genera respuesta en streaming usando historial automático
+    
+    Args:
+        question (str): Pregunta del usuario
+        session_id (str): ID de sesión para historial
+    
+    Returns:
+        dict: {"stream": generator, "references": list} o {"content": error_msg, "references": []}
+    """
     console.print("   📚 Ejecutando cadena RAG con streaming...")
     try:
-        # Recuperar documentos
+        # 🔍 Recuperar documentos similares
         retrieved_docs = retrieve(question)
         context = format_docs(retrieved_docs)
 
-        # Formatear referencias únicas
+        # 📎 Formatear referencias únicas (evitar duplicados si varios chunks del mismo doc)
         unique_sources = {}
         for doc in retrieved_docs:
             url = doc.metadata.get("source", "Sin fuente")
@@ -302,7 +366,7 @@ def run_retrieve_chain(question, session_id):
             for i, (url, data) in enumerate(unique_sources.items(), 1)
         ]
 
-        # Generar respuesta con streaming usando historial automático
+        # 🌊 Generar respuesta con streaming (historial se inyecta/guarda automáticamente)
         stream = rag_chain_with_history.stream(
             {"input": question, "context": context},
             config={"configurable": {"session_id": session_id}}
@@ -319,9 +383,23 @@ def run_retrieve_chain(question, session_id):
 
 
 def run_direct_chain(question, session_id):
-    """Ejecuta la cadena directa (sin RAG) CON STREAMING"""
+    """
+    ⚡ Ejecuta la cadena directa (sin RAG) CON STREAMING.
+    
+    Flujo:
+    1. 🌊 Genera respuesta en streaming usando solo conocimiento del LLM
+    2. 📜 Historial se inyecta/guarda automáticamente
+    
+    Args:
+        question (str): Pregunta del usuario
+        session_id (str): ID de sesión para historial
+    
+    Returns:
+        dict: {"stream": generator, "references": None} o {"content": error_msg, "references": None}
+    """
     console.print("   ⚡ Ejecutando cadena directa con streaming...")
     try:
+        # 🌊 Generar respuesta con streaming (historial se inyecta/guarda automáticamente)
         stream = direct_chain_with_history.stream(
             {"input": question},
             config={"configurable": {"session_id": session_id}}
@@ -332,10 +410,10 @@ def run_direct_chain(question, session_id):
         return {"content": f"Error: {str(e)}", "references": None}
 
 
-# Mapa de acciones. Esto se usa para 
+# 🗺️ Mapa de acciones: Relaciona cada decisión del router con su handler correspondiente
 ACTION_HANDLERS = {
-    "retrieve": run_retrieve_chain,
-    "direct": run_direct_chain,
+    "retrieve": run_retrieve_chain,  # 📚 Preguntas que requieren RAG
+    "direct": run_direct_chain,      # ⚡ Preguntas de conocimiento general
 }
 
 #══════════════════════════════════════════════════════════════════════════════
@@ -377,17 +455,19 @@ def chat_invoke():
         console.print(f"   👤 Session: {session_id[:8]}...")
         console.print(f"   💬 Mensaje: {user_text[:100]}...")
 
-        # Construir hint del historial para el router, de tal forma que así sabe de qué se habló antes.
+        # 📜 Construir hint del historial para el router
+        # El router recibe un RESUMEN del historial (no todo) para decidir mejor si usar RAG
+        # Las cadenas de respuesta sí reciben el historial completo (lo inyecta RunnableWithMessageHistory)
         message_history = SQLChatMessageHistory(
             session_id=session_id,
             connection=f'sqlite:///{DB_FILE}'
         )
         chat_hint = build_chat_hint(message_history.messages)
 
-        # 📜 Mostrar el hint que va a recibir el modelo para saber de lo último que se habló, sin pasarle todo el historial
+        # � Mostrar historial de forma visual en el terminal
         if chat_hint:
             console.print("\n   📜 [bold cyan]Contexto del historial:[/bold cyan]")
-            # Dividir por el separador " | " para mostrar cada mensaje
+            # Dividir por el separador " | " para mostrar cada mensaje en su línea
             messages = chat_hint.split(" | ")
             for msg in messages:
                 if msg.startswith("Usuario:"):
@@ -398,21 +478,32 @@ def chat_invoke():
         else:
             console.print("\n   📜 [dim]Sin historial previo[/dim]\n")
 
-        # Clasificar pregunta
+        # 🧭 Clasificar pregunta con el router
         console.print("\n   🎯 Clasificando pregunta...")
         action, rationale = decide_route(user_text, chat_hint)
 
-        # Ejecutar handler correspondiente (historial automático)
+        # ⚙️ Ejecutar handler correspondiente según la decisión del router
         console.print(f"\n   ⚙️  Ejecutando handler '{action}' con streaming...")
 
-        # Pide el handler que corresponda. Por defecto se devuelve run_direct_chain, que es el segundo parámetro en esta llamada.
+        # 🗺️ Obtener handler del mapa (fallback a direct_chain si algo falla)
         handler = ACTION_HANDLERS.get(action, run_direct_chain)
-        # Se ejecuta con el texto del usuario y el session_id
+        
+        # 🚀 Ejecutar handler con el texto del usuario y el session_id
         result = handler(user_text, session_id)
 
-        # 🌊 Generar función de streaming SSE
+        # 🌊 Función generadora para Server-Sent Events (SSE)
         def generate():
-            """Generator que emite eventos SSE"""
+            """
+            🎭 Generador que emite eventos SSE progresivamente.
+            
+            Formato SSE: "data: {json}\n\n"
+            
+            Tipos de eventos:
+            - metadata: Info inicial (routing, referencias) - Se envía primero
+            - content: Chunks de texto del LLM - Se envían conforme se generan
+            - done: Señal de finalización - Se envía al terminar
+            - error: Error durante el streaming - Se envía si algo falla
+            """
             try:
                 # 📤 Enviar metadata inicial (routing + referencias)
                 metadata = {
@@ -426,10 +517,10 @@ def chat_invoke():
                 
                 yield f"data: {json.dumps(metadata, ensure_ascii=False)}\n\n"
                 
-                # 📝 Stream de contenido
+                # 📝 Stream de contenido (chunks del LLM)
                 if "stream" in result:
                     for chunk in result["stream"]:
-                        # LangChain devuelve objetos AIMessage o chunks
+                        # 🔄 LangChain puede devolver objetos AIMessage o AIMessageChunk
                         if hasattr(chunk, "content"):
                             content = chunk.content
                         else:
@@ -444,10 +535,10 @@ def chat_invoke():
                     
                     console.print(f"\n   ✅ [bold green]Streaming completado[/bold green]")
                     
-                    # 🏁 Señal de fin
+                    # 🏁 Señal de fin (frontend sabrá que terminó)
                     yield f"data: {json.dumps({'type': 'done'})}\n\n"
                 
-                # ❌ Caso de error (sin stream disponible)
+                # ❌ Caso de error (sin stream disponible, tenemos "content" con mensaje de error)
                 elif "content" in result:
                     error_data = {
                         "type": "content",
@@ -466,14 +557,14 @@ def chat_invoke():
             
             console.print("="*80 + "\n")
 
-        # 🔄 Retornar respuesta SSE
+        # 🔄 Retornar respuesta SSE con headers apropiados
         return Response(
             generate(),
-            mimetype='text/event-stream',
+            mimetype='text/event-stream',  # 📡 Tipo MIME para SSE
             headers={
-                'Cache-Control': 'no-cache',
-                'X-Accel-Buffering': 'no',
-                'Connection': 'keep-alive'
+                'Cache-Control': 'no-cache',        # 🚫 No cachear eventos
+                'X-Accel-Buffering': 'no',          # 🚫 Desactivar buffering de nginx/proxies
+                'Connection': 'keep-alive'          # 🔌 Mantener conexión abierta
             }
         )
 
@@ -485,18 +576,18 @@ def chat_invoke():
 
 @app.route("/info", methods=["GET"])
 def info():
-    """ℹ️  Información del servidor"""
+    """ℹ️  Devuelve información sobre la configuración del servidor RAG"""
     try:
         collection_info = client.get_collection(COLLECTION_NAME)
         doc_count = collection_info.points_count
     except:
         doc_count = 0
 
-    # 🔌 Información del proveedor
+    # 🔌 Obtener información del proveedor de modelos
     endpoint_url = os.getenv("ENDPOINT_URL", "No configurado")
     model_provider = os.getenv("MODEL_PROVIDER", "openai")
     
-    # 🎨 Determinar el nombre del proveedor de forma amigable
+    # 🎨 Determinar nombre amigable del proveedor basado en la URL
     provider_name = "OpenAI"
     if "github" in endpoint_url.lower() or "models.inference.ai.azure.com" in endpoint_url:
         provider_name = "GitHub Models"
