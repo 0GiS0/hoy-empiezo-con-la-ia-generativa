@@ -22,6 +22,68 @@
 		</form>
 	</div>
 
+	<!-- 📊 Panel de información de configuración (siempre visible) -->
+	<aside id="config-panel" class="config-panel">
+		<div class="config-header">
+			<h3>⚙️ Configuración</h3>
+		</div>
+		<div class="config-content">
+			<div class="config-loading">Cargando...</div>
+			
+			<!-- Las secciones se llenarán con JavaScript -->
+			<div id="config-models" class="config-section" style="display: none;">
+				<h4>🤖 Modelos LLM</h4>
+				<div class="config-item">
+					<div class="config-label">Router</div>
+					<div class="config-value" id="router-model"></div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Respuesta</div>
+					<div class="config-value" id="answer-model"></div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Embeddings</div>
+					<div class="config-value" id="embeddings-model"></div>
+				</div>
+			</div>
+
+			<div id="config-provider" class="config-section" style="display: none;">
+				<h4>🔌 Proveedor</h4>
+				<div class="config-item">
+					<div class="config-label">Proveedor</div>
+					<div class="config-value" id="provider-name"></div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Endpoint URL</div>
+					<div class="config-value" id="endpoint-url"></div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Model Provider</div>
+					<div class="config-value" id="model-provider"></div>
+				</div>
+			</div>
+
+			<div id="config-vectorstore" class="config-section" style="display: none;">
+				<h4>🗄️ Vector Store</h4>
+				<div class="config-item">
+					<div class="config-label">Colección</div>
+					<div class="config-value" id="collection-name"></div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Documentos</div>
+					<div class="config-value">
+						<span id="doc-count"></span>
+						<span id="doc-status" class="config-status"></span>
+					</div>
+				</div>
+				<div class="config-item">
+					<div class="config-label">Docs/Consulta</div>
+					<div class="config-value" id="k-documents"></div>
+				</div>
+			</div>
+		</div>
+	</aside>
+
 	<template id="message-template">
 		<article class="msg">
 			<div class="avatar" data-role="avatar"></div>

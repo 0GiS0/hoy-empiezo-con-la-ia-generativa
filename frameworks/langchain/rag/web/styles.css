@@ -13,15 +13,44 @@
   --shadow: 0 4px 12px -2px rgba(0,0,0,.4);
   font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
 }
-body { margin:0; background:var(--bg); color:var(--text); min-height:100vh; display:flex; justify-content:center; padding:1rem; }
+body { 
+  margin:0; 
+  background:var(--bg); 
+  color:var(--text); 
+  min-height:100vh; 
+  display:grid; 
+  grid-template-columns: 1fr 350px; 
+  gap: 1rem;
+  padding:1rem; 
+}
 body,textarea { font-size:15px; line-height:1.4; }
 
-.app { width:100%; max-width:850px; display:flex; flex-direction:column; gap:1rem; }
+.app { 
+  width:100%; 
+  max-width:100%; 
+  display:flex; 
+  flex-direction:column; 
+  gap:1rem; 
+  min-width: 0; /* Evita overflow */
+  height: calc(100vh - 2rem); /* Altura completa menos padding */
+}
 header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
 header h1 { font-size:1.25rem; margin:0; display:flex; gap:.5rem; align-items:center; }
 .tag { background:var(--primary); color:#031627; padding:.15rem .5rem; border-radius:999px; font-size:.75rem; font-weight:600; }
 
-#messages { flex:1; min-height:350px; max-height:55vh; overflow-y:auto; display:flex; flex-direction:column; gap:.75rem; padding:1rem; background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--radius); scroll-behavior:smooth; }
+#messages { 
+  flex:1; 
+  overflow-y:auto; 
+  display:flex; 
+  flex-direction:column; 
+  gap:.75rem; 
+  padding:1rem; 
+  background:var(--bg-alt); 
+  border:1px solid var(--border); 
+  border-radius:var(--radius); 
+  scroll-behavior:smooth; 
+  min-height: 0; /* Permite que flex funcione correctamente */
+}
 .msg { display:flex; gap:.75rem; }
 .msg.user { flex-direction:row-reverse; }
 .avatar { width:40px; height:40px; background:#22303c; display:grid; place-items:center; font-size:20px; border-radius:50%; flex-shrink:0; border:1px solid var(--border); }
@@ -129,4 +158,128 @@ textarea:focus { outline:2px solid var(--primary); outline-offset:2px; }
 .reference-url:hover {
   color: var(--primary);
   text-decoration: underline;
+}
+
+/* ⚙️ Panel de configuración (siempre visible) */
+.config-panel {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 2rem);
+}
+
+.config-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.config-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+}
+
+.config-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.config-loading {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 1rem;
+  font-size: 0.85rem;
+}
+
+.config-section {
+  margin-bottom: 1.25rem;
+}
+
+.config-section h4 {
+  color: var(--text);
+  font-size: 0.8rem;
+  margin: 0 0 0.65rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.config-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.config-label {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.config-value {
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+.config-status {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-left: 0.5rem;
+}
+
+.config-status.ready {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.config-status.empty {
+  background: rgba(251, 146, 60, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+@media (max-width: 1024px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  
+  .config-panel {
+    order: -1;
+    max-height: 300px;
+  }
+  
+  .app {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 720px) {
+  .config-panel {
+    max-height: 250px;
+  }
 }

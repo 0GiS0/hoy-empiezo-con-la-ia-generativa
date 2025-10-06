@@ -404,6 +404,21 @@ def info():
     except:
         doc_count = 0
 
+    # 🔌 Información del proveedor
+    endpoint_url = os.getenv("ENDPOINT_URL", "No configurado")
+    model_provider = os.getenv("MODEL_PROVIDER", "openai")
+    
+    # 🎨 Determinar el nombre del proveedor de forma amigable
+    provider_name = "OpenAI"
+    if "github" in endpoint_url.lower() or "models.inference.ai.azure.com" in endpoint_url:
+        provider_name = "GitHub Models"
+    elif "ollama" in endpoint_url.lower() or model_provider == "ollama":
+        provider_name = "Ollama (Local)"
+    elif "azure.com" in endpoint_url.lower() and "openai" in endpoint_url.lower():
+        provider_name = "Azure OpenAI"
+    elif "openai.com" in endpoint_url.lower():
+        provider_name = "OpenAI"
+
     return jsonify({
         "status": "ok",
         "config": {
@@ -411,6 +426,11 @@ def info():
             "answer_model": os.getenv("LLM_ANSWER_MODEL_ID"),
             "embeddings_model": embeddings_model,
             "k_documents": K_DOCUMENTS,
+        },
+        "provider": {
+            "name": provider_name,
+            "endpoint_url": endpoint_url,
+            "model_provider": model_provider
         },
         "vector_store": {
             "collection": COLLECTION_NAME,

@@ -137,3 +137,51 @@ input.addEventListener('keydown', e => {
 
 // 👋 Mensaje de bienvenida
 appendMessage('assistant', 'Hola, ¿en qué te puedo ayudar?');
+
+// ⚙️ Cargar información de configuración al inicio
+const INFO_URL = document.location.origin + '/info';
+
+async function loadConfigInfo() {
+  const loadingEl = document.querySelector('.config-loading');
+  const modelsSection = document.getElementById('config-models');
+  const providerSection = document.getElementById('config-provider');
+  const vectorstoreSection = document.getElementById('config-vectorstore');
+  
+  try {
+    const resp = await fetch(INFO_URL);
+    if (!resp.ok) throw new Error('Error al cargar configuración');
+    const data = await resp.json();
+    
+    // 🤖 Llenar información de modelos
+    document.getElementById('router-model').textContent = data.config.router_model || 'No configurado';
+    document.getElementById('answer-model').textContent = data.config.answer_model || 'No configurado';
+    document.getElementById('embeddings-model').textContent = data.config.embeddings_model || 'No configurado';
+    
+    // 🔌 Llenar información del proveedor
+    document.getElementById('provider-name').textContent = data.provider.name;
+    document.getElementById('endpoint-url').textContent = data.provider.endpoint_url;
+    document.getElementById('model-provider').textContent = data.provider.model_provider;
+    
+    // 🗄️ Llenar información del vector store
+    document.getElementById('collection-name').textContent = data.vector_store.collection;
+    document.getElementById('doc-count').textContent = data.vector_store.documents_count;
+    document.getElementById('k-documents').textContent = data.config.k_documents;
+    
+    const statusEl = document.getElementById('doc-status');
+    statusEl.className = `config-status ${data.vector_store.status}`;
+    statusEl.textContent = data.vector_store.status === 'ready' ? '✓ Listo' : '⚠ Vacío';
+    
+    // 👁️ Mostrar secciones y ocultar loading
+    loadingEl.style.display = 'none';
+    modelsSection.style.display = 'block';
+    providerSection.style.display = 'block';
+    vectorstoreSection.style.display = 'block';
+    
+  } catch (err) {
+    loadingEl.innerHTML = `<span style="color: var(--danger);">❌ Error: ${err.message}</span>`;
+  }
+}
+
+// 🚀 Cargar configuración al inicio
+loadConfigInfo();
+
