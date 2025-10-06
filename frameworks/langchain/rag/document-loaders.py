@@ -40,50 +40,51 @@ if not api_key or api_key == "__PON_AQUI_TU_API_KEY__":
     api_key = "dummy-key"
 
 # 🎬 Siguiendo el ejemplo de rag que te mostré en este otro vídeo, vamos a indexar información de Google para ser mejores Youtubers
+# 🇪🇸 IMPORTANTE: Todas las URLs incluyen ?hl=es para forzar contenido en español
 URLs = [
     {"url": "https://support.google.com/youtube/answer/9527654?hl=es",
         "name": "Configurar la audiencia de un canal o un vídeo"},
-    {"url": "https://support.google.com/youtube/answer/11913617?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11913617?hl=es",
         "name": "Consejos para subir vídeos de YouTube"},
-    {"url": "https://support.google.com/youtube/answer/11908409?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11908409?hl=es",
         "name": "Consejos para optimizar vídeos"},
-    {"url": "https://support.google.com/youtube/answer/12340300?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12340300?hl=es",
         "name": "Consejos sobre miniaturas y títulos"},
-    {"url": "https://support.google.com/youtube/answer/12948449?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12948449?hl=es",
         "name": "Consejos para las descripciones de los vídeos"},
-    {"url": "https://support.google.com/youtube/answer/13616979?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/13616979?hl=es",
         "name": "Consejos para programar subidas"},
-    {"url": "https://support.google.com/youtube/answer/11913513?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11913513?hl=es",
         "name": "Consejos sobre equipos de vídeo"},
-    {"url": "https://support.google.com/youtube/answer/12340105?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12340105?hl=es",
         "name": "Consejos de grabación"},
-    {"url": "https://support.google.com/youtube/answer/12948118?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12948118?hl=es",
         "name": "Consejos para grabar con un dispositivo móvil"},
-    {"url": "https://support.google.com/youtube/answer/11221953?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11221953?hl=es",
         "name": "Consejos para editar vídeos"},
-    {"url": "https://support.google.com/youtube/answer/15575746?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/15575746?hl=es",
         "name": "Consejos para las retiradas por infracción de derechos de autor"},
-    {"url": "https://support.google.com/youtube/answer/15577610?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/15577610?hl=es",
         "name": "Consejos para encontrar música de uso autorizado"},
-    {"url": "https://support.google.com/youtube/answer/11912631?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11912631?hl=es",
         "name": "Consejos sobre las publicaciones"},
-    {"url": "https://support.google.com/youtube/answer/12929858?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12929858?hl=es",
         "name": "Consejos para conseguir más acuerdos de marca"},
-    {"url": "https://support.google.com/youtube/answer/11912533?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11912533?hl=es",
         "name": "Consejos para ganar dinero en YouTube"},
-    {"url": "https://support.google.com/youtube/answer/13615784?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/13615784?hl=es",
         "name": "Consejos sobre usuarios nuevos y recurrentes"},
-    {"url": "https://support.google.com/youtube/answer/13616340?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/13616340?hl=es",
         "name": "Consejos para saber qué contenido crear"},
-    {"url": "https://support.google.com/youtube/answer/11912632?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11912632?hl=es",
         "name": "Consejos sobre Estadísticas de YouTube"},
-    {"url": "https://support.google.com/youtube/answer/11914225?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/11914225?hl=es",
         "name": "Consejos de búsqueda y descubrimiento"},
-    {"url": "https://support.google.com/youtube/answer/15086271?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/15086271?hl=es",
         "name": "Consejos para evitar que disminuya el tiempo de visualización"},
-    {"url": "https://support.google.com/youtube/answer/12950272?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12950272?hl=es",
         "name": "Consejos sobre el banner del canal y la imagen de perfil"},
-    {"url": "https://support.google.com/youtube/answer/12356784?sjid=11557296865847177507-EU",
+    {"url": "https://support.google.com/youtube/answer/12356784?hl=es",
         "name": "Consejos sobre los estrenos de YouTube"},
 ]
 
@@ -142,15 +143,31 @@ vector_store = QdrantVectorStore(
 
 # 📖 https://python.langchain.com/docs/tutorials/rag/#preview
 # 🔄 Iteramos las URLs y creamos un loader para cada una
+# 🇪🇸 Configuramos headers para asegurar contenido en español
+header_template = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept-Language": "es-ES,es;q=0.9",  # 🌍 Priorizar español
+}
+
 for url in URLs:
     console.print(
         f":mag: [bold blue]Indexando:[/bold blue] {url['name']} ([cyan]{url['url']}[/cyan])")
-    loader = WebBaseLoader(web_path=url["url"])
+    
+    # 🌐 WebBaseLoader con headers personalizados para forzar español
+    loader = WebBaseLoader(
+        web_path=url["url"],
+        header_template=header_template
+    )
     docs = loader.load()
+    
+    # 🏷️ Añadir metadata de idioma y título al documento
+    for doc in docs:
+        doc.metadata["language"] = "es"
+        doc.metadata["title"] = url["name"]
 
     # 📏 Chunks más grandes para mantener contexto coherente
-    # chunk_size: tamaño ideal para consejos/guías completas (antes 500, ahora 2000)
-    # chunk_overlap: solapamiento para mantener continuidad entre chunks (antes 100, ahora 200)
+    # chunk_size: tamaño ideal para consejos/guías completas: ahora 2000
+    # chunk_overlap: solapamiento para mantener continuidad entre chunks: 200
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=2000, 
         chunk_overlap=200,
@@ -159,7 +176,6 @@ for url in URLs:
     all_splits = text_splitter.split_documents(docs)
 
     # 💾 Procesar de 1 en 1 para evitar errores de "input too large"
-    # 🐳 Docker Model Runner tiene límites más estrictos que otros proveedores
     for i, doc in enumerate(all_splits):
         try:
             _ = vector_store.add_documents(documents=[doc])

@@ -22,7 +22,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from rich.console import Console
 from dotenv import load_dotenv
-from models import RouteDecision
 
 #══════════════════════════════════════════════════════════════════════════════
 # 🔧 CONFIGURACIÓN INICIAL
@@ -74,11 +73,13 @@ router_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Eres un clasificador. Decide si la pregunta NECESITA búsqueda externa (retrieve) "
      "o se puede responder con conocimiento general (direct). "
-     "Responde SOLO en JSON con: action, rationale. "
-     "Reglas: retrieve=preguntas sobre YouTube; direct=saludos, chit-chat, etc."),
-    ("user", "Pregunta: {question}\nContexto: {chat_hint}\nDevuélveme JSON.")
+     "Responde SOLO en JSON válido con estas claves: action (valores permitidos: 'retrieve' o 'direct'), rationale (string). "
+     "Reglas: retrieve=preguntas sobre YouTube; direct=saludos, chit-chat, etc.\n\n"
+     "Ejemplo de respuesta:\n"
+     '{{"action": "direct", "rationale": "Es un saludo simple"}}'),
+    ("user", "Pregunta: {question}\nContexto: {chat_hint}")
 ])
-router = router_prompt | llm_router | JsonOutputParser(pydantic_object=RouteDecision)
+router = router_prompt | llm_router | JsonOutputParser()
 
 # Cadena directa (sin RAG)
 direct_prompt = ChatPromptTemplate.from_messages([
@@ -173,9 +174,44 @@ console.print("🔄 Gestión automática de historial configurada\n")
 
 def retrieve(query):
     """Recupera documentos relevantes del vector store"""
-    docs = vector_store.similarity_search(query, k=K_DOCUMENTS)
-    console.print(f"   🔍 Documentos recuperados: {len(docs)}")
-    return docs
+    docs_with_scores = vector_store.similarity_search_with_score(query, k=K_DOCUMENTS)
+    console.print(f"\n   � [bold cyan]Documentos recuperados: {len(docs_with_scores)}[/bold cyan]")
+    
+    # Mostrar detalles de cada documento
+    for i, (doc, score) in enumerate(docs_with_scores, 1):
+        # El score en Qdrant con COSINE es la distancia (menor = más similar)
+        # Para hacerlo más intuitivo, mostramos la similitud (1 - distancia)
+        similarity = 1 - score
+        similarity_percent = similarity * 100
+        
+        # Color según relevancia
+        if similarity_percent >= 80:
+            score_color = "green"
+            relevance = "Alta"
+        elif similarity_percent >= 60:
+            score_color = "yellow"
+            relevance = "Media"
+        else:
+            score_color = "red"
+            relevance = "Baja"
+        
+        console.print(f"\n   [yellow]📄 Documento {i}:[/yellow]")
+        console.print(f"      🎯 Similitud: [{score_color}]{similarity_percent:.1f}% ({relevance})[/{score_color}]")
+        console.print(f"      🔗 Fuente: [blue]{doc.metadata.get('source', 'Sin fuente')}[/blue]")
+        console.print(f"      📝 Título: {doc.metadata.get('title', 'Sin título')}")
+        
+        # Mostrar preview del contenido (primeras 150 caracteres)
+        preview = doc.page_content[:150].replace('\n', ' ')
+        console.print(f"      📖 Preview: [dim]{preview}...[/dim]")
+        
+        # Mostrar metadata adicional si existe
+        if 'chunk_index' in doc.metadata:
+            console.print(f"      🔢 Chunk: {doc.metadata['chunk_index']}")
+    
+    console.print()  # Línea en blanco para separación
+    
+    # Retornar solo los documentos (sin scores) para mantener compatibilidad
+    return [doc for doc, _ in docs_with_scores]
 
 
 def format_docs(docs):
@@ -203,13 +239,23 @@ def decide_route(question, chat_hint=""):
             "question": question,
             "chat_hint": chat_hint or "Sin contexto previo"
         })
+        
+        # Validar que tengamos los campos necesarios
         action = result.get("action", "direct")
         rationale = result.get("rationale", "Sin explicación")
+        
+        # Validar que action sea válido
+        if action not in ["retrieve", "direct"]:
+            console.print(f"   ⚠️  Action inválido '{action}', usando 'direct' por defecto")
+            action = "direct"
+        
         console.print(f"   🤖 Decisión: [bold]{action}[/bold] - {rationale}")
         return action, rationale
+        
     except Exception as e:
         console.print(f"   ⚠️  Error en router: {str(e)}")
-        return "direct", f"Error: {str(e)}"
+        console.print(f"   ℹ️  Usando respuesta directa por defecto")
+        return "direct", f"Error en clasificación, respondiendo directamente"
 
 
 def run_retrieve_chain(question, session_id):

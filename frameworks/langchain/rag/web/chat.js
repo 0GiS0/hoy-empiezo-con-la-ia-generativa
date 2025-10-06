@@ -1,18 +1,18 @@
-// URL del endpoint del backend, obtenida dinámicamente por si cambia el puerto.
+// 🌐 URL del endpoint del backend, obtenida dinámicamente por si cambia el puerto.
 const API_URL = document.location.origin + '/chat';
 
-// Elementos del DOM
+// 🎯 Elementos del DOM
 const messagesEl = document.getElementById('messages');
 const form = document.getElementById('chat-form');
 const input = document.getElementById('input');
 const statusEl = document.getElementById('status');
 
-// Generar / recuperar un sessionId persistente para simular usuarios distintos
+// 🆔 Generar / recuperar un sessionId persistente para simular usuarios distintos
 function getSessionId() {
   const KEY = 'chat_session_id';
   let id = localStorage.getItem(KEY);
   if (!id) {
-    // ID sencillo: fecha base36 + 8 chars aleatorios
+    // 🎲 ID sencillo: fecha base36 + 8 chars aleatorios
     const rand = Math.random().toString(36).slice(2, 10);
     id = Date.now().toString(36) + '-' + rand;
     localStorage.setItem(KEY, id);
@@ -20,10 +20,10 @@ function getSessionId() {
   return id;
 }
 
-// Generar o recuperar un ID de sesión único
+// 🔑 Generar o recuperar un ID de sesión único
 const SESSION_ID = getSessionId();
 
-// Permite añadir un mensaje al chat
+// 💬 Permite añadir un mensaje al chat
 function appendMessage(role, content, references = null, routingAction = null) {
   const tpl = document.getElementById('message-template');
   const node = tpl.content.firstElementChild.cloneNode(true);
@@ -87,7 +87,7 @@ function appendMessage(role, content, references = null, routingAction = null) {
   return bubbleEl;
 }
 
-// Envía un mensaje al backend y maneja la respuesta
+// 📤 Envía un mensaje al backend y maneja la respuesta
 async function sendMessage(message) {
   appendMessage('user', message);
   const assistantBubble = appendMessage('assistant', '...');
@@ -103,7 +103,7 @@ async function sendMessage(message) {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     
-    // 🎨 Limpiar el bubble y recrear el mensaje con referencias y tipo de routing
+    // 🔄 Limpiar el bubble y recrear el mensaje con referencias y tipo de routing
     const parentArticle = assistantBubble.closest('.msg');
     parentArticle.remove();
     const routingAction = data.routing?.action || null;
@@ -116,7 +116,7 @@ async function sendMessage(message) {
   }
 }
 
-// Controla cuando se envía el formulario
+// 📝 Controla cuando se envía el formulario
 form.addEventListener('submit', e => {
   e.preventDefault();
   const text = input.value.trim();
@@ -125,15 +125,15 @@ form.addEventListener('submit', e => {
   sendMessage(text);
 });
 
-// Controla cuando se presiona una tecla en el campo de entrada
+// ⌨️ Controla cuando se presiona una tecla en el campo de entrada
 input.addEventListener('keydown', e => {
 
-  // Si es la tecla Enter significa que se quiere enviar el mensaje
+  // ⏎ Si es la tecla Enter significa que se quiere enviar el mensaje
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     form.requestSubmit();
   }
 });
 
-// Mensaje de bienvenida
+// 👋 Mensaje de bienvenida
 appendMessage('assistant', 'Hola, ¿en qué te puedo ayudar?');
