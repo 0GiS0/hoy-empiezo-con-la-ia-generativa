@@ -1,3 +1,25 @@
+"""
+🤖 Ejemplo de Agente LangChain Tradicional con AgentExecutor
+
+Este archivo demuestra el uso del enfoque tradicional de LangChain para crear agentes:
+- 🔄 Utiliza AgentExecutor como wrapper que maneja automáticamente el bucle "pensamiento -> acción -> observación"
+- 🚀 Ideal para prototipos rápidos y casos de uso simples
+- 📦 El flujo de ejecución es una "caja negra" controlada internamente por LangChain
+
+Ventajas de AgentExecutor:
+✅ 🎯 Configuración simple y rápida
+✅ 🔮 Abstracción del bucle de ejecución
+✅ 📝 Menos código para casos básicos
+✅ 🔧 Integración directa con herramientas
+
+Limitaciones de AgentExecutor:
+❌ 🎮 Control limitado sobre el flujo de ejecución
+❌ ⚙️ Difícil personalización de la lógica de decisión
+❌ 👁️ Estado interno no transparente
+❌ 🤹 Complicado para flujos multi-agente complejos
+❌ 🔍 Menor observabilidad del proceso de pensamiento
+"""
+
 # Imports generales
 import datetime
 import random
@@ -85,10 +107,12 @@ async def main():
         ("placeholder", "{agent_scratchpad}"),
     ])
 
-    # Crear el agente con las herramientas
+    # 🧠 Crear el agente con las herramientas
     agent = create_openai_functions_agent(llm, tools, prompt)
 
-    # Crear el ejecutor del agente
+    # 🏭 Crear el ejecutor del agente
+    # 📦 AgentExecutor encapsula toda la lógica del bucle "pensamiento -> acción -> observación"
+    # 🎭 Es una caja negra que maneja automáticamente las decisiones y llamadas a herramientas
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
     # Ejecutar una consulta
@@ -98,6 +122,12 @@ async def main():
     """
 
     try:
+        # 🚀 Ejecutar el agente usando AgentExecutor
+        # 🔄 El bucle interno automáticamente:
+        # 1. 🧠 Llama al LLM para decidir qué hacer
+        # 2. 🔧 Ejecuta herramientas si es necesario
+        # 3. 🔍 Evalúa si necesita más información
+        # 4. 🔁 Repite hasta llegar a una respuesta final
         result = await agent_executor.ainvoke({
             "input": f"Crea títulos para YouTube basados en esta descripción: {user_input}"
         })
