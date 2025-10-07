@@ -72,3 +72,35 @@ Estos son 5 títulos optimizados para YouTube...
 ```
 
 Cada paso es **visible** y **controlable**, a diferencia del AgentExecutor que oculta esta lógica.
+
+## 🎨 Visualización del Grafo
+
+Una de las **ventajas clave** de LangGraph es poder visualizar el grafo:
+
+### 📊 Representación Mermaid (Texto)
+```python
+mermaid_code = app.get_graph().draw_mermaid()
+print(mermaid_code)
+```
+
+### 🖼️ Imagen PNG
+```python
+png_data = app.get_graph().draw_mermaid_png()
+with open("graph.png", "wb") as f:
+    f.write(png_data)
+```
+
+### 🔍 Ejecutar Demo de Visualización
+```bash
+python demo_visualization.py
+```
+
+Este comando genera:
+- ✅ Código Mermaid para copiar a [mermaid.live](https://mermaid.live/)
+- ✅ Imagen PNG del grafo
+- ✅ Información detallada de nodos y aristas
+- ✅ Consejos para usar las visualizaciones
+
+### 🎯 Archivos Generados
+- `graph_visualization.png` - Grafo del ejemplo principal
+- `demo_graph_complex.png` - Grafo más complejo del demo

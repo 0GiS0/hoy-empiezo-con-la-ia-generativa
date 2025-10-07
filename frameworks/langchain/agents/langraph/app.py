@@ -42,9 +42,21 @@ from typing import TypedDict, Annotated, Sequence
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
+# 🎨 Rich para salida bonita
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.columns import Columns
+from rich import box
+
 
 # Cargo las variables de entorno del .env
 load_dotenv()
+
+# 🎨 Crear consola Rich para salida bonita
+console = Console()
 
 
 # Definir herramientas personalizadas para el agente
@@ -63,14 +75,29 @@ def generate_random_number(min_val: int = 1, max_val: int = 100) -> int:
 @tool
 def create_youtube_titles(description: str) -> str:
     """Crea 5 títulos optimizados para YouTube basados en una descripción."""
-    # Esta es una función de ejemplo, en la práctica podrías usar APIs o lógica más compleja
-    base_titles = [
-        f"🔥 {description[:30]}... ¡INCREÍBLE!",
-        f"✨ Cómo {description[:35]}... paso a paso",
-        f"🚀 {description[:40]}... ¡TUTORIAL!",
-        f"💡 {description[:30]}... ¡Te va a sorprender!",
-        f"⚡ {description[:35]}... ¡FÁCIL y RÁPIDO!"
-    ]
+    # 📝 Extraer palabras clave de la descripción
+    keywords = description.lower()
+    
+    # 🎯 Generar títulos específicos y relevantes
+    if "microsoft agent framework" in keywords:
+        base_titles = [
+            "🔥 MICROSOFT AGENT FRAMEWORK - ¡Guía completa para developers!",
+            "✨ Cómo empezar con Microsoft Agent Framework - Paso a paso",
+            "🚀 Microsoft Agent Framework TUTORIAL - De básico a avanzado",
+            "💡 Secretos de Microsoft Agent Framework - ¡Te va a sorprender!",
+            "⚡ Domina Microsoft Agent Framework - ¡FÁCIL y RÁPIDO!"
+        ]
+    else:
+        # 📋 Títulos genéricos para otras descripciones
+        topic = description.split('.')[0][:40] if '.' in description else description[:40]
+        base_titles = [
+            f"🔥 {topic} - ¡INCREÍBLE!",
+            f"✨ Cómo {topic} - paso a paso",
+            f"🚀 {topic} - ¡TUTORIAL!",
+            f"💡 {topic} - ¡Te va a sorprender!",
+            f"⚡ {topic} - ¡FÁCIL y RÁPIDO!"
+        ]
+    
     return "\n".join([f"{i+1}. {title}" for i, title in enumerate(base_titles)])
 
 # 1️⃣ Definir el estado del agente
@@ -167,7 +194,39 @@ async def main():
     # 🚀 El grafo se convierte en una aplicación que podemos ejecutar paso a paso
     app = workflow.compile()
 
-    # 🎬 Ejecutar una consulta
+    # � VISUALIZACIÓN DEL GRAFO
+    # 👁️ Una de las ventajas clave de LangGraph: puedes ver el grafo visualmente
+    try:
+        console.print("\n🎨 [bold cyan]Generando visualización del grafo...[/bold cyan]")
+        
+        # 📊 Obtener representación Mermaid del grafo (formato de texto)
+        mermaid_graph = app.get_graph().draw_mermaid()
+        
+        # 📋 Mostrar Mermaid con Rich
+        mermaid_panel = Panel(
+            Syntax(mermaid_graph, "mermaid", theme="monokai", line_numbers=False),
+            title="📋 Representación Mermaid del Grafo",
+            border_style="cyan",
+            expand=False
+        )
+        console.print(mermaid_panel)
+        
+        # 🖼️ Generar imagen PNG del grafo
+        png_data = app.get_graph().draw_mermaid_png()
+        
+        # 💾 Guardar la imagen
+        graph_image_path = "graph_visualization.png"
+        with open(graph_image_path, "wb") as f:
+            f.write(png_data)
+        
+        console.print(f"🖼️  [green]Imagen del grafo guardada en:[/green] [bold]{graph_image_path}[/bold]")
+        console.print("   [dim]Puedes abrirla para ver la visualización completa del flujo![/dim]")
+        
+    except Exception as e:
+        console.print(f"⚠️  [yellow]Error generando visualización:[/yellow] {e}")
+        console.print("   [dim](Es normal si no tienes graphviz instalado)[/dim]")
+
+    # �🎬 Ejecutar una consulta
     user_input = """
     ¡Hola developer 👋🏻! Para este vídeo te voy a mostrar cómo empezar con Microsoft Agent Framework, 
     desde un agente simple, pasando por uno con tools y demás a un flujo donde se involucren varios agentes.
@@ -176,22 +235,20 @@ async def main():
     # 📝 Crear el mensaje inicial del sistema
     system_message = """
     Eres un asistente especializado en crear títulos optimizados para YouTube 🎬.
-    Tu tarea principal es generar 5 opciones de títulos atractivos, creativos y relevantes.
-
-    ➡️ Cuando generes títulos, cada uno debe:
-    - Ser claro y fácil de entender.
-    - Estar orientado a captar la atención (gancho).
-    - Reflejar fielmente el contenido del vídeo.
-    - Usar un máximo de 70 caracteres.
-    - Incluir siempre al menos un emoji para hacerlo más llamativo.
-
-    Tienes acceso a herramientas que puedes usar cuando sea necesario:
+    
+    Cuando el usuario te pida crear títulos para YouTube, DEBES usar la herramienta create_youtube_titles 
+    pasándole la descripción del video como parámetro.
+    
+    NUNCA respondas directamente con títulos, SIEMPRE usa la herramienta create_youtube_titles.
+    
+    Después de usar la herramienta, puedes comentar o mejorar los títulos que generó.
+    
+    Tienes acceso a estas herramientas:
     - get_current_time: Para obtener la hora actual
-    - generate_random_number: Para generar números aleatorios
-    - create_youtube_titles: Para crear títulos optimizados para YouTube
-
-    Si recibes una solicitud que no esté relacionada con la generación de títulos de YouTube, 
-    puedes usar tus otras herramientas si son relevantes, o responder de manera útil.
+    - generate_random_number: Para generar números aleatorios  
+    - create_youtube_titles: Para crear títulos optimizados para YouTube (¡USA ESTA!)
+    
+    Recuerda: Siempre usa las herramientas cuando sea apropiado, no respondas directamente.
     """
 
     try:
@@ -203,27 +260,117 @@ async def main():
         
         inputs = {"messages": initial_messages}
         
-        print("🤖 Ejecutando el grafo del agente...")
+        console.print("\n🤖 [bold green]Ejecutando el grafo del agente...[/bold green]")
+        console.print()
         
         # 🌟 VENTAJA CLAVE: Observabilidad completa del proceso
         # 👁️ El método astream() permite ver cada paso del grafo en tiempo real
         # 📦 Esto es imposible con AgentExecutor que es una caja negra
+        
+        # 📊 Recopilar todos los mensajes para mostrar al final
+        all_tool_results = []
+        
         async for output in app.astream(inputs):
             # 📊 El resultado del stream es un diccionario donde la clave es el nombre del nodo
             for key, value in output.items():
-                print(f"--- 🔄 SALIDA DEL NODO: '{key}' ---")
-                # 🔍 Podemos inspeccionar exactamente qué ocurre en cada nodo
-                # 🐛 Esto facilita la depuración y el monitoreo en producción
-                print(value['messages'])  # 💬 Descomenta para ver todos los mensajes
+                
+                # 🎨 Crear panel bonito para cada nodo
+                node_title = f"� OUTPUT DEL NODO: {key.upper()}"
+                node_content = []
+                
+                # 📋 Procesar cada mensaje
+                for msg in value['messages']:
+                    if hasattr(msg, 'content') and msg.content:
+                        # 🎯 Mostrar contenido completo si es importante
+                        content = msg.content.strip()
+                        if len(content) > 0:
+                            if len(content) > 200:
+                                node_content.append(f"💬 [cyan]Contenido:[/cyan] {content[:150]}...")
+                            else:
+                                node_content.append(f"💬 [cyan]Contenido:[/cyan] {content}")
+                    
+                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        for tool_call in msg.tool_calls:
+                            node_content.append(f"🔧 [yellow]Llamada a herramienta:[/yellow] [bold]{tool_call['name']}[/bold]")
+                            # 📝 Mostrar argumentos de forma más limpia
+                            args_preview = str(tool_call['args'])[:150]
+                            node_content.append(f"   📋 [dim]Argumentos:[/dim] {args_preview}...")
+                    
+                    if hasattr(msg, 'name') and msg.name:
+                        node_content.append(f"🛠️  [green]Resultado de herramienta:[/green] [bold]{msg.name}[/bold]")
+                        if hasattr(msg, 'content'):
+                            # 🎨 Guardar resultado completo para mostrar al final
+                            all_tool_results.append(msg.content)
+                            # Mostrar preview
+                            response_preview = msg.content.replace('\n', ' | ')[:100]
+                            node_content.append(f"   📤 [green]Respuesta:[/green] {response_preview}...")
+                
+                # � Mostrar panel del nodo
+                if node_content:
+                    panel = Panel(
+                        "\n".join(node_content),
+                        title=node_title,
+                        border_style="blue",
+                        expand=False
+                    )
+                    console.print(panel)
         
-        # 🏆 La respuesta final está en el último mensaje del estado
+        # 🏆 Mostrar respuesta final completa del agente
         final_response = value['messages'][-1]
-        print("\n🤖 Respuesta Final del Agente:")
-        print(final_response.content)
+        
+        # 🎨 Panel especial para la respuesta final
+        final_panel = Panel(
+            f"[bold white]{final_response.content}[/bold white]",
+            title="🤖 Respuesta Final del Agente",
+            border_style="green",
+            expand=False
+        )
+        console.print(final_panel)
+        
+        # 📋 Si hay resultados de herramientas, mostrarlos también
+        if all_tool_results:
+            console.print("\n🎬 [bold cyan]Títulos generados por la herramienta:[/bold cyan]")
+            for i, result in enumerate(all_tool_results, 1):
+                # 🧹 Limpiar caracteres unicode problemáticos
+                clean_result = result.encode('utf-8', errors='ignore').decode('utf-8')
+                clean_result = clean_result.replace('\\u00a1', '¡').replace('\\u00bb', '»')
+                clean_result = clean_result.replace('\\u00e1', 'á').replace('\\u00e9', 'é')
+                clean_result = clean_result.replace('\\u00ed', 'í').replace('\\u00f3', 'ó')
+                clean_result = clean_result.replace('\\u00fa', 'ú').replace('\\u00f1', 'ñ')
+                
+                tool_panel = Panel(
+                    f"[yellow]{clean_result}[/yellow]",
+                    title=f"📝 Resultado de Herramienta #{i}",
+                    border_style="yellow",
+                    expand=False
+                )
+                console.print(tool_panel)
+        
+        # 🌟 Mostrar resumen final de ventajas de LangGraph
+        console.print("\n" + "="*70)
+        advantages_text = """
+🌟 VENTAJAS DE LANGGRAPH DEMOSTRADAS:
+
+✅ Observabilidad completa - Viste cada paso del proceso
+✅ Control explícito del flujo - Definiste el grafo exacto
+✅ Visualización del grafo - Imagen y código Mermaid generados
+✅ Estado transparente - Acceso completo a todos los mensajes
+✅ Depuración fácil - Información detallada de cada nodo
+✅ Modularidad - Nodos reutilizables (agent, action)
+
+🎯 Con AgentExecutor esto sería una caja negra sin visibilidad.
+        """
+        
+        console.print(Panel(
+            advantages_text.strip(),
+            title="🕸️ LangGraph vs AgentExecutor",
+            border_style="magenta",
+            expand=False
+        ))
 
     except Exception as e:
-        print(f"❌ Error: {e}")
-        print("Asegúrate de tener Ollama ejecutándose con el modelo llama3.2")
+        console.print(f"❌ [red]Error:[/red] {e}")
+        console.print("[dim]Asegúrate de tener Ollama ejecutándose con el modelo llama3.2[/dim]")
 
 
 if __name__ == "__main__":
