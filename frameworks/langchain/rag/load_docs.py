@@ -1,4 +1,3 @@
-
 # Para este ejemplo he utilizado una base de datos vectorial de tipo Qdrant, pero podría adaptarse a otros tipos de bases de datos
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
