@@ -136,7 +136,7 @@ async function sendMessage(message) {
       
       buffer += decoder.decode(value, { stream: true });
       
-      // � Procesar líneas completas (formato SSE: "data: {...}\n\n")
+      // 🔄 Procesar líneas completas (formato SSE: "data: {...}\n\n")
       const lines = buffer.split('\n\n');
       buffer = lines.pop(); // Guardar última línea incompleta
       
