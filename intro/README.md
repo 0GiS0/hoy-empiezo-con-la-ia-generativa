@@ -232,7 +232,7 @@ Y como te puedes imaginar, no todo el mundo tiene maquinones para poder ejecutar
 La tercera opción que puedes utilizar, si las anteriores no son posibles para ti es Github Models. El cual es un marketplace de modelos de IA que puedes utilizar en fase de desarrollo de forma gratuita. Para poder utilizarlo solo necesitas tener una cuenta de GitHub y generar un Personal Access Token que nisiquiera necesita tener ningún scope.
 
 ```bash
-GITHUB_TOKEN=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
+GITHUB_TOKEN=github_pat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 y ya solo con esto puedes hacer llamadas a los diferentes modelos que hay en el catalogo de GitHub Models:

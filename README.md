@@ -138,6 +138,15 @@ En cada carpeta encontrarás:
             <br/>
             <a href="https://youtu.be/PM33QnrClzU">Ver vídeo</a> · <a href="frameworks/langchain/intro/README.md">Código</a>
         </td>
+         <td align="center" width="33%">
+            <a href="frameworks/langchain/chat/README.md">
+                <img src="https://img.youtube.com/vi/apVbAdnEIeg/maxresdefault.jpg" alt="LangChain 🦜 + Qdrant ⚡ con Routing inteligente para tu RAG | Cap. 12" width="100%" />
+            <br/>
+            <strong>LangChain 🦜 + Qdrant ⚡ con Routing inteligente para tu RAG | Cap. 12</strong>
+            </a>
+            <br/>
+            <a href="https://youtu.be/apVbAdnEIeg">Ver vídeo</a> · <a href="frameworks/langchain/rag/README.md">Código</a>
+        </td>
     </tr>
 </div>
 

@@ -1,0 +1,7 @@
+rich==14.1.0
+langchain-community==0.3.27
+beautifulsoup4==4.13.5
+langchain-text-splitters==0.3.9
+qdrant_client==1.15.1
+langchain_qdrant==0.2.0
+langchain-openai==0.3.34
